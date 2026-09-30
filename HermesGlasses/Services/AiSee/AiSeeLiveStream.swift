@@ -3,6 +3,7 @@
 //
 // LiveCaptureStream (Wi-Fi hotspot, H.264) → decoded AiSeeFrame callbacks.
 // Keeps the latest frame so a still can be served from it while streaming.
+// A clip recorder, when attached, gets every sample (video AND audio) raw.
 // stop() awaits the SDK teardown, which FINDINGS measured at 1–7 s; the
 // coordinator adds the 1 s settle on top.
 //
@@ -27,6 +28,8 @@ final class AiSeeLiveStream: NSObject, LiveStreamSampleReceiving, @unchecked Sen
     private var capture: LiveCaptureStream?
     private var _latest: AiSeeFrame?
     private var onFrame: (@Sendable (AiSeeFrame) -> Void)?
+    private var recorder: AiSeeClipRecorder?
+    private var _audioFormat: CMFormatDescription?
     private var onError: (@Sendable (String) -> Void)?
     private var onTerminate: (@Sendable (String?) -> Void)?
     private var frames = 0
@@ -41,6 +44,20 @@ final class AiSeeLiveStream: NSObject, LiveStreamSampleReceiving, @unchecked Sen
     var isStreaming: Bool { lock.withLock { capture }?.isStreaming ?? false }
 
     var latestFrame: AiSeeFrame? { lock.withLock { _latest } }
+
+    /// The audio format the SDK reported at start, if the stream carries audio.
+    var audioFormat: CMFormatDescription? { lock.withLock { _audioFormat } }
+
+    /// Replaces the frame consumer on a running stream (nil = decode for the
+    /// latest-frame still only). The coordinator swaps it as users join/leave.
+    func setFrameHandler(_ handler: (@Sendable (AiSeeFrame) -> Void)?) {
+        lock.withLock { onFrame = handler }
+    }
+
+    /// Attaches (or, with nil, detaches) a clip recorder.
+    func setRecorder(_ recorder: AiSeeClipRecorder?) {
+        lock.withLock { self.recorder = recorder }
+    }
 
     func start(onFrame: @escaping @Sendable (AiSeeFrame) -> Void,
                onError: @escaping @Sendable (String) -> Void,
@@ -58,6 +75,7 @@ final class AiSeeLiveStream: NSObject, LiveStreamSampleReceiving, @unchecked Sen
         let t0 = Date()
         do {
             let info = try await stream.start(via: .wifi, sampleReceivers: [self])
+            lock.withLock { if _audioFormat == nil { _audioFormat = info.audio } }
             log("livestream: started in \(Int(Date().timeIntervalSince(t0) * 1000))ms, video=\(info.video != nil) audio=\(info.audio != nil)")
         } catch {
             lock.withLock { self.capture = nil; self.stopped = true }
@@ -98,6 +116,7 @@ final class AiSeeLiveStream: NSObject, LiveStreamSampleReceiving, @unchecked Sen
             onFrame = nil
             onError = nil
             onTerminate = nil
+            recorder = nil
             return current
         }
     }
@@ -116,9 +135,14 @@ final class AiSeeLiveStream: NSObject, LiveStreamSampleReceiving, @unchecked Sen
 
     // MARK: LiveStreamSampleReceiving (SDK thread)
 
-    func stream(_ stream: LiveCaptureStream, didStartWithMedia format: LiveCaptureStream.StreamFormat) {}
+    func stream(_ stream: LiveCaptureStream, didStartWithMedia format: LiveCaptureStream.StreamFormat) {
+        lock.withLock { _audioFormat = format.audio }
+    }
 
     func stream(_ stream: LiveCaptureStream, didGenerate sampleBuffer: CMSampleBuffer) {
+        // The recorder takes the compressed sample before anything else, so a
+        // slow decode can't delay the file.
+        lock.withLock { stopped ? nil : recorder }?.append(sampleBuffer)
         guard sampleBuffer.formatDescription?.mediaType == .video else { return }
         let go: Bool = lock.withLock {
             guard !stopped else { return false }

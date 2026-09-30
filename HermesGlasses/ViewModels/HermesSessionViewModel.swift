@@ -12,6 +12,7 @@ import MWDATCamera
 import MWDATCore
 import Observation
 import os
+import Photos
 import SwiftUI
 
 /// Represents the current state of the Hermes conversation
@@ -116,6 +117,12 @@ final class HermesSessionViewModel {
     var lastTestPhotoSource: String? = nil
     var lastTestAudioRoute: String? = nil
     var lastTestMicSummary: String? = nil
+    /// AiSee video clip in progress. `clipStarting` covers the stream open,
+    /// which takes seconds - a second press then is ignored rather than
+    /// queued, so a quick double press can't leave a clip running unseen.
+    var clipRecording = false
+    var clipStarting = false
+    var clipStartedAt: Date? = nil
     /// Last physical key press on the AiSee glasses ("Key 1 · 10:07:32"); nil until one arrives.
     var lastAiSeeKeyPress: String? = nil
     /// Button → action mapping for the AiSee glasses (Settings › Devices › Buttons).
@@ -721,6 +728,13 @@ final class HermesSessionViewModel {
         Task { [weak self] in
             await self?.aiseeCoordinator.setKeyPressObserver { index in
                 Task { @MainActor [weak self] in self?.handleGlassesKeyPress(index) }
+            }
+            // Every clip end arrives here - the stop button, the length cap,
+            // the stream dying, a disconnect - so saving has one path.
+            await self?.aiseeCoordinator.setClipObserver { file, interruption in
+                Task { @MainActor [weak self] in
+                    self?.clipDidEnd(file: file, interruption: interruption)
+                }
             }
         }
         // The stored mic source outlives the app, the vendor setting can be
@@ -2676,6 +2690,90 @@ final class HermesSessionViewModel {
             await ensureSessionThen { self.submitQuery("Remember this person") }
         case .snapPhoto:
             await testPhoto()
+        case .recordClip:
+            await toggleClipRecording()
+        }
+    }
+
+    // MARK: - Video clips (AiSee)
+
+    /// Whether a clip can be recorded right now: AiSee glasses, connected,
+    /// camera not wedged. The glasses have no storage, so a clip is the
+    /// livestream written to a file on the phone.
+    var canRecordClip: Bool {
+        glassesVendor == .aisee && aisee.state.isConnected && !aiseeWedged
+    }
+
+    func toggleClipRecording() async {
+        guard !clipStarting else { return }
+        if clipRecording {
+            // The file arrives through the clip observer (clipDidEnd).
+            await aiseeCoordinator.stopClip()
+            return
+        }
+        guard canRecordClip else {
+            show(glassesVendor == .aisee
+                 ? "Connect your AiSee glasses to record a clip."
+                 : "Video clips need AiSee glasses.")
+            return
+        }
+        clipStarting = true
+        defer { clipStarting = false }
+        do {
+            try await aiseeCoordinator.startClip()
+            clipRecording = true
+            clipStartedAt = Date()
+            speakCue("Recording video")
+        } catch {
+            show("Could not start the clip: \(error.localizedDescription)")
+        }
+    }
+
+    private func clipDidEnd(file: URL?, interruption: String?) {
+        clipRecording = false
+        clipStartedAt = nil
+        guard let file else {
+            show("The clip was not saved\(interruption.map { " - \($0)" } ?? "") - no video reached the phone.")
+            return
+        }
+        Task { await saveClipToPhotos(file, interruption: interruption) }
+    }
+
+    /// Add-only access: Hermes never reads the library. The temp file is
+    /// deleted once Photos has it, and kept (with the path logged) if not.
+    private func saveClipToPhotos(_ file: URL, interruption: String?) async {
+        let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+        guard status == .authorized || status == .limited else {
+            show("Allow Hermes to add to Photos (Settings › Privacy › Photos) to save clips.")
+            return
+        }
+        do {
+            try await PHPhotoLibrary.shared().performChanges {
+                PHAssetCreationRequest.creationRequestForAssetFromVideo(atFileURL: file)
+            }
+            try? FileManager.default.removeItem(at: file)
+            let why = interruption.map { " (stopped: \($0))" } ?? ""
+            show(notice: "Clip saved to Photos\(why).")
+            speakCue("Clip saved")
+        } catch {
+            NSLog("[Hermes] clip save failed, kept at \(file.path): \(error)")
+            show("Could not save the clip to Photos: \(error.localizedDescription)")
+        }
+    }
+
+    /// A short spoken confirmation. With the voice loop listening, the
+    /// recognizer is suspended first (onFinished resumes it) so Hermes
+    /// doesn't transcribe its own cue; mid-answer, the cue is skipped.
+    private func speakCue(_ text: String) {
+        switch connectionState {
+        case .listening:
+            connectionState = .speaking
+            speechRecognizer.isSuspended = true
+            speechSynthesizer.speak(text)
+        case .disconnected:
+            speechSynthesizer.speak(text)
+        default:
+            break
         }
     }
 

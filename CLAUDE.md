@@ -244,6 +244,15 @@ photo via the DAT camera API.
   + `ingest(_:)` push the kit's 16 kHz Int16 buffers through `processInputBuffer`,
   so recognizer, VAD, recording and level work unchanged. Never toggle
   `AVAudioSession` around a capture (FINDINGS §F). The device streams Opus (16 kHz mono) - the kit decodes with the SDK's `OpusDecoder`/`SBCDecoder` before `PCMResampler`; wiring the resampler to the raw connection fails with `unacceptableData`. Device log: `idevicesyslog -p "Hermes Glasses"` shows `Logger` lines (not `NSLog`).
+- **AiSee video clips are the livestream written on the phone.** The glasses
+  have no storage, so `AiSeeClipRecorder` muxes the stream's H.264 + AAC
+  samples into an .mp4 (passthrough, starts at the first keyframe, 5-minute
+  cap) and Hermes saves it to Photos (add-only permission). The ONE stream is
+  shared: `AiSeeSequencing.StreamUsers` tracks the camera consumer and the
+  clip, and the coordinator stops the stream only when both have let go -
+  closing Lens mid-clip must not cut the clip. Every clip end (stop, cap,
+  stream death, disconnect) reaches the host once, via `setClipObserver`.
+  Triggers: glasses key action `.recordClip` and the Lens header button.
 - **Livestream needs the HotspotConfiguration entitlement** (already present)
   and an iOS local-network/Wi-Fi join prompt on first use.
 - **The visual language lives in `Views/HermesDesign.swift`** (imported

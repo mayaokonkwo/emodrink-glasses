@@ -9,6 +9,8 @@
 //       settle 300 ms, reopen after.
 //   F2  stills right after a livestream time out → 1 s settle after stop.
 //   —   a still during a livestream is served from the latest decoded frame.
+//   —   the glasses serve ONE livestream; its users (the camera consumer and a
+//       clip recording) share it, and it stops only when the last one leaves.
 //
 // Foundation only.
 //
@@ -51,5 +53,34 @@ enum AiSeeSequencing {
             plan.append(.shoot)
         }
         return plan
+    }
+
+    /// Longest clip before the coordinator stops it by itself. A forgotten
+    /// recording otherwise runs until the battery or the phone's disk gives out.
+    static let maxClipSeconds = 300
+
+    /// Who is holding the one livestream.
+    struct StreamUsers: Equatable {
+        enum User: Hashable { case vision, clip }
+        private(set) var users: Set<User> = []
+
+        var isEmpty: Bool { users.isEmpty }
+        func contains(_ user: User) -> Bool { users.contains(user) }
+
+        /// Returns true when the stream was idle, i.e. the caller must open it.
+        mutating func add(_ user: User) -> Bool {
+            let wasIdle = users.isEmpty
+            users.insert(user)
+            return wasIdle
+        }
+
+        /// Returns true when `user` was the last one, i.e. the caller must stop
+        /// the stream. Removing a user who was not holding it changes nothing.
+        mutating func remove(_ user: User) -> Bool {
+            guard users.remove(user) != nil else { return false }
+            return users.isEmpty
+        }
+
+        mutating func removeAll() { users.removeAll() }
     }
 }

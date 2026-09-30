@@ -72,6 +72,8 @@
 	<string>Hermes listens through your iPhone or your glasses&apos; microphone so you can talk to your assistant.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Hermes Glasses tells the assistant whether you're walking, driving, or still, so answers fit what you're doing.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Hermes Glasses saves video clips you record through your AiSee glasses to your photo library.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Hermes Glasses transcribes your speech on this device so your words appear instantly as you talk.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

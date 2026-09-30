@@ -83,6 +83,11 @@ actor AiSeeDeviceCoordinator {
     func detach() { attach(nil) }
 
     private func resetDeviceState() {
+        // A clip in progress is closed and handed over, not lost: the frames
+        // already written are still a valid file.
+        endClip(reason: "the glasses disconnected")
+        streamUsers.removeAll()
+        visionTerminate = nil
         micOpen = false
         streaming = false
         lastStreamStop = nil
@@ -166,6 +171,12 @@ actor AiSeeDeviceCoordinator {
 
     // MARK: Live stream
 
+    // The glasses serve ONE livestream. Two users share it: the host's camera
+    // consumer (`startLiveStream`/`stopLiveStream`) and a clip recording
+    // (`startClip`/`stopClip`). It opens for the first and stops only when the
+    // last one leaves (`AiSeeSequencing.StreamUsers`), so closing Lens can't
+    // cut a clip short and a clip can't blank the view the user is watching.
+
     /// - Parameters:
     ///   - onError: errors the running stream reports that are not an end of stream.
     ///     A start failure is thrown, not routed here.
@@ -177,9 +188,60 @@ actor AiSeeDeviceCoordinator {
         // One operation at a time: a stream opened mid-capture would race the shot.
         guard !captureInFlight else { throw AiSeeError.captureInProgress }
         guard let connection else { throw AiSeeError.notConnected }
-        guard !streaming && !streamStarting else { return }
+        if streamStarting && streamStartingFor == .vision { return }
+        await waitForStreamTransition()
+        if streamUsers.contains(.vision) { return }
+        if let stream = liveStream, streaming {
+            // A clip already holds the stream: join it.
+            stream.setFrameHandler(onFrame)
+            visionTerminate = onTerminate
+            _ = streamUsers.add(.vision)
+            log("livestream: camera joined the running stream")
+            return
+        }
+        try await openStream(connection, for: .vision, onFrame: onFrame, onError: onError)
+        guard streaming else { return }
+        visionTerminate = onTerminate
+        _ = streamUsers.add(.vision)
+    }
+
+    func stopLiveStream() async {
+        if streamStarting && streamStartingFor == .vision {
+            // `startLiveStream` is inside its start await; it honours this after it returns.
+            pendingStreamStop = true
+            log("livestream: stop requested during start — will stop once started")
+            return
+        }
+        guard streamUsers.contains(.vision) else { return }
+        visionTerminate = nil
+        if streamUsers.remove(.vision) {
+            await closeStream()
+        } else {
+            // A clip is still recording: keep the stream, drop the consumer.
+            liveStream?.setFrameHandler(nil)
+            log("livestream: camera left; stream kept for the clip")
+        }
+    }
+
+    /// Serializes stream opens/closes: a user joining mid-close would attach to
+    /// a stream that is about to die, and a second open would ask the glasses
+    /// for a stream they are still tearing down.
+    private func waitForStreamTransition() async {
+        while streamStarting || streamStopping {
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+    }
+
+    private var streamStartingFor: AiSeeSequencing.StreamUsers.User?
+    private var streamStopping = false
+
+    private func openStream(_ connection: IntelligenceDeviceConnection,
+                            for user: AiSeeSequencing.StreamUsers.User,
+                            onFrame: @escaping @Sendable (AiSeeFrame) -> Void,
+                            onError: @escaping @Sendable (String) -> Void) async throws {
         streamStarting = true
-        defer { streamStarting = false; pendingStreamStop = false }
+        streamStartingFor = user
+        defer { streamStarting = false; streamStartingFor = nil; pendingStreamStop = false }
         let stream = AiSeeLiveStream(connection: connection, log: log)
         try await stream.start(
             onFrame: onFrame,
@@ -189,7 +251,7 @@ actor AiSeeDeviceCoordinator {
             onTerminate: { [weak self, weak stream] text in
                 Task {
                     guard let self, let stream else { return }
-                    await self.streamDidTerminate(stream, text: text, onTerminate: onTerminate)
+                    await self.streamDidTerminate(stream, text: text)
                 }
             })
         // `stream.start` suspended the actor. If a stop or a detach arrived while it
@@ -207,35 +269,10 @@ actor AiSeeDeviceCoordinator {
         }
     }
 
-    /// Called from `AiSeeLiveStream`'s `onTerminate` hook — an SDK-initiated
-    /// end (clean or errored) must reset `streaming` even though nobody
-    /// called `stopLiveStream()`. Guarded by identity so a stale callback
-    /// from an already-replaced/stopped stream can't clobber current state.
-    private func streamDidTerminate(_ stream: AiSeeLiveStream, text: String?,
-                                     onTerminate: @escaping @Sendable (String?) -> Void) async {
-        guard liveStream === stream else { return }
-        liveStream = nil
-        latestFrameJPEG = nil
-        streaming = false
-        // Tell the host before tearing down: nothing about the cleanup below changes
-        // what it needs to know, and it should not wait on the decoder drain.
-        onTerminate(text)
-        // The SDK ended the stream, but nothing tore our side down: without this the
-        // decoder session and the retained latest frame outlive it. Local cleanup
-        // only — the SDK is already done with this stream.
-        await stream.releaseAfterTermination()
-        // Stamped after the cleanup, as in stopLiveStream(), so the 1 s post-stream
-        // settle is measured from when the stream was actually released.
-        lastStreamStop = Date()
-    }
-
-    func stopLiveStream() async {
-        if streamStarting {
-            // `startLiveStream` is inside its start await; it honours this after it returns.
-            pendingStreamStop = true
-            log("livestream: stop requested during start — will stop once started")
-        }
+    private func closeStream() async {
         guard let stream = liveStream else { return }
+        streamStopping = true
+        defer { streamStopping = false }
         await stream.stop()
         // `stream.stop()` suspended the actor: only clear state if this is still the
         // installed stream (a terminate callback may have replaced/cleared it).
@@ -243,8 +280,108 @@ actor AiSeeDeviceCoordinator {
         liveStream = nil
         latestFrameJPEG = nil
         streaming = false
+        streamUsers.removeAll()
         lastStreamStop = Date()
     }
+
+    /// Called from `AiSeeLiveStream`'s `onTerminate` hook — an SDK-initiated
+    /// end (clean or errored) must reset `streaming` even though nobody
+    /// called `stopLiveStream()`. Guarded by identity so a stale callback
+    /// from an already-replaced/stopped stream can't clobber current state.
+    private func streamDidTerminate(_ stream: AiSeeLiveStream, text: String?) async {
+        guard liveStream === stream else { return }
+        liveStream = nil
+        latestFrameJPEG = nil
+        streaming = false
+        streamUsers.removeAll()
+        // Tell the host before tearing down: nothing about the cleanup below changes
+        // what it needs to know, and it should not wait on the decoder drain.
+        let terminate = visionTerminate
+        visionTerminate = nil
+        terminate?(text)
+        endClip(reason: text ?? "the glasses ended the stream")
+        // The SDK ended the stream, but nothing tore our side down: without this the
+        // decoder session and the retained latest frame outlive it. Local cleanup
+        // only — the SDK is already done with this stream.
+        await stream.releaseAfterTermination()
+        // Stamped after the cleanup, as in closeStream(), so the 1 s post-stream
+        // settle is measured from when the stream was actually released.
+        lastStreamStop = Date()
+    }
+
+    // MARK: Clip recording
+
+    /// Every clip end — `stopClip()`, the length cap, the stream dying, a
+    /// disconnect — is reported here exactly once: the finished file (nil when
+    /// nothing usable was written) and, for an end the host did not ask for, why.
+    func setClipObserver(_ observer: (@Sendable (_ file: URL?, _ interruption: String?) -> Void)?) {
+        clipObserver = observer
+    }
+
+    var clipRecording: Bool { clip != nil }
+
+    /// Records the livestream to an .mp4 — opening the stream if nothing else
+    /// holds it. The file arrives on the clip observer when the clip ends.
+    func startClip() async throws {
+        guard clip == nil else { return }
+        guard !captureInFlight else { throw AiSeeError.captureInProgress }
+        guard let connection else { throw AiSeeError.notConnected }
+        await waitForStreamTransition()
+        guard clip == nil else { return }
+        if liveStream == nil || !streaming {
+            // Frames still decode with no consumer: a still asked for while
+            // recording is served from the latest one.
+            try await openStream(connection, for: .clip, onFrame: { _ in }, onError: { _ in })
+        }
+        guard let stream = liveStream, streaming else { throw AiSeeError.streamUnavailable }
+        let recorder = AiSeeClipRecorder(url: AiSeeClipRecorder.makeTemporaryURL(),
+                                         audioFormat: stream.audioFormat, log: log)
+        stream.setRecorder(recorder)
+        clip = recorder
+        _ = streamUsers.add(.clip)
+        clipGeneration &+= 1
+        let generation = clipGeneration
+        log("clip: recording (cap \(AiSeeSequencing.maxClipSeconds) s)")
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(AiSeeSequencing.maxClipSeconds))
+            await self?.stopClip(generation: generation)
+        }
+    }
+
+    /// Stops the clip; the file goes to the clip observer. No-op if none runs.
+    func stopClip() async { await stopClip(generation: nil) }
+
+    private func stopClip(generation: Int?) async {
+        guard let recorder = clip else { return }
+        let capped = generation != nil
+        if let generation, generation != clipGeneration { return }
+        clip = nil
+        liveStream?.setRecorder(nil)
+        _ = streamUsers.remove(.clip)
+        let file = await recorder.finish()
+        clipObserver?(file, capped ? "reached the \(AiSeeSequencing.maxClipSeconds / 60)-minute limit" : nil)
+        // Decided AFTER the finish await, not before: the camera (or a new clip)
+        // may have joined the still-running stream meanwhile.
+        if streamUsers.isEmpty { await closeStream() }
+    }
+
+    /// Synchronous end for paths that can't await (stream death, detach): the
+    /// file is finished and reported in the background.
+    private func endClip(reason: String) {
+        guard let recorder = clip else { return }
+        clip = nil
+        let observer = clipObserver
+        Task {
+            let file = await recorder.finish()
+            observer?(file, reason)
+        }
+    }
+
+    private var clip: AiSeeClipRecorder?
+    private var clipGeneration = 0
+    private var clipObserver: (@Sendable (_ file: URL?, _ interruption: String?) -> Void)?
+    private var streamUsers = AiSeeSequencing.StreamUsers()
+    private var visionTerminate: (@Sendable (String?) -> Void)?
 
     // MARK: Microphone
 
@@ -368,6 +505,10 @@ actor AiSeeDeviceCoordinator {
         throw AiSeeError.notConnected
     }
     func stopLiveStream() async {}
+    var clipRecording: Bool { false }
+    func setClipObserver(_ observer: (@Sendable (_ file: URL?, _ interruption: String?) -> Void)?) {}
+    func startClip() async throws { throw AiSeeError.notConnected }
+    func stopClip() async {}
     func startMicrophone(onBuffer: @escaping @Sendable (AVAudioPCMBuffer) -> Void) async throws {
         throw AiSeeError.notConnected
     }

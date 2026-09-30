@@ -33,5 +33,15 @@ let migrated = GlassesKeyMap.load(from: d)
 expect(migrated.action(forKey: 1) == .rememberPerson, "old 1.single form migrates to key 1")
 expect(migrated.entries.count == 1, "old .double, unknown key and bogus action ignored")
 
+// Video clip action round-trips through storage.
+do {
+    var clip = GlassesKeyMap.defaults
+    clip.set(.recordClip, forKey: 3)
+    clip.save(to: d)
+    expect(GlassesKeyMap.load(from: d).action(forKey: 3) == .recordClip, "record clip action persists")
+    expect(GlassesKeyAction.recordClip.label == "Start / stop video clip", "record clip label")
+    expect(GlassesKeyMap.defaults.action(forKey: 3) == .none, "record clip is not assigned by default")
+}
+
 print(failures == 0 ? "ALL PASS" : "\(failures) FAILED")
 exit(failures == 0 ? 0 : 1)

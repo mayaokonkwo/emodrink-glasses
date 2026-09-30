@@ -18,6 +18,7 @@ enum GlassesKeyAction: String, CaseIterable, Identifiable {
     case visualQuery
     case snapPhoto
     case rememberPerson
+    case recordClip
 
     var id: String { rawValue }
 
@@ -28,6 +29,7 @@ enum GlassesKeyAction: String, CaseIterable, Identifiable {
         case .visualQuery: return "What am I looking at?"
         case .snapPhoto: return "Snap a photo to the chat"
         case .rememberPerson: return "Remember this person"
+        case .recordClip: return "Start / stop video clip"
         }
     }
 }

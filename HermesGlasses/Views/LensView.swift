@@ -72,6 +72,10 @@ struct LensView: View {
                     .foregroundStyle(HermesTheme.cream.opacity(0.4))
             }
 
+            if hermesVM.canRecordClip || hermesVM.clipRecording {
+                clipButton
+            }
+
             Button {
                 exportPDF()
             } label: {
@@ -98,6 +102,38 @@ struct LensView: View {
         .padding(.horizontal, 16)
         .padding(.top, 8)
         .padding(.bottom, 10)
+    }
+
+    /// AiSee only: records the livestream to Photos. The clip shares the
+    /// stream Lens is showing, so closing Lens doesn't end it - the glasses
+    /// button or this one does.
+    private var clipButton: some View {
+        Button {
+            Task { await hermesVM.toggleClipRecording() }
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: hermesVM.clipRecording ? "stop.fill" : "record.circle")
+                    .font(.system(size: 13, weight: .semibold))
+                if hermesVM.clipRecording, let started = hermesVM.clipStartedAt {
+                    TimelineView(.periodic(from: started, by: 1)) { context in
+                        let seconds = max(0, Int(context.date.timeIntervalSince(started)))
+                        Text(String(format: "%d:%02d", seconds / 60, seconds % 60))
+                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    }
+                }
+            }
+            .foregroundStyle(hermesVM.clipRecording ? HermesTheme.cream : HermesTheme.destructive)
+            .padding(.horizontal, 9)
+            .frame(height: 30)
+            .background(hermesVM.clipRecording
+                        ? AnyShapeStyle(HermesTheme.destructive)
+                        : AnyShapeStyle(HermesTheme.cream.opacity(0.1)),
+                        in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(hermesVM.clipStarting)
+        .opacity(hermesVM.clipStarting ? 0.5 : 1)
+        .accessibilityLabel(hermesVM.clipRecording ? "Stop video clip" : "Record video clip")
     }
 
     // MARK: - Live feed + overlay
