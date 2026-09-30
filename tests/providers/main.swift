@@ -185,5 +185,32 @@ do {
     catch { expect(true, "gemini error throws") }
 }
 
+// ── maxTokens ───────────────────────────────────────────────────────────
+do {
+    var big = AIRequest(systemPrompt: "S", contextLine: nil, history: [], userText: "u",
+                        imageJPEG: nil, model: "m", baseURL: AnthropicProvider().defaultBaseURL, apiKey: "k")
+    expectEqual(bodyJSON(try! AnthropicProvider().buildRequest(big))["max_tokens"] as? Int, 1024,
+                "anthropic default max_tokens unchanged")
+    big.maxTokens = 8192
+    expectEqual(bodyJSON(try! AnthropicProvider().buildRequest(big))["max_tokens"] as? Int, 8192,
+                "anthropic honours maxTokens")
+
+    var oa = AIRequest(systemPrompt: "S", contextLine: nil, history: [], userText: "u",
+                       imageJPEG: nil, model: "m", baseURL: OpenAICompatibleProvider.openAI.defaultBaseURL, apiKey: "k")
+    expectEqual(bodyJSON(try! OpenAICompatibleProvider.openAI.buildRequest(oa))["max_tokens"] as? Int, 1024,
+                "openai default max_tokens unchanged")
+    oa.maxTokens = 8192
+    expectEqual(bodyJSON(try! OpenAICompatibleProvider.openAI.buildRequest(oa))["max_tokens"] as? Int, 8192,
+                "openai honours maxTokens")
+
+    var gm = AIRequest(systemPrompt: "S", contextLine: nil, history: [], userText: "u",
+                       imageJPEG: nil, model: "m", baseURL: GeminiProvider().defaultBaseURL, apiKey: "k")
+    expect(bodyJSON(try! GeminiProvider().buildRequest(gm))["generationConfig"] == nil,
+           "gemini sends no generationConfig by default")
+    gm.maxTokens = 8192
+    let cfg = bodyJSON(try! GeminiProvider().buildRequest(gm))["generationConfig"] as? [String: Any]
+    expectEqual(cfg?["maxOutputTokens"] as? Int, 8192, "gemini honours maxTokens")
+}
+
 if failures > 0 { print("\(failures) test(s) FAILED"); exit(1) }
 print("All provider tests passed")

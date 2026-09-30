@@ -43,7 +43,7 @@ struct AnthropicProvider: AIProvider {
         }
 
         var body: [String: Any] = [
-            "model": req.model, "max_tokens": 1024, "system": system, "messages": messages,
+            "model": req.model, "max_tokens": req.maxTokens ?? 1024, "system": system, "messages": messages,
         ]
         if req.webSearch {
             // The server-side web search tool: the API searches and reads

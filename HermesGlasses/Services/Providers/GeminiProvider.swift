@@ -32,10 +32,13 @@ struct GeminiProvider: AIProvider {
         parts.append(["text": req.userText])
         contents.append(["role": "user", "parts": parts])
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "systemInstruction": ["parts": [["text": systemText(req)]]],
             "contents": contents,
         ]
+        if let maxTokens = req.maxTokens {
+            body["generationConfig"] = ["maxOutputTokens": maxTokens]
+        }
         // The key travels as a header, never as a query item: a keyed URL
         // ends up in the invalidURL error below, in the UI alert that renders
         // it, and in every log line that mentions the request.

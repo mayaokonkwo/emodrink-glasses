@@ -215,13 +215,13 @@ final class DirectClient: @unchecked Sendable {
     /// providers ignore it and answer from model knowledge).
     func askOneShotText(
         systemPrompt: String, userText: String, webSearch: Bool = false,
-        timeout: TimeInterval = 30
+        maxTokens: Int? = nil, timeout: TimeInterval = 30
     ) async throws -> String {
         let provider = Self.provider
         let key = Self.loadKey(for: provider.id)
         if provider.requiresKey, (key ?? "").isEmpty { throw AIProviderError.missingKey }
 
-        let request = AIRequest(
+        var request = AIRequest(
             systemPrompt: systemPrompt,
             contextLine: nil,
             history: [],
@@ -231,6 +231,7 @@ final class DirectClient: @unchecked Sendable {
             baseURL: Self.baseURL(for: provider),
             apiKey: key,
             webSearch: webSearch)
+        request.maxTokens = maxTokens
 
         var urlRequest = try provider.buildRequest(request)
         urlRequest.timeoutInterval = timeout

@@ -47,7 +47,7 @@ struct OpenAICompatibleProvider: AIProvider {
             messages.append(["role": "user", "content": req.userText])
         }
 
-        let body: [String: Any] = ["model": req.model, "max_tokens": 1024, "messages": messages]
+        let body: [String: Any] = ["model": req.model, "max_tokens": req.maxTokens ?? 1024, "messages": messages]
         guard let url = URL(string: req.baseURL + "/v1/chat/completions") else {
             throw AIProviderError.invalidURL(req.baseURL + "/v1/chat/completions")
         }

@@ -38,6 +38,10 @@ struct AIRequest {
     /// face path asks for more than the default so a person search has
     /// room to disambiguate namesakes.
     var webSearchMaxUses = 3
+    /// Output token limit. Nil keeps each provider's chat default (1024 for
+    /// Anthropic/OpenAI, the model default for Gemini). Build Check's
+    /// procedure split asks for more: a long document's step list is JSON.
+    var maxTokens: Int? = nil
 }
 
 enum AIProviderError: LocalizedError, Equatable {
