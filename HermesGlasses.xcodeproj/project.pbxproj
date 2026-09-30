@@ -106,6 +106,8 @@
 		AAAA00000000000000000A08 /* AiSeeSequencing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A11 /* AiSeeSequencing.swift */; };
 		AAAA00000000000000000A09 /* AiSeeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A12 /* AiSeeTypes.swift */; };
 		AAAA00000000000000000A57 /* AiSeeClipRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */; };
+		AAAA00000000000000000A5B /* Procedure.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A5C /* Procedure.swift */; };
+		AAAA00000000000000000A59 /* BuildCheckJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A5A /* BuildCheckJSON.swift */; };
 		AAAA00000000000000000A30 /* RTKAIDeviceConnection.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A20 /* RTKAIDeviceConnection.framework */; };
 		AAAA00000000000000000A31 /* RTKAudioConnectSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A21 /* RTKAudioConnectSDK.framework */; };
 		AAAA00000000000000000A32 /* RTKAudioStreaming.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A22 /* RTKAudioStreaming.framework */; };
@@ -250,6 +252,8 @@
 		AAAA00000000000000000A11 /* AiSeeSequencing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeSequencing.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A12 /* AiSeeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeTypes.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeClipRecorder.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A5C /* Procedure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/Procedure.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A5A /* BuildCheckJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildCheckJSON.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A20 /* RTKAIDeviceConnection.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = RTKAIDeviceConnection.framework; sourceTree = "<group>"; };
 		AAAA00000000000000000A21 /* RTKAudioConnectSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = RTKAudioConnectSDK.framework; sourceTree = "<group>"; };
 		AAAA00000000000000000A22 /* RTKAudioStreaming.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = RTKAudioStreaming.framework; sourceTree = "<group>"; };
@@ -419,6 +423,8 @@
 				AAAA00000000000000000A11 /* AiSeeSequencing.swift */,
 				AAAA00000000000000000A12 /* AiSeeTypes.swift */,
 				AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */,
+				AAAA00000000000000000A5C /* Procedure.swift */,
+				AAAA00000000000000000A5A /* BuildCheckJSON.swift */,
 				AAAA00000000000000000A51 /* GlassesVendor.swift */,
 				AAAA00000000000000000A55 /* GlassesKeyMap.swift */,
 			);
@@ -631,6 +637,8 @@
 				AAAA00000000000000000A08 /* AiSeeSequencing.swift in Sources */,
 				AAAA00000000000000000A09 /* AiSeeTypes.swift in Sources */,
 				AAAA00000000000000000A57 /* AiSeeClipRecorder.swift in Sources */,
+				AAAA00000000000000000A5B /* Procedure.swift in Sources */,
+				AAAA00000000000000000A59 /* BuildCheckJSON.swift in Sources */,
 				AAAA00000000000000000A52 /* GlassesVendor.swift in Sources */,
 				AAAA00000000000000000A56 /* GlassesKeyMap.swift in Sources */,
 			);
