@@ -34,13 +34,7 @@ final class BuildRunStore: @unchecked Sendable {
     }()
 
     func folderURL(runID: UUID) -> URL {
-        let url = rootURL.appendingPathComponent(runID.uuidString, isDirectory: true)
-        // Don't recreate if marked as deleted
-        let deletedMarker = rootURL.appendingPathComponent(".\(runID.uuidString).deleted")
-        if !fm.fileExists(atPath: deletedMarker.path) {
-            try? fm.createDirectory(at: url, withIntermediateDirectories: true)
-        }
-        return url
+        rootURL.appendingPathComponent(runID.uuidString, isDirectory: true)
     }
 
     func frameURL(runID: UUID, filename: String) -> URL {
@@ -66,6 +60,8 @@ final class BuildRunStore: @unchecked Sendable {
 
     func addFrame(_ jpeg: Data, runID: UUID, at date: Date) throws -> String {
         let name = "f-\(Int(date.timeIntervalSince1970 * 1000)).jpg"
+        let framesDir = folderURL(runID: runID).appendingPathComponent("frames", isDirectory: true)
+        try fm.createDirectory(at: framesDir, withIntermediateDirectories: true)
         try jpeg.write(to: frameURL(runID: runID, filename: name), options: .atomic)
         return name
     }
@@ -88,9 +84,6 @@ final class BuildRunStore: @unchecked Sendable {
 
     func delete(id: UUID) {
         try? fm.removeItem(at: rootURL.appendingPathComponent(id.uuidString, isDirectory: true))
-        // Mark as deleted to prevent folderURL from recreating
-        let deletedMarker = rootURL.appendingPathComponent(".\(id.uuidString).deleted")
-        try? "".write(to: deletedMarker, atomically: true, encoding: .utf8)
     }
 
     func diskSize(runID: UUID) -> Int64 {
