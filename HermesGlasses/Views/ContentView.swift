@@ -54,6 +54,7 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
 struct ContentView: View {
     let wearablesVM: WearablesViewModel
     let hermesVM: HermesSessionViewModel
+    let buildCheckVM: BuildCheckViewModel
 
     @State private var showSettings: Bool = false
     @State private var showPeople: Bool = false

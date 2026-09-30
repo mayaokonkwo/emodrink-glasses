@@ -21,6 +21,7 @@ private let logger = Logger(subsystem: "com.flowsxr.hermesglasses", category: "s
 struct HermesGlassesApp: App {
     @State private var wearablesViewModel: WearablesViewModel
     @State private var hermesSessionViewModel: HermesSessionViewModel
+    @State private var buildCheckViewModel: BuildCheckViewModel
     @State private var permissions = PermissionsCoordinator()
 
     /// First launch runs the three-step wizard (glasses → permissions →
@@ -57,9 +58,9 @@ struct HermesGlassesApp: App {
         self._wearablesViewModel = State(
             wrappedValue: WearablesViewModel(wearables: wearables)
         )
-        self._hermesSessionViewModel = State(
-            wrappedValue: HermesSessionViewModel(wearables: wearables)
-        )
+        let session = HermesSessionViewModel(wearables: wearables)
+        self._hermesSessionViewModel = State(wrappedValue: session)
+        self._buildCheckViewModel = State(wrappedValue: BuildCheckViewModel(hermesVM: session))
     }
 
     var body: some Scene {
@@ -67,7 +68,8 @@ struct HermesGlassesApp: App {
             Group {
                 ContentView(
                     wearablesVM: wearablesViewModel,
-                    hermesVM: hermesSessionViewModel
+                    hermesVM: hermesSessionViewModel,
+                    buildCheckVM: buildCheckViewModel
                 )
                 // Handle Meta AI URL callback after registration
                 .onOpenURL { url in
