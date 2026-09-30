@@ -391,7 +391,14 @@ photo via the DAT camera API.
   the ONE stream through `AiSeeSequencing.StreamUsers` (the coordinator stops
   it only when the last user leaves), so finishing a clip can't kill a run.
   Only one of Lens / conversation capture / Build Check can own a glasses
-  stream at a time otherwise.
+  stream at a time otherwise, and that is ENFORCED: during a run
+  `ContentView.open` (the one choke point for the drawer and the quick
+  actions) refuses Lens and Lookup with "End the build check before
+  opening Lens/Lookup.", and a capture refuses as above. Frames carry a
+  timestamp; one older than max(2 x interval, 6 s) is stale - it is not
+  logged, an end-of-step check never runs on it (no NOW tile = no AI call,
+  recorded as unclear "no camera frame"), and the run says "Camera lost.
+  Still logging speech." once until frames resume.
 - **Every Build Check AI call goes through `BuildChecker`.** It is the seam
   for future local-only routing. Checks use `askOneShot` (never `ask()`);
   the end-of-step check sends ONE composite JPEG (reference + NOW tiles)
@@ -401,7 +408,14 @@ photo via the DAT camera API.
 - **Alert escalation is pure and tested** (`AlertPolicy`, `tests/buildcheck-alerts`).
   Quick checks need two consecutive mismatches and are suppressed for 120 s
   per similar issue; full checks ("step done", "fixed") always deliver.
-  Only a confident mismatch (>= 0.75) on a critical step blocks the tracker.
+  Only a confident mismatch (>= 0.75) on a critical step blocks the tracker
+  (`BuildRunTracker.blocks`, pure, tested in `tests/buildcheck-tracker`).
+- **Build Check speaks through `speakCue(_:queued: true)`.** The one-arg
+  `speakCue` drops a line while another is speaking; a run's warnings must
+  all be heard, so its lines queue (FIFO drained by
+  `speechSynthesizer.onFinished`, recognizer kept suspended between them,
+  cleared by `endSession`). "confirmed" means "yes, something IS wrong": a
+  confirmed flag stays open until a later full check on that step matches.
 - **Unblocking is narrow.** "fixed" re-checks the FLAGGED step (the pending
   reply's step); with no open warning it is refused with NO AI call. A
   BLOCKED critical step advances only on a re-check whose verdict is match,

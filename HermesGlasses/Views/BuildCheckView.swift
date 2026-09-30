@@ -93,6 +93,11 @@ struct BuildCheckView: View {
     private var settingsSection: some View {
         HermesSection(header: "Run settings",
                       footer: "Photos are always logged. The AI sees a photo only when the scene has changed and settled, at most once every 15 seconds and within the hourly budget.") {
+            HermesRow(title: "Voice start and glasses buttons",
+                      subtitle: "Off = runs start from this screen only", showsChevron: false) {
+                Toggle("", isOn: $vm.buildCheckEnabled).labelsHidden().tint(HermesTheme.accent)
+            }
+            HermesDivider()
             HermesRow(title: "Operator", showsChevron: false) {
                 TextField("Name", text: $vm.operatorName)
                     .multilineTextAlignment(.trailing)

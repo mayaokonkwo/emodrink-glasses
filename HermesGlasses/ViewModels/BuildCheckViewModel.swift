@@ -25,6 +25,8 @@ final class BuildCheckViewModel {
     static let budgetKey = "buildcheck_quick_budget_per_hour"
     static let checksEnabledKey = "buildcheck_checks_enabled"
     static let operatorKey = "buildcheck_operator_name"
+    /// Spec §6: voice start + glasses buttons. The screen always works.
+    static let enabledKey = "buildcheck_enabled"
     static let lastProcedureKey = "buildcheck_last_procedure_id"
     static let frameObserverKey = "build-check"
     static let replyWindow: TimeInterval = 20
@@ -51,6 +53,9 @@ final class BuildCheckViewModel {
     }
     var operatorName: String = UserDefaults.standard.string(forKey: operatorKey) ?? "" {
         didSet { UserDefaults.standard.set(operatorName, forKey: Self.operatorKey) }
+    }
+    var buildCheckEnabled: Bool = UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true {
+        didSet { UserDefaults.standard.set(buildCheckEnabled, forKey: Self.enabledKey) }
     }
 
     // MARK: Observable state
@@ -85,11 +90,23 @@ final class BuildCheckViewModel {
     @ObservationIgnored private var streamStarted = false
     @ObservationIgnored private var startedSession = false
     @ObservationIgnored private var latestImage: UIImage?
+    /// When `latestImage` arrived. Older than `staleAfter` = the camera is gone.
+    @ObservationIgnored private var latestImageAt: Date?
+    /// "Camera lost" was said; reset when frames resume.
+    @ObservationIgnored private var cameraLostAnnounced = false
+    /// The last frame actually written to the run folder - the end-of-step
+    /// fallback tile when nothing settled (its filename is real, on disk).
+    @ObservationIgnored private var lastSavedFrame: (filename: String, image: UIImage, t: Date)?
+    /// The flag the lens last showed, re-shown after live partials.
+    @ObservationIgnored private var lensFlag: String?
     @ObservationIgnored private var prevPrint: VNFeaturePrintObservation?
     @ObservationIgnored private var checkedPrint: VNFeaturePrintObservation?
     @ObservationIgnored private var settledFrames: [(filename: String, image: UIImage, t: Date)] = []
     @ObservationIgnored private var quickInFlight = false
-    @ObservationIgnored private var fullInFlight = false
+    /// End-of-step checks in flight (a counter: "fixed" can overlap a
+    /// non-critical step's check).
+    @ObservationIgnored private var fullInFlightCount = 0
+    private var fullInFlight: Bool { fullInFlightCount > 0 }
     @ObservationIgnored private var consecutiveFailures = 0
     @ObservationIgnored private var checksDisabled = false
     @ObservationIgnored private var pendingReply: (alertID: UUID, step: Int, expires: Date)?
@@ -208,11 +225,44 @@ final class BuildCheckViewModel {
 
     // MARK: Start / end
 
+    /// Every Build Check line waits its turn instead of being dropped.
+    private func say(_ text: String) {
+        hermesVM.speakCue(text, queued: true)
+    }
+
+    /// A run-affecting failure: shown on the phone AND spoken.
+    private func fail(_ message: String) {
+        errorMessage = message
+        say(message)
+    }
+
+    /// A frame older than this means the stream died or was taken.
+    private var staleAfter: TimeInterval {
+        max(2 * Double(activeRun?.settings.intervalSeconds ?? intervalSeconds), 6)
+    }
+
+    private func freshImage(now: Date) -> UIImage? {
+        guard let image = latestImage, let at = latestImageAt,
+              now.timeIntervalSince(at) <= staleAfter else { return nil }
+        return image
+    }
+
+    /// First line of an error, short enough to speak.
+    private static func shortReason(_ error: Error) -> String {
+        let text = error.localizedDescription
+        let first = text.split(whereSeparator: { ".\n".contains($0) }).first.map(String.init) ?? text
+        return first.count > 80 ? String(first.prefix(80)) : first
+    }
+
     private func startFromVoice() {
+        guard buildCheckEnabled else {
+            say("Build Check is turned off.")
+            return
+        }
         let lastID = UserDefaults.standard.string(forKey: Self.lastProcedureKey).flatMap(UUID.init)
         let ready = procedures.filter(\.ready)
         guard let procedure = ready.first(where: { $0.id == lastID }) ?? (ready.count == 1 ? ready.first : nil) else {
-            hermesVM.speakCue("Pick a procedure on the phone first.")
+            say("Pick a procedure on the phone first.")
             return
         }
         Task { await startRun(procedure) }
@@ -222,35 +272,45 @@ final class BuildCheckViewModel {
         guard activeRun == nil, !isStarting else { return }
         isStarting = true
         defer { isStarting = false }
-        guard procedure.ready else { errorMessage = "Review the procedure and mark it ready first."; return }
+        guard procedure.ready else { fail("Review the procedure and mark it ready first."); return }
         guard !hermesVM.conversationCaptureActive else {
-            errorMessage = "Stop the conversation recording before starting a build check."
+            fail("Stop the conversation recording before starting a build check.")
             return
         }
         if hermesVM.connectionState == .disconnected {
             await hermesVM.startSessionForRecording()
             guard hermesVM.connectionState != .disconnected else {
-                errorMessage = "Couldn't start the microphone."
+                fail("Couldn't start the microphone.")
                 return
             }
             startedSession = true
         }
         guard hermesVM.hasVisionSource, await hermesVM.ensureVisionPermission(interactive: true) else {
-            errorMessage = "Build Check needs a camera - connect the glasses or allow the iPhone camera."
+            fail("Build Check needs a camera - connect the glasses or allow the iPhone camera.")
+            if startedSession { startedSession = false; hermesVM.endSession() }
+            return
+        }
+        // A capture may have started during the awaits above; it would
+        // fight the run for every utterance.
+        guard !hermesVM.conversationCaptureActive else {
+            fail("Stop the conversation recording before starting a build check.")
             if startedSession { startedSession = false; hermesVM.endSession() }
             return
         }
 
+        // Preflight: a provider that can't see (or has no key) would fail
+        // every check - start log-only and say why, up front.
+        let preflight = checksEnabled ? BuildChecker.canRunVisionChecks : (ok: true, reason: nil)
         let settings = BuildRunSettings(
             intervalSeconds: intervalSeconds,
             gate: ChangeGate.Config(budgetPerHour: budgetPerHour),
-            checksEnabled: checksEnabled)
+            checksEnabled: checksEnabled && preflight.ok)
         let run = BuildRun(id: UUID(), procedure: procedure, operatorName: operatorName,
                            startedAt: Date(), endedAt: nil, settings: settings, events: [])
         do {
             try runStore.begin(run, referencePhoto: procedureStore.photoURL)
         } catch {
-            errorMessage = "Couldn't create the run log: \(error.localizedDescription)"
+            fail("Couldn't create the run log: \(error.localizedDescription)")
             if startedSession { startedSession = false; hermesVM.endSession() }
             return
         }
@@ -262,11 +322,13 @@ final class BuildCheckViewModel {
         policy = AlertPolicy()
         throttle = SaveThrottle()
         aiCallCount = 0
-        checksNotice = settings.checksEnabled ? nil : "Checks off - logging only"
+        let preflightReason = preflight.ok ? nil : (preflight.reason ?? "the AI provider isn't set up")
+        checksNotice = settings.checksEnabled ? nil
+            : preflightReason.map { "Checks off: \($0)" } ?? "Checks off - logging only"
         checksDisabled = !settings.checksEnabled
         consecutiveFailures = 0
         quickInFlight = false
-        fullInFlight = false
+        fullInFlightCount = 0
         lastWarning = nil
         pendingReply = nil
         blockingAlertID = nil
@@ -279,6 +341,10 @@ final class BuildCheckViewModel {
         prevPrint = nil
         checkedPrint = nil
         latestImage = nil
+        latestImageAt = nil
+        cameraLostAnnounced = false
+        lastSavedFrame = nil
+        lensFlag = nil
         liveImage = nil
 
         hermesVM.buildRunClaimer = { [weak self] text in self?.claim(text) ?? false }
@@ -295,7 +361,15 @@ final class BuildCheckViewModel {
                 await self.sampleFrame()
             }
         }
-        announceStep(prefix: "Build check started.")
+        let startLine: String
+        if let preflightReason {
+            startLine = "Build check started. AI checks are off: \(preflightReason). Logging only."
+        } else if checksDisabled {
+            startLine = "Build check started. Logging only - no AI checks."
+        } else {
+            startLine = "Build check started."
+        }
+        announceStep(prefix: startLine)
     }
 
     func endRun() { endRun(sessionEnding: false) }
@@ -320,13 +394,15 @@ final class BuildCheckViewModel {
         tracker = nil
         liveImage = nil
         latestImage = nil
+        latestImageAt = nil
+        lastSavedFrame = nil
         pendingReply = nil
         recheckingBlockedStep = nil
         reload()
         // The session is already going away; don't let a stale flag make a
         // later run end a session the user started.
         guard !sessionEnding else { startedSession = false; return }
-        hermesVM.speakCue(saved ? summary : "The run log could not be saved.")
+        say(saved ? summary : "The run log could not be saved.")
         if startedSession {
             startedSession = false
             // Let the summary finish before the audio stack goes away.
@@ -342,8 +418,11 @@ final class BuildCheckViewModel {
 
     private func startStream() async {
         let onImage: (UIImage) -> Void = { [weak self] image in
-            self?.latestImage = image
-            self?.liveImage = image
+            guard let self else { return }
+            self.latestImage = image
+            self.latestImageAt = Date()
+            self.liveImage = image
+            if self.cameraLostAnnounced { self.cameraLostAnnounced = false }
         }
         if hermesVM.visionStreamIsShared {
             hermesVM.addVisionFrameObserver(Self.frameObserverKey) { frame in
@@ -357,12 +436,28 @@ final class BuildCheckViewModel {
                     guard let image = frame.image else { return }
                     Task { @MainActor in onImage(image) }
                 },
-                onError: { _ in })
+                onError: { [weak self] _ in
+                    Task { @MainActor in self?.cameraLost() }
+                })
             streamStarted = true
             if activeRun == nil { hermesVM.vision.stopLiveStream(); streamStarted = false }
         } catch {
-            errorMessage = "The camera stream didn't open (\(error.localizedDescription)). The run keeps logging speech; close Lens if it's open, then end and restart the run."
+            guard activeRun != nil else { return }
+            cameraLostAnnounced = true
+            errorMessage = "The camera stream didn't open (\(error.localizedDescription)). The run keeps logging speech; end and restart the run to try again."
+            say("The camera didn't open. Still logging speech.")
         }
+    }
+
+    /// The stream reported an error, or frames went stale: stop trusting the
+    /// last frame, say so once. Frames arriving again reset it.
+    private func cameraLost() {
+        guard activeRun != nil else { return }
+        latestImage = nil
+        latestImageAt = nil
+        guard !cameraLostAnnounced else { return }
+        cameraLostAnnounced = true
+        say("Camera lost. Still logging speech.")
     }
 
     private func stopStream() {
@@ -376,26 +471,37 @@ final class BuildCheckViewModel {
     // MARK: Sampling
 
     private func sampleFrame() async {
-        guard let runID = activeRun?.id, let tracker, let image = latestImage,
-              let jpeg = BuildCheckComposer.downscaledJPEG(image),
-              let filename = try? runStore.addFrame(jpeg, runID: runID, at: Date()) else { return }
+        guard let runID = activeRun?.id, let run = activeRun, tracker != nil else { return }
         let now = Date()
-        let step = tracker.current
+        // A stale frame is a frozen picture of the past: never logged.
+        guard let image = freshImage(now: now) else {
+            let started = latestImageAt ?? run.startedAt
+            if latestImage != nil || now.timeIntervalSince(started) > staleAfter { cameraLost() }
+            return
+        }
+        guard let jpeg = BuildCheckComposer.downscaledJPEG(image),
+              let filename = try? runStore.addFrame(jpeg, runID: runID, at: now),
+              let captureStep = tracker?.current else { return }
+        let savedImage = UIImage(data: jpeg) ?? image
+        lastSavedFrame = (filename, savedImage, now)
         let print: VNFeaturePrintObservation? = await Task.detached {
             UIImage(data: jpeg)?.cgImage.flatMap(FramePrint.observation(for:))
         }.value
-        guard activeRun?.id == runID else { return }
+        // The step may have moved during the await: re-read the tracker.
+        guard activeRun?.id == runID, let tracker = self.tracker else { return }
+        let step = captureStep
+        let sameStep = tracker.current == captureStep
 
         let dPrev = FramePrint.distance(print, prevPrint)
         let dChecked = checkedPrint == nil ? nil : FramePrint.distance(print, checkedPrint)
         prevPrint = print
-        if let dPrev, dPrev < gate.config.settleThreshold, let frameImage = UIImage(data: jpeg) {
-            settledFrames.append((filename, frameImage, now))
+        if sameStep, let dPrev, dPrev < gate.config.settleThreshold {
+            settledFrames.append((filename, savedImage, now))
             if settledFrames.count > Self.maxSettledFrames { settledFrames.removeFirst() }
         }
 
         var sent = false
-        if !checksDisabled, !quickInFlight, !fullInFlight, tracker.phase == .working,
+        if sameStep, !checksDisabled, !quickInFlight, !fullInFlight, tracker.phase == .working,
            gate.evaluate(distanceFromChecked: dChecked, distanceFromPrevious: dPrev, now: now) == .send {
             gate.recordSent(at: now)
             checkedPrint = print
@@ -413,6 +519,7 @@ final class BuildCheckViewModel {
             guard !logWriteFailed else { return }
             logWriteFailed = true
             errorMessage = "Couldn't save the build check log: \(error.localizedDescription)"
+            say("Couldn't save the build check log.")
         }
     }
 
@@ -448,11 +555,26 @@ final class BuildCheckViewModel {
             if criticalWaiting {
                 let recheck = recheckingBlockedStep == step
                 recheckingBlockedStep = nil
-                applyCriticalResult(step: step, blocking: recheck)
+                applyCriticalResult(step: step,
+                                    blocking: BuildRunTracker.blocks(result: nil, isRecheckOfBlockedStep: recheck))
             }
             return
         }
-        fullInFlight = true
+        // NOW tiles only from a live camera: reference tiles alone must
+        // never be judged (they would pass by definition).
+        let now = Date()
+        var frames: [(filename: String, image: UIImage, t: Date)] = []
+        if freshImage(now: now) != nil {
+            frames = settledFrames
+            if frames.isEmpty, let saved = lastSavedFrame, now.timeIntervalSince(saved.t) <= staleAfter {
+                frames = [saved]
+            }
+        }
+        guard !frames.isEmpty else {
+            finishCheck(.failure(NoCameraFrame()), kind: .full, step: step, frames: [],
+                        criticalWaiting: criticalWaiting)
+            return
+        }
         let procedureStep = run.procedure.steps[step]
         var tiles: [(label: String, image: UIImage)] = []
         for (i, name) in procedureStep.referencePhotoFilenames.enumerated() {
@@ -460,14 +582,10 @@ final class BuildCheckViewModel {
                 tiles.append(("REFERENCE \(i + 1)", image))
             }
         }
-        var frames = settledFrames
-        if frames.isEmpty, let latest = latestImage { frames = [("latest", latest, Date())] }
-        let now = Date()
         for frame in frames {
             tiles.append(("NOW -\(Int(now.timeIntervalSince(frame.t)))s", frame.image))
         }
         guard let jpeg = BuildCheckComposer.composite(tiles) else {
-            fullInFlight = false
             finishCheck(.failure(ProcedureImporter.ImportError.unreadable), kind: .full, step: step,
                         frames: [], criticalWaiting: criticalWaiting)
             return
@@ -475,12 +593,13 @@ final class BuildCheckViewModel {
         let labels = tiles.map(\.label)
         let frameNames = frames.map(\.filename)
         let total = run.procedure.steps.count
+        fullInFlightCount += 1
         Task { [weak self] in
             guard let self else { return }
             let outcome = await self.callChecker(kind: .full, step: procedureStep, number: step + 1,
                                                  total: total, jpeg: jpeg, labels: labels)
             guard self.activeRun?.id == run.id else { return }
-            self.fullInFlight = false
+            self.fullInFlightCount = max(0, self.fullInFlightCount - 1)
             self.finishCheck(outcome, kind: .full, step: step, frames: frameNames, criticalWaiting: criticalWaiting)
         }
     }
@@ -508,6 +627,11 @@ final class BuildCheckViewModel {
             consecutiveFailures = 0
             if checksNotice == "Checks offline, still logging" { checksNotice = nil }
             append(.check(id: checkID, t: now, step: step, kind: kind, frames: frames, result: r, error: nil))
+        case .failure(let error) where error is NoCameraFrame:
+            // No AI call was made: not a provider failure, just no evidence.
+            result = .unclear(NoCameraFrame.text)
+            append(.check(id: checkID, t: now, step: step, kind: kind, frames: [], result: nil,
+                          error: NoCameraFrame.text))
         case .failure(let error):
             result = .unclear("check failed")
             append(.check(id: checkID, t: now, step: step, kind: kind, frames: frames, result: nil,
@@ -517,6 +641,7 @@ final class BuildCheckViewModel {
                 checksDisabled = true
                 checksNotice = "Checks off: \(error.localizedDescription)"
                 hermesVM.playChime()
+                say("Checks are off: \(Self.shortReason(error)). Still logging.")
             } else if consecutiveFailures == 3 {
                 checksNotice = "Checks offline, still logging"
                 hermesVM.playChime()
@@ -529,7 +654,9 @@ final class BuildCheckViewModel {
         // end-of-step check blocks only on a confident mismatch.
         let isRecheck = criticalWaiting && recheckingBlockedStep == step
         if isRecheck { recheckingBlockedStep = nil }
-        let blocking = criticalWaiting && (isRecheck ? result.verdict != .match : result.isConfidentMismatch)
+        let answered: CheckResult? = if case .success(let r) = outcome { r } else { nil }
+        let blocking = criticalWaiting
+            && BuildRunTracker.blocks(result: answered, isRecheckOfBlockedStep: isRecheck)
         let blockLine: String? = !blocking ? nil : isRecheck
             ? "Couldn't confirm the fix on step \(step + 1). Say fixed to check again, or override."
             : "Say fixed to check again, or override."
@@ -542,7 +669,7 @@ final class BuildCheckViewModel {
             deliver(decision, result: result, step: step, alertID: id, blockLine: blockLine)
         } else if let blockLine {
             lastWarning = blockLine
-            hermesVM.speakCue(blockLine)
+            say(blockLine)
         }
         if criticalWaiting {
             // Keep the previous blocking alert when the re-check raised none.
@@ -573,19 +700,19 @@ final class BuildCheckViewModel {
             let line = "Check step \(step + 1): \(issue.isEmpty ? "this doesn't match the procedure" : issue)."
             lastWarning = line
             pendingReply = (alertID, step, Date().addingTimeInterval(Self.replyWindow))
-            hermesVM.speakCue(line + " " + (blockLine ?? "Say confirmed, ignore, or fixed."))
+            say(line + " " + (blockLine ?? "Say confirmed, ignore, or fixed."))
             showLens(flag: issue)
         case .chime:
             hermesVM.playChime()
             if let blockLine {
                 lastWarning = blockLine
                 pendingReply = (alertID, step, Date().addingTimeInterval(Self.replyWindow))
-                hermesVM.speakCue(blockLine)
+                say(blockLine)
             } else if decision.askToConfirm {
-                let line = "Couldn't verify step \(step + 1). Can you confirm it's right?"
+                let line = "Couldn't verify step \(step + 1). Say ignore if it's right, or confirmed if something's wrong."
                 lastWarning = line
                 pendingReply = (alertID, step, Date().addingTimeInterval(Self.replyWindow))
-                hermesVM.speakCue(line)
+                say(line)
             } else {
                 unreadNotes[step, default: []].append((alertID, issue))
             }
@@ -602,13 +729,20 @@ final class BuildCheckViewModel {
             command(cmd, via: .voice)
         } else {
             append(.speech(t: Date(), step: tracker?.current ?? 0, text: text))
+            // Live partials replaced the lens with "listening": put the
+            // step (and any open flag) back.
+            showLens(flag: lensFlag)
         }
         return true
     }
 
     private func handleKey(_ action: GlassesKeyAction) {
+        guard buildCheckEnabled else {
+            say("Build Check is turned off.")
+            return
+        }
         guard activeRun != nil else {
-            hermesVM.speakCue("No build check is running.")
+            say("No build check is running.")
             return
         }
         switch action {
@@ -626,26 +760,26 @@ final class BuildCheckViewModel {
             endRun()
 
         case .repeatWarning:
-            hermesVM.speakCue(lastWarning ?? "No warnings so far.")
+            say(lastWarning ?? "No warnings so far.")
 
         case .confirmed, .ignore:
             guard let pending = pendingReply, pending.expires > now else {
-                hermesVM.speakCue("There's no open warning.")
+                say("There's no open warning.")
                 return
             }
             append(.reply(t: now, step: pending.step, alertID: pending.alertID,
                           reply: command == .confirmed ? .confirmed : .ignore), force: true)
             pendingReply = nil
             if t.phase == .blocked, pending.step == t.current {
-                hermesVM.speakCue("Logged. Step \(t.current + 1) is still blocked - say fixed or override.")
+                say("Logged. Step \(t.current + 1) is still blocked - say fixed or override.")
                 return
             }
             showLens(flag: nil)
-            hermesVM.speakCue("Noted.")
+            say("Noted.")
 
         case .fixed:
             guard t.phase != .checking, !fullInFlight else {
-                hermesVM.speakCue("Still checking step \(t.current + 1).")
+                say("Still checking step \(t.current + 1).")
                 return
             }
             // "fixed" re-checks the FLAGGED step; with nothing flagged it spends nothing.
@@ -656,12 +790,12 @@ final class BuildCheckViewModel {
             } else if t.phase == .blocked {
                 targetStep = t.current
             } else {
-                hermesVM.speakCue("There's no open warning.")
+                say("There's no open warning.")
                 return
             }
             let recheckBlocked = t.phase == .blocked && targetStep == t.current
             if recheckBlocked, checksDisabled {
-                hermesVM.speakCue("Checks are off. Say override to continue.")
+                say("Checks are off. Say override to continue.")
                 return
             }
             if let pending {
@@ -670,18 +804,24 @@ final class BuildCheckViewModel {
             } else if let id = blockingAlertID {
                 append(.reply(t: now, step: t.current, alertID: id, reply: .fixed), force: true)
             }
+            if checksDisabled {
+                // Not blocked (handled above): logged, but nothing can re-check it.
+                say("Logged. Checks are off, so step \(targetStep + 1) wasn't checked again.")
+                showLens(flag: nil)
+                return
+            }
             if recheckBlocked {
                 _ = t.fixed()
                 tracker = t
                 recheckingBlockedStep = t.current
                 criticalVia = via
             }
-            hermesVM.speakCue("Checking step \(targetStep + 1) again.")
+            say("Checking step \(targetStep + 1) again.")
             runFullCheck(step: targetStep, criticalWaiting: recheckBlocked)
 
         case .override:
             guard t.phase == .blocked else {
-                hermesVM.speakCue("Nothing to override.")
+                say("Nothing to override.")
                 return
             }
             let from = t.current
@@ -701,14 +841,19 @@ final class BuildCheckViewModel {
             let notes = unreadNotes.keys.sorted().flatMap { key in
                 (unreadNotes[key] ?? []).map { (step: key, alertID: $0.alertID, issue: $0.issue) }
             }
-            if !notes.isEmpty, !notesReadThisCycle, t.phase == .working {
+            let finished = t.phase == .finished
+            if !notes.isEmpty, (t.phase == .working && !notesReadThisCycle) || finished {
                 notesReadThisCycle = true
                 unreadNotes = [:]
                 let first = notes[0]
                 pendingReply = (first.alertID, first.step, now.addingTimeInterval(Self.replyWindow))
                 lastWarning = "Note on step \(first.step + 1): \(first.issue)"
                 let more = notes.count > 1 ? " And \(notes.count - 1) more on the phone." : ""
-                hermesVM.speakCue("One note on step \(first.step + 1) before you move on: \(first.issue).\(more) Say confirmed, ignore, or fixed, then step done.")
+                say("One note on step \(first.step + 1) before you move on: \(first.issue).\(more) Say confirmed, ignore, or fixed, then step done.")
+                return
+            }
+            if finished {
+                say("All steps done. Say end build check to save.")
                 return
             }
             let outcome = t.stepDone()
@@ -717,10 +862,10 @@ final class BuildCheckViewModel {
             case .awaitingCheck:
                 criticalVia = via
                 recheckingBlockedStep = nil
-                hermesVM.speakCue("Checking step \(step + 1).")
+                say(checksDisabled ? "Step \(step + 1) not checked." : "Checking step \(step + 1).")
                 runFullCheck(step: step, criticalWaiting: true)
             case .refused:
-                hermesVM.speakCue(t.phase == .blocked
+                say(t.phase == .blocked
                     ? "Step \(step + 1) is blocked. Say fixed to check again, or override."
                     : "Still checking step \(step + 1).")
             case .advanced, .finished:
@@ -740,7 +885,8 @@ final class BuildCheckViewModel {
             announceStep(prefix: nil)
         case .finished:
             append(.stepChange(t: Date(), from: from, to: from + 1, via: via), force: true)
-            hermesVM.speakCue("All steps done. Say end build check to save the run.")
+            notesReadThisCycle = false
+            say("All steps done. Say end build check to save the run.")
             showLens(flag: "All steps done - say \"end build check\"")
         case .awaitingCheck, .refused:
             break
@@ -751,15 +897,22 @@ final class BuildCheckViewModel {
         guard let run = activeRun, let t = tracker, t.current < run.procedure.steps.count else { return }
         let step = run.procedure.steps[t.current]
         let line = "Step \(t.current + 1)\(step.critical ? ", critical" : ""): \(step.text)"
-        hermesVM.speakCue([prefix, line].compactMap { $0 }.joined(separator: " "))
+        say([prefix, line].compactMap { $0 }.joined(separator: " "))
         showLens(flag: nil)
     }
 
     private func showLens(flag: String?) {
         guard let run = activeRun, let t = tracker else { return }
+        lensFlag = flag
         let index = min(t.current, max(0, run.procedure.steps.count - 1))
         guard run.procedure.steps.indices.contains(index) else { return }
         hermesVM.showBuildCheckOnLens(step: index + 1, total: run.procedure.steps.count,
                                       text: run.procedure.steps[index].text, flag: flag)
     }
+}
+
+/// End-of-step check with no live camera frame: no AI call is made.
+private struct NoCameraFrame: LocalizedError {
+    static let text = "no camera frame"
+    var errorDescription: String? { Self.text }
 }

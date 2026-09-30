@@ -136,6 +136,9 @@ final class HermesSessionViewModel {
     /// The session is being torn down; a run must save itself.
     @ObservationIgnored var onSessionEnding: (@MainActor () -> Void)?
     @ObservationIgnored private var chimePlayer: AVAudioPlayer?
+    /// Queued cues (`speakCue(_:queued: true)`) waiting for the current one
+    /// to finish; drained one at a time by `speechSynthesizer.onFinished`.
+    @ObservationIgnored private var cueQueue: [String] = []
 
     /// Last physical key press on the AiSee glasses ("Key 1 · 10:07:32"); nil until one arrives.
     var lastAiSeeKeyPress: String? = nil
@@ -1041,11 +1044,19 @@ final class HermesSessionViewModel {
         speechSynthesizer.onFinished = { [weak self] in
             Task { @MainActor [weak self] in
                 guard let self else { return }
+                // A queued cue speaks next with the recognizer still
+                // suspended: state stays .speaking, no grace gap in between.
+                if case .speaking = self.connectionState, !self.cueQueue.isEmpty {
+                    self.speechSynthesizer.speak(self.cueQueue.removeFirst())
+                    return
+                }
                 self.displayManager.replySpeakingFinished()
                 if case .speaking = self.connectionState {
                     self.connectionState = .listening
                 }
                 try? await Task.sleep(nanoseconds: Self.speechResumeGraceNanos)
+                // A cue that started during the grace owns the suspension.
+                if case .speaking = self.connectionState { return }
                 self.speechRecognizer.isSuspended = false
             }
         }
@@ -1297,6 +1308,15 @@ final class HermesSessionViewModel {
             return
         }
 
+        // "start build check" needs no brain, so it must work in a
+        // recording-only session too (Build Check starts one itself).
+        if case .startBuildCheck = IntentDetector.detect(trimmed) {
+            liveTranscript = ""
+            lastTranscript = trimmed
+            onStartBuildCheck?()
+            return
+        }
+
         // A recording-only session has no brain wired up. Anything not
         // claimed by the capture above (an utterance in the gap before
         // recording starts, or after it stops) is dropped here rather than
@@ -1319,11 +1339,6 @@ final class HermesSessionViewModel {
             liveTranscript = ""
             lastTranscript = trimmed
             startEncounter()
-            return
-        case .startBuildCheck:
-            liveTranscript = ""
-            lastTranscript = trimmed
-            onStartBuildCheck?()
             return
         case .startConversationCapture where socialNotesEnabled:
             liveTranscript = ""
@@ -2817,6 +2832,22 @@ final class HermesSessionViewModel {
         }
     }
 
+    /// Build Check's form: while another cue is speaking the line waits its
+    /// turn (FIFO, drained by onFinished) instead of being dropped - a run's
+    /// warnings and step prompts must all be heard.
+    func speakCue(_ text: String, queued: Bool) {
+        if queued, case .speaking = connectionState {
+            cueQueue.append(text)
+            return
+        }
+        speakCue(text)
+    }
+
+    /// A notice on the main screen (the non-fault banner).
+    func showNoticeMessage(_ message: String) {
+        show(notice: message)
+    }
+
     /// Soft "note for later" cue (ChimeTone). Plays over whatever route
     /// speech uses; never suspends the recognizer (it's 0.35 s of tone).
     func playChime() {
@@ -2887,6 +2918,7 @@ final class HermesSessionViewModel {
         badgeAssistTask = nil
         sessionObserverTask?.cancel()
         sessionObserverTask = nil
+        cueQueue.removeAll()
         speechSynthesizer.stop()
         speechRecognizer.stop()
         displayManager.stop()

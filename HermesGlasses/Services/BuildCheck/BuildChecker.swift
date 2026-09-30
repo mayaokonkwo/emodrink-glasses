@@ -36,6 +36,20 @@ final class BuildChecker: @unchecked Sendable {
         return try ProcedureParser.split(fromAIReply: reply)
     }
 
+    /// Preflight for a run: the same two checks `askOneShot` makes before
+    /// every call (vision support, key present), asked once up front so a
+    /// run that can't check says so at the start instead of failing each time.
+    static var canRunVisionChecks: (ok: Bool, reason: String?) {
+        let provider = DirectClient.provider
+        guard provider.supportsVision else {
+            return (false, "\(provider.displayName) can't read images")
+        }
+        if provider.requiresKey, (DirectClient.loadKey(for: provider.id) ?? "").isEmpty {
+            return (false, "no \(provider.displayName) API key")
+        }
+        return (true, nil)
+    }
+
     /// Auth / config failures end checking for the run (same rule as badge assist).
     static func isFatal(_ error: Error) -> Bool { BadgeAssist.isFatal(error) }
 }

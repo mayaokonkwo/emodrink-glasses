@@ -737,7 +737,16 @@ struct ContentView: View {
         return nil
     }
 
+    /// The one choke point for the drawer and the quick actions. Lens and
+    /// Lookup open their own camera stream; during a Build Check run the
+    /// run owns the camera, so they are refused rather than left to take
+    /// it (the run would log a frozen frame).
     private func open(_ app: HermesApp) {
+        if hermesVM.buildRunClaimer != nil, app.id == "lens" || app.id == "lookup" {
+            hermesVM.showNoticeMessage(
+                "End the build check before opening \(app.id == "lens" ? "Lens" : "Lookup").")
+            return
+        }
         switch app.id {
         case "lens": showLens = true
         case "people": showPeople = true
