@@ -2692,6 +2692,8 @@ final class HermesSessionViewModel {
             await testPhoto()
         case .recordClip:
             await toggleClipRecording()
+        case .buildStepDone, .buildRepeatWarning:
+            break
         }
     }
 

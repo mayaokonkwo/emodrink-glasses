@@ -121,5 +121,9 @@ expect(!HermesAppRegistry.lookup.summary.lowercased().contains("web"),
 expect(HermesAppRegistry.lookup.summary.lowercased().contains("roster"),
        "lookup's summary says where the answer comes from")
 
+expect(HermesAppRegistry.all.contains(HermesAppRegistry.buildCheck), "Build Check is registered")
+expect(HermesAppRegistry.buildCheck.isVoiceLaunchable, "Build Check is voice-launchable")
+expect(!HermesAppRegistry.buildCheck.requiresGlasses, "Build Check works in phone mode")
+
 print(failures == 0 ? "\nALL PASS" : "\n\(failures) FAILURE(S)")
 exit(failures == 0 ? 0 : 1)

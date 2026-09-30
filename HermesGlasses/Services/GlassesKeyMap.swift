@@ -19,6 +19,8 @@ enum GlassesKeyAction: String, CaseIterable, Identifiable {
     case snapPhoto
     case rememberPerson
     case recordClip
+    case buildStepDone
+    case buildRepeatWarning
 
     var id: String { rawValue }
 
@@ -30,6 +32,8 @@ enum GlassesKeyAction: String, CaseIterable, Identifiable {
         case .snapPhoto: return "Snap a photo to the chat"
         case .rememberPerson: return "Remember this person"
         case .recordClip: return "Start / stop video clip"
+        case .buildStepDone: return "Build check: step done"
+        case .buildRepeatWarning: return "Build check: repeat last warning"
         }
     }
 }

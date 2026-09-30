@@ -43,5 +43,9 @@ do {
     expect(GlassesKeyMap.defaults.action(forKey: 3) == .none, "record clip is not assigned by default")
 }
 
+expect(GlassesKeyAction.allCases.contains(.buildStepDone), "build step done action exists")
+expect(GlassesKeyAction.buildStepDone.label == "Build check: step done", "step done label")
+expect(GlassesKeyAction.buildRepeatWarning.label == "Build check: repeat last warning", "repeat label")
+
 print(failures == 0 ? "ALL PASS" : "\(failures) FAILED")
 exit(failures == 0 ? 0 : 1)

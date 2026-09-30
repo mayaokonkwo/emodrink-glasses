@@ -62,6 +62,30 @@ enum VoiceCommandCatalog {
                 setting: "People → Remember people I meet"
             ),
             VoiceCommandGroup(
+                id: "buildcheck",
+                title: "Check an assembly",
+                summary: "Photographs your work every few seconds and checks it against a procedure you imported. Everything you say during a run is logged against the current step.",
+                examples: ["Start build check"],
+                followUp: "Say \"step done\" to move on, \"end build check\" to save the run.",
+                phrases: IntentDetector.buildCheckStartCommands.sorted()
+                    + IntentDetector.buildStepDoneCommands.sorted()
+                    + IntentDetector.buildCheckEndCommands.sorted(),
+                setting: nil
+            ),
+            VoiceCommandGroup(
+                id: "buildcheck-replies",
+                title: "Answer a Build Check warning",
+                summary: "Heard for 20 seconds after a warning. Every answer is saved with the flag.",
+                examples: ["Confirmed", "False alarm", "Fixed", "Override"],
+                followUp: "\"Fixed\" checks the step again right away. \"Override\" moves past a blocked critical step and is recorded in red.",
+                phrases: IntentDetector.buildConfirmCommands.sorted()
+                    + IntentDetector.buildIgnoreCommands.sorted()
+                    + IntentDetector.buildFixedCommands.sorted()
+                    + IntentDetector.buildOverrideCommands.sorted()
+                    + IntentDetector.buildRepeatCommands.sorted(),
+                setting: nil
+            ),
+            VoiceCommandGroup(
                 id: "navigate",
                 title: "Navigate somewhere",
                 summary: "Puts a map and turn-by-turn directions on the lens. Add \"driving\" or \"by car\" for driving directions; walking is the default.",

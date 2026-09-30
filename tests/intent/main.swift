@@ -96,5 +96,21 @@ expectEqual(IntentDetector.isConversationStop("we should stop meeting like this"
 expectEqual(IntentDetector.isConversationStop("she kept recording everything"),
             false, "mid-sentence recording is not a stop")
 
+// Build Check
+expectEqual(IntentDetector.detect("start build check"), .startBuildCheck, "start build check")
+expectEqual(IntentDetector.detect("Hey start build check!"), .startBuildCheck, "filler + punctuation")
+expectEqual(IntentDetector.detect("can you start build check later"), .none, "not a substring match")
+expectEqual(IntentDetector.buildRunCommand("step done"), .stepDone, "step done")
+expectEqual(IntentDetector.buildRunCommand("Next step."), .stepDone, "next step")
+expectEqual(IntentDetector.buildRunCommand("confirmed"), .confirmed, "confirmed")
+expectEqual(IntentDetector.buildRunCommand("false alarm"), .ignore, "false alarm → ignore")
+expectEqual(IntentDetector.buildRunCommand("It's fixed"), .fixed, "it's fixed")
+expectEqual(IntentDetector.buildRunCommand("override"), .override, "override")
+expectEqual(IntentDetector.buildRunCommand("repeat that"), .repeatWarning, "repeat")
+expectEqual(IntentDetector.buildRunCommand("end build check"), .end, "end")
+expectEqual(IntentDetector.buildRunCommand("the next step is the cover"), nil, "narration is not a command")
+expectEqual(IntentDetector.buildRunCommand("I fixed the bracket earlier"), nil, "narration containing 'fixed'")
+expectEqual(IntentDetector.buildRunCommand("confirmed torque on bolt three"), nil, "narration starting with confirmed")
+
 print(failures == 0 ? "\nALL PASS" : "\n\(failures) FAILURES")
 exit(failures == 0 ? 0 : 1)

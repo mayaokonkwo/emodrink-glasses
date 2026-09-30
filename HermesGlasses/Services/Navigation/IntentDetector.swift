@@ -48,6 +48,46 @@ enum IntentDetector {
         "save this conversation", "save the recording", "save the note",
     ]
 
+    // MARK: Build Check
+
+    /// Whole-utterance, like the capture commands. Start is matched by
+    /// `detect`; everything else is only consulted during a run
+    /// (`buildRunCommand`), when every utterance is claimed by the run.
+    static let buildCheckStartCommands: Set<String> = [
+        "start build check", "start a build check", "start the build check",
+        "begin build check", "start assembly check",
+    ]
+    static let buildCheckEndCommands: Set<String> = [
+        "end build check", "stop build check", "finish build check",
+        "end the build check", "stop the build check",
+    ]
+    static let buildStepDoneCommands: Set<String> = [
+        "step done", "step complete", "step completed", "step finished",
+        "next step", "done with this step",
+    ]
+    static let buildConfirmCommands: Set<String> = ["confirmed", "confirm", "real issue", "that's real"]
+    static let buildIgnoreCommands: Set<String> = ["ignore", "ignore that", "ignore it", "false alarm", "dismiss"]
+    static let buildFixedCommands: Set<String> = [
+        "fixed", "it's fixed", "its fixed", "fixed it", "check again", "recheck", "re-check",
+    ]
+    static let buildOverrideCommands: Set<String> = ["override", "override step", "override this step"]
+    static let buildRepeatCommands: Set<String> = [
+        "repeat", "repeat that", "say again", "say that again", "repeat warning", "what was that",
+    ]
+
+    /// A command during a Build Check run, or nil for narration.
+    static func buildRunCommand(_ text: String) -> BuildRunCommand? {
+        let c = normalizeCommand(text)
+        if buildCheckEndCommands.contains(c) { return .end }
+        if buildStepDoneCommands.contains(c) { return .stepDone }
+        if buildConfirmCommands.contains(c) { return .confirmed }
+        if buildIgnoreCommands.contains(c) { return .ignore }
+        if buildFixedCommands.contains(c) { return .fixed }
+        if buildOverrideCommands.contains(c) { return .override }
+        if buildRepeatCommands.contains(c) { return .repeatWarning }
+        return nil
+    }
+
     /// True when an utterance heard during a capture is the command to end
     /// it rather than conversation to transcribe.
     static func isConversationStop(_ text: String) -> Bool {
@@ -127,6 +167,10 @@ enum IntentDetector {
             return .startConversationCapture
         }
 
+        if buildCheckStartCommands.contains(normalizeCommand(text)) {
+            return .startBuildCheck
+        }
+
         if let nav = detectNavigate(lowered, original: text) {
             return nav
         }
@@ -186,4 +230,8 @@ enum IntentDetector {
         return String(original[start...])
             .trimmingCharacters(in: CharacterSet(charactersIn: " ?.!,"))
     }
+}
+
+enum BuildRunCommand: Equatable {
+    case end, stepDone, confirmed, ignore, fixed, override, repeatWarning
 }

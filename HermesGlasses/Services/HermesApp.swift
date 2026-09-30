@@ -83,7 +83,7 @@ struct HermesApp: Identifiable, Equatable {
 
 enum HermesAppRegistry {
     /// Every app the app knows about. Order is the order they appear.
-    static let all: [HermesApp] = [lens, people, map, log, lookup]
+    static let all: [HermesApp] = [lens, people, map, log, lookup, buildCheck]
 
     /// Shown as the quick-action row under the conversation. The rest live
     /// in the drawer - the row scrolls horizontally, so it holds all five.
@@ -155,6 +155,17 @@ enum HermesAppRegistry {
         capabilities: [.vision, .lens],
         presentation: .fullScreen,
         voiceGroupIDs: [],
+        requiresGlasses: false
+    )
+
+    static let buildCheck = HermesApp(
+        id: "buildcheck",
+        title: "Build Check",
+        systemImage: "checklist",
+        summary: "Checks your assembly against a procedure as you work.",
+        capabilities: [.vision, .microphone, .storage, .export],
+        presentation: .sheet,
+        voiceGroupIDs: ["buildcheck", "buildcheck-replies"],
         requiresGlasses: false
     )
 }

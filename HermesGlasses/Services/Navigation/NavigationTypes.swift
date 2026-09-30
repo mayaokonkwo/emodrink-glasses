@@ -30,6 +30,8 @@ enum HermesIntent: Equatable {
     /// "record this conversation" - transcribe everything and snap the
     /// people looked at into one note, until told to stop.
     case startConversationCapture
+    /// "start build check" - begin a Build Check run on the last procedure.
+    case startBuildCheck
     case none
 }
 
