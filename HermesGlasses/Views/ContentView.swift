@@ -62,6 +62,7 @@ struct ContentView: View {
     @State private var showObjectLog: Bool = false
     @State private var showMap: Bool = false
     @State private var showLookup: Bool = false
+    @State private var showBuildCheck: Bool = false
     /// In phone mode the 5b camera view is the session screen; this flips to
     /// the chat transcript so the conversation is never unreachable.
     @State private var showTranscript: Bool = false
@@ -131,6 +132,9 @@ struct ContentView: View {
         }
         .fullScreenCover(isPresented: $showLookup) {
             LookupView(hermesVM: hermesVM)
+        }
+        .sheet(isPresented: $showBuildCheck) {
+            BuildCheckView(vm: buildCheckVM)
         }
         .task {
             hermesVM.logVisionDiagnostics("app-launch")
@@ -740,6 +744,7 @@ struct ContentView: View {
         case "map": showMap = true
         case "log": showObjectLog = true
         case "lookup": showLookup = true
+        case "buildcheck": showBuildCheck = true
         default: break
         }
     }
