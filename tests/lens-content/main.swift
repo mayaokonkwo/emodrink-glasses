@@ -137,8 +137,9 @@ let all: [LensContent] = [
     .navigation(title: "e", step: "f", eta: "g", mapURL: nil, mode: .walking),
     .encounterPrompt, .recording, .encounterSaved(note: "h"), .newConversation,
     .personSighted(name: "i", subtitle: "j"), .personLookup(name: "k", info: "l"),
+    .buildCheck(step: 3, total: 7, text: "Torque", flag: nil),
 ]
-expect(all.count == 13, "all 13 cases covered")
+expect(all.count == 14, "all 14 cases covered")
 // No case may trap: exercising each accessor is the assertion.
 for content in all {
     _ = content.label
@@ -178,6 +179,15 @@ expect(!lookup.isLive, "a lookup result is a card, not a live state")
 expect(!lookup.isBlank, "a lookup result is not blank")
 expect(lookup != LensContent.personLookup(name: "Sarah Chen", info: "other"),
        "the info participates in equality, so a refreshed card redraws")
+
+let bc = LensContent.buildCheck(step: 3, total: 7, text: "Torque bolts", flag: nil)
+expectEqual(bc.label, "STEP 3/7", "build check label")
+expectEqual(bc.body, "Torque bolts", "build check body is the step")
+expectEqual(bc.statusLine, "say \"step done\" when finished", "build check hint")
+let flagged = LensContent.buildCheck(step: 3, total: 7, text: "Torque bolts", flag: "3 bolts, expected 4")
+expectEqual(flagged.body, "3 bolts, expected 4", "flag replaces the body")
+expectEqual(flagged.statusLine, "confirmed · ignore · fixed", "flag hint")
+expect(bc.isLive, "build check is live")
 
 print(failures == 0 ? "\nALL PASS" : "\n\(failures) FAILURE(S)")
 exit(failures == 0 ? 0 : 1)

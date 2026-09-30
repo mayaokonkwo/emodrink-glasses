@@ -299,6 +299,15 @@ final class HermesDisplayManager {
         send(HermesDisplayScreens.recording())
     }
 
+    /// Build Check step / flag. No dwell: it stays until the next step.
+    func showBuildCheck(step: Int, total: Int, text: String, flag: String?) {
+        content = .buildCheck(step: step, total: total, text: text, flag: flag)
+        cancelDwell()
+        lastReplyText = ""
+        lastDefinitionImageURL = nil
+        send(HermesDisplayScreens.buildCheck(step: step, total: total, text: text, flag: flag))
+    }
+
     func showEncounterSaved(note: String) {
         content = .encounterSaved(note: note)
         cancelDwell()

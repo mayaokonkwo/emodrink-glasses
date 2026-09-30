@@ -106,6 +106,7 @@
 		AAAA00000000000000000A08 /* AiSeeSequencing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A11 /* AiSeeSequencing.swift */; };
 		AAAA00000000000000000A09 /* AiSeeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A12 /* AiSeeTypes.swift */; };
 		AAAA00000000000000000A57 /* AiSeeClipRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */; };
+		AAAA00000000000000000A6D /* ChimeTone.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A6E /* ChimeTone.swift */; };
 		AAAA00000000000000000A6B /* BuildRunStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A6C /* BuildRunStore.swift */; };
 		AAAA00000000000000000A69 /* ProcedureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A6A /* ProcedureStore.swift */; };
 		AAAA00000000000000000A67 /* BuildRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A68 /* BuildRun.swift */; };
@@ -260,6 +261,7 @@
 		AAAA00000000000000000A11 /* AiSeeSequencing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeSequencing.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A12 /* AiSeeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeTypes.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeClipRecorder.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A6E /* ChimeTone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ChimeTone.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A6C /* BuildRunStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRunStore.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A6A /* ProcedureStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ProcedureStore.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A68 /* BuildRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRun.swift; sourceTree = "<group>"; };
@@ -439,6 +441,7 @@
 				AAAA00000000000000000A11 /* AiSeeSequencing.swift */,
 				AAAA00000000000000000A12 /* AiSeeTypes.swift */,
 				AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */,
+				AAAA00000000000000000A6E /* ChimeTone.swift */,
 				AAAA00000000000000000A6C /* BuildRunStore.swift */,
 				AAAA00000000000000000A6A /* ProcedureStore.swift */,
 				AAAA00000000000000000A68 /* BuildRun.swift */,
@@ -661,6 +664,7 @@
 				AAAA00000000000000000A08 /* AiSeeSequencing.swift in Sources */,
 				AAAA00000000000000000A09 /* AiSeeTypes.swift in Sources */,
 				AAAA00000000000000000A57 /* AiSeeClipRecorder.swift in Sources */,
+				AAAA00000000000000000A6D /* ChimeTone.swift in Sources */,
 				AAAA00000000000000000A6B /* BuildRunStore.swift in Sources */,
 				AAAA00000000000000000A69 /* ProcedureStore.swift in Sources */,
 				AAAA00000000000000000A67 /* BuildRun.swift in Sources */,

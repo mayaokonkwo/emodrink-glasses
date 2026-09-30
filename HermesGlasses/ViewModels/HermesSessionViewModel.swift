@@ -123,6 +123,20 @@ final class HermesSessionViewModel {
     var clipRecording = false
     var clipStarting = false
     var clipStartedAt: Date? = nil
+
+    // MARK: Build Check hooks (set by BuildCheckViewModel)
+
+    /// During a run, every finalized utterance is offered here first; true =
+    /// claimed (command or narration), and nothing reaches the brain.
+    @ObservationIgnored var buildRunClaimer: (@MainActor (String) -> Bool)?
+    /// "start build check" was heard.
+    @ObservationIgnored var onStartBuildCheck: (@MainActor () -> Void)?
+    /// A glasses button mapped to a Build Check action.
+    @ObservationIgnored var onBuildKey: (@MainActor (GlassesKeyAction) -> Void)?
+    /// The session is being torn down; a run must save itself.
+    @ObservationIgnored var onSessionEnding: (@MainActor () -> Void)?
+    @ObservationIgnored private var chimePlayer: AVAudioPlayer?
+
     /// Last physical key press on the AiSee glasses ("Key 1 · 10:07:32"); nil until one arrives.
     var lastAiSeeKeyPress: String? = nil
     /// Button → action mapping for the AiSee glasses (Settings › Devices › Buttons).
@@ -1274,6 +1288,15 @@ final class HermesSessionViewModel {
             return
         }
 
+        // A Build Check run claims every utterance, like a capture.
+        if let claim = buildRunClaimer, claim(trimmed) {
+            liveTranscript = ""
+            completeTestOutcome(.failure(TestFailure(
+                "A Build Check run is claiming every utterance - end the run before running this test."
+            )))
+            return
+        }
+
         // A recording-only session has no brain wired up. Anything not
         // claimed by the capture above (an utterance in the gap before
         // recording starts, or after it stops) is dropped here rather than
@@ -1296,6 +1319,11 @@ final class HermesSessionViewModel {
             liveTranscript = ""
             lastTranscript = trimmed
             startEncounter()
+            return
+        case .startBuildCheck:
+            liveTranscript = ""
+            lastTranscript = trimmed
+            onStartBuildCheck?()
             return
         case .startConversationCapture where socialNotesEnabled:
             liveTranscript = ""
@@ -2693,7 +2721,7 @@ final class HermesSessionViewModel {
         case .recordClip:
             await toggleClipRecording()
         case .buildStepDone, .buildRepeatWarning:
-            break
+            onBuildKey?(action)
         }
     }
 
@@ -2766,7 +2794,7 @@ final class HermesSessionViewModel {
     /// A short spoken confirmation. With the voice loop listening, the
     /// recognizer is suspended first (onFinished resumes it) so Hermes
     /// doesn't transcribe its own cue; mid-answer, the cue is skipped.
-    private func speakCue(_ text: String) {
+    func speakCue(_ text: String) {
         switch connectionState {
         case .listening:
             connectionState = .speaking
@@ -2779,6 +2807,21 @@ final class HermesSessionViewModel {
         }
     }
 
+    /// Soft "note for later" cue (ChimeTone). Plays over whatever route
+    /// speech uses; never suspends the recognizer (it's 0.35 s of tone).
+    func playChime() {
+        guard let player = try? AVAudioPlayer(data: ChimeTone.wav()) else { return }
+        player.volume = 0.6
+        chimePlayer = player
+        player.play()
+    }
+
+    /// Build Check on the lens (Ray-Ban Display) and the simulated lens.
+    /// Best-effort, like every display call.
+    func showBuildCheckOnLens(step: Int, total: Int, text: String, flag: String?) {
+        displayManager.showBuildCheck(step: step, total: total, text: text, flag: flag)
+    }
+
     private func ensureSessionThen(_ body: @escaping @MainActor () -> Void) async {
         if connectionState == .disconnected {
             await startSession()
@@ -2788,6 +2831,10 @@ final class HermesSessionViewModel {
     }
 
     func endSession() {
+        // Take the hook first: the run's own teardown may call endSession().
+        let ending = onSessionEnding
+        onSessionEnding = nil
+        ending?()
         // Unlike a half-finished "remember this person", a running
         // conversation capture is saved, not discarded - an hour of notes
         // must not vanish because the session dropped. Silent: the audio

@@ -236,6 +236,20 @@ enum HermesDisplayScreens {
         .padding(24)
     }
 
+    /// Build Check: step number, the instruction (or an open flag), a hint.
+    static func buildCheck(step: Int, total: Int, text: String, flag: String?) -> FlexBox {
+        FlexBox(direction: .column, spacing: 8) {
+            FlexBox(direction: .row, spacing: 12, crossAlignment: .center) {
+                Icon(name: .fourCornerFrame)
+                Text("Step \(step) of \(total)", style: .heading)
+            }
+            Text(flag ?? text, style: .body)
+            Text(flag == nil ? "Say \"step done\" when finished" : "Confirmed · ignore · fixed",
+                 style: .meta, color: .secondary)
+        }
+        .padding(24)
+    }
+
     /// Encounter saved confirmation. Shows the start of the note so the
     /// user can see the transcription landed sanely.
     static func encounterSaved(note: String) -> FlexBox {

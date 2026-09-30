@@ -31,6 +31,8 @@ enum LensContent: Equatable {
     case recording
     case encounterSaved(note: String)
     case newConversation
+    /// Build Check: the current step, or an open flag in place of it.
+    case buildCheck(step: Int, total: Int, text: String, flag: String?)
 
     /// Nothing to draw - the simulated lens shows its empty frame.
     var isBlank: Bool { self == .blank }
@@ -53,6 +55,7 @@ enum LensContent: Equatable {
         case .recording: return "RECORDING"
         case .encounterSaved: return "SAVED"
         case .newConversation: return "NEW CHAT"
+        case .buildCheck(let step, let total, _, _): return "STEP \(step)/\(total)"
         }
     }
 
@@ -85,6 +88,8 @@ enum LensContent: Equatable {
             return note.isEmpty ? "Note saved" : note
         case .newConversation:
             return "New conversation"
+        case .buildCheck(_, _, let text, let flag):
+            return flag ?? text
         }
     }
 
@@ -113,6 +118,8 @@ enum LensContent: Equatable {
             return "waiting for a note"
         case .recording:
             return "say \"stop recording\" to finish"
+        case .buildCheck(_, _, _, let flag):
+            return flag == nil ? "say \"step done\" when finished" : "confirmed · ignore · fixed"
         }
     }
 
@@ -134,7 +141,7 @@ enum LensContent: Equatable {
              .personSighted, .personLookup:
             return false
         case .listening, .thinking, .reply, .definition, .navigation,
-             .encounterPrompt, .recording:
+             .encounterPrompt, .recording, .buildCheck:
             return true
         }
     }
