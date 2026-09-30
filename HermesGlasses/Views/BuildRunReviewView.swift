@@ -13,6 +13,7 @@ struct BuildRunReviewView: View {
     let run: BuildRun
     @Environment(\.dismiss) private var dismiss
     @State private var shareURL: URL?
+    @State private var exportError: String?
 
     private struct ShareItem: Identifiable { let id = UUID(); let url: URL }
 
@@ -35,12 +36,20 @@ struct BuildRunReviewView: View {
                 HStack(spacing: 8) {
                     HermesPrimaryButton(title: "PDF report", systemImage: "doc.richtext") {
                         let url = FileManager.default.temporaryDirectory
-                            .appendingPathComponent("\(run.procedure.title)-\(run.id.uuidString.prefix(8)).pdf")
-                        try? BuildRunPDF.make(run: run, store: vm.runStore).write(to: url)
-                        shareURL = url
+                            .appendingPathComponent("\(safeName(run.procedure.title))-\(run.id.uuidString.prefix(8)).pdf")
+                        do {
+                            try BuildRunPDF.make(run: run, store: vm.runStore).write(to: url)
+                            shareURL = url
+                        } catch {
+                            exportError = "Couldn't create the PDF: \(error.localizedDescription)"
+                        }
                     }
                     HermesPrimaryButton(title: "Raw zip", systemImage: "archivebox") {
-                        shareURL = BuildRunPDF.zip(runID: run.id, store: vm.runStore)
+                        if let zip = BuildRunPDF.zip(runID: run.id, store: vm.runStore) {
+                            shareURL = zip
+                        } else {
+                            exportError = "Couldn't create the zip."
+                        }
                     }
                 }
                 .padding(.horizontal, 16)
@@ -52,7 +61,18 @@ struct BuildRunReviewView: View {
                                  set: { if $0 == nil { shareURL = nil } })) { item in
                 ShareSheet(items: [item.url])
             }
+            .alert("Export", isPresented: Binding(get: { exportError != nil },
+                                                  set: { if !$0 { exportError = nil } })) {
+                Button("OK") { exportError = nil }
+            } message: { Text(exportError ?? "") }
         }
+    }
+
+    private func safeName(_ title: String) -> String {
+        let allowed = CharacterSet.letters.union(.decimalDigits).union(CharacterSet(charactersIn: " -_"))
+        let mapped = String(title.unicodeScalars.map { allowed.contains($0) ? Character($0) : "-" })
+        let trimmed = mapped.trimmingCharacters(in: .whitespaces)
+        return trimmed.isEmpty ? "build-run" : trimmed
     }
 
     private func icon(_ s: StepStatus) -> String {

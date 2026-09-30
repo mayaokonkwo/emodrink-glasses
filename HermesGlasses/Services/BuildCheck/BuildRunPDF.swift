@@ -17,8 +17,8 @@ enum BuildRunPDF {
         let title = UIFont.boldSystemFont(ofSize: 18)
         let statuses = BuildRunSummary.stepStatuses(run)
         let flags = BuildRunSummary.flags(in: run)
-        let frameForCheck: [UUID: String] = Dictionary(uniqueKeysWithValues: run.events.compactMap { e in
-            guard e.kind == .check, let id = e.id, let f = e.frames?.last else { return nil }
+        let framesForCheck: [UUID: [String]] = Dictionary(uniqueKeysWithValues: run.events.compactMap { e in
+            guard e.kind == .check, let id = e.id, let f = e.frames, !f.isEmpty else { return nil }
             return (id, f)
         })
         let checkForAlert: [UUID: UUID] = Dictionary(uniqueKeysWithValues: run.events.compactMap { e in
@@ -62,11 +62,17 @@ enum BuildRunPDF {
                 line(flag.issue.isEmpty ? "(no detail)" : flag.issue, body)
                 line("Reply: \(flag.reply?.rawValue ?? "unresolved")", bold,
                      color: flag.reply == nil || flag.reply == .override ? .systemRed : .black)
-                if let checkID = checkForAlert[flag.alertID], let frame = frameForCheck[checkID],
-                   let image = UIImage(contentsOfFile: store.frameURL(runID: run.id, filename: frame).path) {
-                    let maxW = page.width - 2 * margin, maxH = page.height - y - margin
-                    let k = min(maxW / image.size.width, maxH / image.size.height, 1)
-                    image.draw(in: CGRect(x: margin, y: y, width: image.size.width * k, height: image.size.height * k))
+                if let checkID = checkForAlert[flag.alertID], let frames = framesForCheck[checkID] {
+                    for frame in frames {
+                        guard let image = UIImage(contentsOfFile: store.frameURL(runID: run.id, filename: frame).path),
+                              image.size.width > 0, image.size.height > 0 else { continue }
+                        if page.height - y - margin < 160 { newPage() }
+                        let maxW = page.width - 2 * margin, maxH = max(page.height - y - margin, 1)
+                        let k = max(min(maxW / image.size.width, maxH / image.size.height, 1), 0.01)
+                        let size = CGSize(width: image.size.width * k, height: image.size.height * k)
+                        image.draw(in: CGRect(origin: CGPoint(x: margin, y: y), size: size))
+                        y += size.height + 8
+                    }
                 }
             }
         }
@@ -82,6 +88,7 @@ enum BuildRunPDF {
             try? FileManager.default.removeItem(at: target)
             if (try? FileManager.default.copyItem(at: zipURL, to: target)) != nil { result = target }
         }
+        if error != nil { return nil }
         return result
     }
 }

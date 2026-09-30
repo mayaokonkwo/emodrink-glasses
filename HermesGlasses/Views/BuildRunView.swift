@@ -33,7 +33,7 @@ struct BuildRunView: View {
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .padding(.horizontal, 16)
 
-            if let run = vm.activeRun, let t = vm.tracker {
+            if let run = vm.activeRun, let t = vm.tracker, !run.procedure.steps.isEmpty {
                 let index = min(t.current, run.procedure.steps.count - 1)
                 let step = run.procedure.steps[index]
                 HermesSection(header: "Step \(index + 1) of \(run.procedure.steps.count)\(step.critical ? " · critical" : "")") {
