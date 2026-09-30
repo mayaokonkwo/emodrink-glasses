@@ -65,6 +65,7 @@ struct ProcedureEditorView: View {
                 }
             }
         }
+        .interactiveDismissDisabled()
     }
 
     @ViewBuilder
