@@ -66,6 +66,8 @@
 		AAAA00000000000000000873 /* LookupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000874 /* LookupViewModel.swift */; };
 		AAAA00000000000000000A77 /* BuildCheckViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A78 /* BuildCheckViewModel.swift */; };
 		AAAA00000000000000000875 /* LookupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000876 /* LookupView.swift */; };
+		AAAA00000000000000000A7F /* BuildRunReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A80 /* BuildRunReviewView.swift */; };
+		AAAA00000000000000000A7D /* BuildRunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A7E /* BuildRunView.swift */; };
 		AAAA00000000000000000A7B /* ProcedureEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A7C /* ProcedureEditorView.swift */; };
 		AAAA00000000000000000A79 /* BuildCheckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A7A /* BuildCheckView.swift */; };
 		AAAA00000000000000000843 /* HermesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000844 /* HermesApp.swift */; };
@@ -109,6 +111,7 @@
 		AAAA00000000000000000A08 /* AiSeeSequencing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A11 /* AiSeeSequencing.swift */; };
 		AAAA00000000000000000A09 /* AiSeeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A12 /* AiSeeTypes.swift */; };
 		AAAA00000000000000000A57 /* AiSeeClipRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */; };
+		AAAA00000000000000000A75 /* BuildRunPDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A76 /* BuildRunPDF.swift */; };
 		AAAA00000000000000000A73 /* ProcedureImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A74 /* ProcedureImporter.swift */; };
 		AAAA00000000000000000A71 /* BuildChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A72 /* BuildChecker.swift */; };
 		AAAA00000000000000000A6F /* BuildCheckVision.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A70 /* BuildCheckVision.swift */; };
@@ -231,6 +234,8 @@
 		AAAA00000000000000000874 /* LookupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LookupViewModel.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A78 /* BuildCheckViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheckViewModel.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000876 /* LookupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LookupView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A80 /* BuildRunReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildRunReviewView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A7E /* BuildRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildRunView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A7C /* ProcedureEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcedureEditorView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A7A /* BuildCheckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheckView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000844 /* HermesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesApp.swift; sourceTree = "<group>"; };
@@ -270,6 +275,7 @@
 		AAAA00000000000000000A11 /* AiSeeSequencing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeSequencing.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A12 /* AiSeeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeTypes.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeClipRecorder.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A76 /* BuildRunPDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRunPDF.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A74 /* ProcedureImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ProcedureImporter.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A72 /* BuildChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildChecker.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A70 /* BuildCheckVision.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildCheckVision.swift; sourceTree = "<group>"; };
@@ -362,6 +368,8 @@
 				AAAA00000000000000000834 /* PhoneModeSessionView.swift */,
 				AAAA00000000000000000846 /* AppDrawerView.swift */,
 				AAAA00000000000000000876 /* LookupView.swift */,
+				AAAA00000000000000000A80 /* BuildRunReviewView.swift */,
+				AAAA00000000000000000A7E /* BuildRunView.swift */,
 				AAAA00000000000000000A7C /* ProcedureEditorView.swift */,
 				AAAA00000000000000000A7A /* BuildCheckView.swift */,
 				AAAA0000000000000000892 /* RosterView.swift */,
@@ -456,6 +464,7 @@
 				AAAA00000000000000000A11 /* AiSeeSequencing.swift */,
 				AAAA00000000000000000A12 /* AiSeeTypes.swift */,
 				AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */,
+				AAAA00000000000000000A76 /* BuildRunPDF.swift */,
 				AAAA00000000000000000A74 /* ProcedureImporter.swift */,
 				AAAA00000000000000000A72 /* BuildChecker.swift */,
 				AAAA00000000000000000A70 /* BuildCheckVision.swift */,
@@ -647,6 +656,8 @@
 				AAAA00000000000000000873 /* LookupViewModel.swift in Sources */,
 				AAAA00000000000000000A77 /* BuildCheckViewModel.swift in Sources */,
 				AAAA00000000000000000875 /* LookupView.swift in Sources */,
+				AAAA00000000000000000A7F /* BuildRunReviewView.swift in Sources */,
+				AAAA00000000000000000A7D /* BuildRunView.swift in Sources */,
 				AAAA00000000000000000A7B /* ProcedureEditorView.swift in Sources */,
 				AAAA00000000000000000A79 /* BuildCheckView.swift in Sources */,
 				AAAA00000000000000000845 /* AppDrawerView.swift in Sources */,
@@ -685,6 +696,7 @@
 				AAAA00000000000000000A08 /* AiSeeSequencing.swift in Sources */,
 				AAAA00000000000000000A09 /* AiSeeTypes.swift in Sources */,
 				AAAA00000000000000000A57 /* AiSeeClipRecorder.swift in Sources */,
+				AAAA00000000000000000A75 /* BuildRunPDF.swift in Sources */,
 				AAAA00000000000000000A73 /* ProcedureImporter.swift in Sources */,
 				AAAA00000000000000000A71 /* BuildChecker.swift in Sources */,
 				AAAA00000000000000000A6F /* BuildCheckVision.swift in Sources */,

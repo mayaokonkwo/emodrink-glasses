@@ -159,13 +159,3 @@ struct BuildCheckView: View {
         }
     }
 }
-
-struct BuildRunView: View {
-    let vm: BuildCheckViewModel
-    var body: some View { Text("Run in progress") }
-}
-struct BuildRunReviewView: View {
-    let vm: BuildCheckViewModel
-    let run: BuildRun
-    var body: some View { Text(run.procedure.title) }
-}
