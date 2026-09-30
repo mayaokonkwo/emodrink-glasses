@@ -60,7 +60,14 @@ enum BuildCheckPrompt {
         stepBlock(step, number: number, total: total)
             + "\n\nThe technician says this step is finished. The image is a grid of labelled tiles: "
             + tileLabels.joined(separator: ", ")
-            + ". Tiles labelled REFERENCE show this step done correctly; tiles labelled NOW are the technician's work. Is the step complete and correct?"
+            + "."
+            // Only name REFERENCE tiles when there are some: a prompt that
+            // describes absent references invites the model to judge them.
+            + (tileLabels.contains { $0.hasPrefix("REFERENCE") }
+                ? " Tiles labelled REFERENCE show this step done correctly; tiles labelled NOW are the technician's work."
+                : " Tiles labelled NOW are the technician's work.")
+            + " If no tile labelled NOW is present, answer unclear."
+            + " Is the step complete and correct?"
     }
 
     static func parseVerdict(_ reply: String) -> CheckResult {

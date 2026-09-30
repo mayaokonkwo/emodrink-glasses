@@ -86,5 +86,26 @@ expect(th.shouldSave(now: t0 + 6, force: true), "forced save goes through")
 expect(!th.shouldSave(now: t0 + 15, force: false), "window restarts from the forced save")
 expect(th.shouldSave(now: t0 + 16, force: false), "10 s after last save")
 
+// I7: "confirmed" = the wearer says something IS wrong → open, until a
+// later full check on the same step matches.
+let c3 = UUID(), a3 = UUID()
+var confirmedOpen = run
+confirmedOpen.events = [
+    .check(id: c3, t: t0, step: 1, kind: .full, frames: [], result: .unclear("dark"), error: nil),
+    .alert(id: a3, t: t0, step: 1, checkID: c3, level: .chime, askedToConfirm: true),
+    .reply(t: t0 + 1, step: 1, alertID: a3, reply: .confirmed),
+]
+expect(BuildRunSummary.stepStatuses(confirmedOpen)[1] == .unresolved, "confirmed, no later pass → unresolved")
+expect(BuildRunSummary.spokenSummary(confirmedOpen) == "Run saved. 1 flag, 1 unresolved.", "confirmed counts as open")
+var confirmedFixed = confirmedOpen
+confirmedFixed.events.append(
+    .check(id: UUID(), t: t0 + 5, step: 1, kind: .full, frames: [], result: pass, error: nil))
+expect(BuildRunSummary.stepStatuses(confirmedFixed)[1] == .flagResolved, "confirmed then a passing full check → resolved")
+expect(BuildRunSummary.spokenSummary(confirmedFixed) == "Run saved. 1 flag, 0 unresolved.", "resolved confirmed flag not open")
+var passBeforeConfirm = confirmedOpen
+passBeforeConfirm.events.insert(
+    .check(id: UUID(), t: t0, step: 1, kind: .full, frames: [], result: pass, error: nil), at: 0)
+expect(BuildRunSummary.stepStatuses(passBeforeConfirm)[1] == .unresolved, "a pass BEFORE the confirm doesn't resolve it")
+
 print(failures == 0 ? "ALL PASS" : "\(failures) FAILED")
 exit(failures == 0 ? 0 : 1)

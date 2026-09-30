@@ -61,6 +61,15 @@ struct BuildRunTracker: Equatable {
 
     mutating func finish() { phase = .finished }
 
+    /// Whether an end-of-step check holds a critical step. The first check
+    /// blocks only on a confident mismatch (an unsure answer must not stop
+    /// work); a re-check of a BLOCKED step unblocks only on a match. `nil`
+    /// = no result at all (no camera frame, the call failed).
+    static func blocks(result: CheckResult?, isRecheckOfBlockedStep: Bool) -> Bool {
+        if isRecheckOfBlockedStep { return result?.verdict != .match }
+        return result?.isConfidentMismatch ?? false
+    }
+
     private mutating func advance() -> Outcome {
         if current + 1 >= stepCount {
             phase = .finished

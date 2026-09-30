@@ -129,28 +129,42 @@ enum BuildRunSummary {
         let issue: String
         /// Latest reply; nil = unresolved.
         let reply: AlertReply?
+        /// Still needs attention: no reply, an override, or "confirmed"
+        /// (the wearer says something IS wrong) with no later passing full
+        /// check on the same step.
+        let open: Bool
     }
 
     /// Alerts that reached the wearer (speak/chime), with their check's issue.
     static func flags(in run: BuildRun) -> [Flag] {
         var issues: [UUID: String] = [:]
-        var replies: [UUID: AlertReply] = [:]
-        for e in run.events {
+        var replies: [UUID: (reply: AlertReply, index: Int)] = [:]
+        for (i, e) in run.events.enumerated() {
             if e.kind == .check, let id = e.id { issues[id] = e.result?.issue ?? e.error ?? "" }
-            if e.kind == .reply, let a = e.alertID, let r = e.reply { replies[a] = r }
+            if e.kind == .reply, let a = e.alertID, let r = e.reply { replies[a] = (r, i) }
+        }
+        func passedAfter(_ index: Int, step: Int) -> Bool {
+            run.events[(index + 1)...].contains {
+                $0.kind == .check && $0.step == step && $0.checkKind == .full && $0.result?.verdict == .match
+            }
         }
         return run.events.compactMap { e in
             guard e.kind == .alert, let id = e.id, let level = e.level, level != .log else { return nil }
             let issue = e.checkID.flatMap { issues[$0] } ?? ""
+            let latest = replies[id]
+            let open: Bool
+            switch latest?.reply {
+            case nil, .override?: open = true
+            case .confirmed?: open = !passedAfter(latest!.index, step: e.step)
+            case .ignore?, .fixed?: open = false
+            }
             return Flag(alertID: id, step: e.step, level: level,
                         issue: e.askedToConfirm == true && issue.isEmpty ? "could not verify" : issue,
-                        reply: replies[id])
+                        reply: latest?.reply, open: open)
         }
     }
 
-    private static func isOpen(_ flag: Flag) -> Bool {
-        flag.reply == nil || flag.reply == .override
-    }
+    private static func isOpen(_ flag: Flag) -> Bool { flag.open }
 
     static func stepStatuses(_ run: BuildRun) -> [StepStatus] {
         let flags = flags(in: run)

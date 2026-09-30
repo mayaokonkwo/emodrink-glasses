@@ -49,5 +49,13 @@ expect(BuildCheckPrompt.systemPrompt.contains("\"unclear\""), "system prompt def
 let enc = JSONEncoder(), dec = JSONDecoder()
 expect((try? dec.decode(CheckResult.self, from: try! enc.encode(ok))) == ok, "CheckResult round trip")
 
+// C1: no reference photos → the prompt must not talk about REFERENCE tiles,
+// and every full prompt tells the model to answer unclear without a NOW tile.
+let nowOnly = BuildCheckPrompt.fullPrompt(step: step, number: 3, total: 7, tileLabels: ["NOW -2s"])
+expect(!nowOnly.contains("REFERENCE"), "no-reference prompt never mentions REFERENCE tiles")
+expect(nowOnly.contains("If no tile labelled NOW is present, answer unclear.")
+       && full.contains("If no tile labelled NOW is present, answer unclear."),
+       "full prompt always carries the no-NOW → unclear instruction")
+
 print(failures == 0 ? "ALL PASS" : "\(failures) FAILED")
 exit(failures == 0 ? 0 : 1)

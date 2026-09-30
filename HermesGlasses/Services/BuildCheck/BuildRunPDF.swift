@@ -61,7 +61,7 @@ enum BuildRunPDF {
                 line("Step \(flag.step + 1) - \(flag.level == .speak ? "spoken warning" : "note")", title)
                 line(flag.issue.isEmpty ? "(no detail)" : flag.issue, body)
                 line("Reply: \(flag.reply?.rawValue ?? "unresolved")", bold,
-                     color: flag.reply == nil || flag.reply == .override ? .systemRed : .black)
+                     color: flag.open ? .systemRed : .black)
                 if let checkID = checkForAlert[flag.alertID], let frames = framesForCheck[checkID] {
                     for frame in frames {
                         guard let image = UIImage(contentsOfFile: store.frameURL(runID: run.id, filename: frame).path),

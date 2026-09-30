@@ -1,6 +1,10 @@
 //
 // Standalone tests for BuildRunTracker. Build + run:
-//   xcrun swiftc HermesGlasses/Services/BuildCheck/BuildRunTracker.swift \
+//   xcrun swiftc \
+//     HermesGlasses/Services/BuildCheck/BuildCheckJSON.swift \
+//     HermesGlasses/Services/BuildCheck/Procedure.swift \
+//     HermesGlasses/Services/BuildCheck/BuildCheckPrompt.swift \
+//     HermesGlasses/Services/BuildCheck/BuildRunTracker.swift \
 //     tests/buildcheck-tracker/main.swift -o /tmp/bc-tracker && /tmp/bc-tracker
 //
 import Foundation
@@ -37,6 +41,23 @@ expect(one.stepDone() == .finished, "single non-critical step finishes")
 var f = BuildRunTracker(stepCount: 3, criticalSteps: [])
 f.finish()
 expect(f.phase == .finished && f.stepDone() == .refused, "finish() ends early")
+
+// Blocking decision (finishCheck). First check: only a confident mismatch
+// blocks. Re-check of a blocked step: anything but a match keeps it blocked.
+// nil = no result (no camera frame / the call failed).
+let confidentBad = CheckResult(verdict: .mismatch, confidence: 0.9, observed: "", issue: "x")
+let weakBad = CheckResult(verdict: .mismatch, confidence: 0.6, observed: "", issue: "x")
+let good = CheckResult(verdict: .match, confidence: 0.9, observed: "", issue: "")
+let unsure = CheckResult.unclear("dark")
+expect(BuildRunTracker.blocks(result: confidentBad, isRecheckOfBlockedStep: false), "first: confident mismatch blocks")
+expect(!BuildRunTracker.blocks(result: weakBad, isRecheckOfBlockedStep: false), "first: weak mismatch doesn't block")
+expect(!BuildRunTracker.blocks(result: unsure, isRecheckOfBlockedStep: false), "first: unclear doesn't block")
+expect(!BuildRunTracker.blocks(result: good, isRecheckOfBlockedStep: false), "first: match doesn't block")
+expect(!BuildRunTracker.blocks(result: nil, isRecheckOfBlockedStep: false), "first: no result doesn't block")
+expect(!BuildRunTracker.blocks(result: good, isRecheckOfBlockedStep: true), "re-check: match unblocks")
+expect(BuildRunTracker.blocks(result: unsure, isRecheckOfBlockedStep: true), "re-check: unclear stays blocked")
+expect(BuildRunTracker.blocks(result: weakBad, isRecheckOfBlockedStep: true), "re-check: weak mismatch stays blocked")
+expect(BuildRunTracker.blocks(result: nil, isRecheckOfBlockedStep: true), "re-check: no result stays blocked")
 
 print(failures == 0 ? "ALL PASS" : "\(failures) FAILED")
 exit(failures == 0 ? 0 : 1)
