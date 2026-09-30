@@ -95,7 +95,16 @@ final class BuildCheckViewModel {
     @ObservationIgnored private var pendingReply: (alertID: UUID, step: Int, expires: Date)?
     @ObservationIgnored private var blockingAlertID: UUID?
     @ObservationIgnored private var unreadNotes: [Int: [(alertID: UUID, issue: String)]] = [:]
-    @ObservationIgnored private var notesReadForStep: Int?
+    /// Notes were read out on this step's "step done"; the next one advances.
+    @ObservationIgnored private var notesReadThisCycle = false
+    @ObservationIgnored private var isStarting = false
+    /// A log write failed this run - reported once, not on every save.
+    @ObservationIgnored private var logWriteFailed = false
+    /// The in-flight critical check is a re-check of this blocked step:
+    /// only a `.match` unblocks it.
+    @ObservationIgnored private var recheckingBlockedStep: Int?
+    /// How the pending critical check was started, logged on its advance.
+    @ObservationIgnored private var criticalVia: StepChangeVia = .voice
 
     init(hermesVM: HermesSessionViewModel) {
         self.hermesVM = hermesVM
@@ -210,7 +219,9 @@ final class BuildCheckViewModel {
     }
 
     func startRun(_ procedure: Procedure) async {
-        guard activeRun == nil else { return }
+        guard activeRun == nil, !isStarting else { return }
+        isStarting = true
+        defer { isStarting = false }
         guard procedure.ready else { errorMessage = "Review the procedure and mark it ready first."; return }
         guard !hermesVM.conversationCaptureActive else {
             errorMessage = "Stop the conversation recording before starting a build check."
@@ -260,15 +271,23 @@ final class BuildCheckViewModel {
         pendingReply = nil
         blockingAlertID = nil
         unreadNotes = [:]
-        notesReadForStep = nil
+        notesReadThisCycle = false
+        logWriteFailed = false
+        recheckingBlockedStep = nil
+        criticalVia = .voice
         settledFrames = []
         prevPrint = nil
         checkedPrint = nil
+        latestImage = nil
+        liveImage = nil
 
         hermesVM.buildRunClaimer = { [weak self] text in self?.claim(text) ?? false }
         hermesVM.onSessionEnding = { [weak self] in self?.endRun(sessionEnding: true) }
 
         await startStream()
+        // Ended while the stream was opening: no ticker for a dead run.
+        guard activeRun?.id == run.id else { return }
+        ticker?.cancel()
         ticker = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(Double(settings.intervalSeconds)))
@@ -289,17 +308,25 @@ final class BuildCheckViewModel {
         hermesVM.buildRunClaimer = nil
         hermesVM.onSessionEnding = nil
         run.endedAt = Date()
-        try? runStore.write(run)
+        var saved = true
+        do {
+            try runStore.write(run)
+        } catch {
+            saved = false
+            errorMessage = "Couldn't save the build check log: \(error.localizedDescription)"
+        }
         let summary = BuildRunSummary.spokenSummary(run)
         activeRun = nil
         tracker = nil
         liveImage = nil
+        latestImage = nil
         pendingReply = nil
+        recheckingBlockedStep = nil
         reload()
         // The session is already going away; don't let a stale flag make a
         // later run end a session the user started.
         guard !sessionEnding else { startedSession = false; return }
-        hermesVM.speakCue(summary)
+        hermesVM.speakCue(saved ? summary : "The run log could not be saved.")
         if startedSession {
             startedSession = false
             // Let the summary finish before the audio stack goes away.
@@ -380,7 +407,13 @@ final class BuildCheckViewModel {
 
     private func persist(force: Bool) {
         guard let run = activeRun, throttle.shouldSave(now: Date(), force: force) else { return }
-        try? runStore.write(run)
+        do {
+            try runStore.write(run)
+        } catch {
+            guard !logWriteFailed else { return }
+            logWriteFailed = true
+            errorMessage = "Couldn't save the build check log: \(error.localizedDescription)"
+        }
     }
 
     private func append(_ event: BuildRunEvent, force: Bool = false) {
@@ -412,7 +445,11 @@ final class BuildCheckViewModel {
         if checksDisabled {
             // Logging-only run: a critical step can't be verified, so it
             // advances on the wearer's word and the log shows it unchecked.
-            if criticalWaiting { applyCriticalResult(step: step, blocking: false) }
+            if criticalWaiting {
+                let recheck = recheckingBlockedStep == step
+                recheckingBlockedStep = nil
+                applyCriticalResult(step: step, blocking: recheck)
+            }
             return
         }
         fullInFlight = true
@@ -488,17 +525,29 @@ final class BuildCheckViewModel {
 
         let critical = run.procedure.steps[step].critical
         let decision = policy.decide(result: result, kind: kind, step: step, critical: critical, now: now)
+        // A re-check of a blocked step unblocks only on a match; the first
+        // end-of-step check blocks only on a confident mismatch.
+        let isRecheck = criticalWaiting && recheckingBlockedStep == step
+        if isRecheck { recheckingBlockedStep = nil }
+        let blocking = criticalWaiting && (isRecheck ? result.verdict != .match : result.isConfidentMismatch)
+        let blockLine: String? = !blocking ? nil : isRecheck
+            ? "Couldn't confirm the fix on step \(step + 1). Say fixed to check again, or override."
+            : "Say fixed to check again, or override."
         var alertID: UUID?
         if decision.level != .log {
             let id = UUID()
             alertID = id
             append(.alert(id: id, t: now, step: step, checkID: checkID, level: decision.level,
                           askedToConfirm: decision.askToConfirm), force: true)
-            deliver(decision, result: result, step: step, alertID: id)
+            deliver(decision, result: result, step: step, alertID: id, blockLine: blockLine)
+        } else if let blockLine {
+            lastWarning = blockLine
+            hermesVM.speakCue(blockLine)
         }
         if criticalWaiting {
-            if result.isConfidentMismatch { blockingAlertID = alertID }
-            applyCriticalResult(step: step, blocking: result.isConfidentMismatch)
+            // Keep the previous blocking alert when the re-check raised none.
+            if blocking, let alertID { blockingAlertID = alertID }
+            applyCriticalResult(step: step, blocking: blocking)
         }
     }
 
@@ -509,22 +558,30 @@ final class BuildCheckViewModel {
         if blocking {
             showLens(flag: lastWarning)
         } else {
-            handleAdvance(outcome, from: step, via: .voice)
+            blockingAlertID = nil
+            handleAdvance(outcome, from: step, via: criticalVia)
         }
     }
 
-    private func deliver(_ decision: AlertDecision, result: CheckResult, step: Int, alertID: UUID) {
+    /// `blockLine`: the alert blocks a critical step, so the wearer is told
+    /// how to get out of it (fixed / override) instead of the usual reply set.
+    private func deliver(_ decision: AlertDecision, result: CheckResult, step: Int, alertID: UUID,
+                         blockLine: String?) {
         let issue = result.issue.isEmpty ? result.observed : result.issue
         switch decision.level {
         case .speak:
             let line = "Check step \(step + 1): \(issue.isEmpty ? "this doesn't match the procedure" : issue)."
             lastWarning = line
             pendingReply = (alertID, step, Date().addingTimeInterval(Self.replyWindow))
-            hermesVM.speakCue(line + " Say confirmed, ignore, or fixed.")
+            hermesVM.speakCue(line + " " + (blockLine ?? "Say confirmed, ignore, or fixed."))
             showLens(flag: issue)
         case .chime:
             hermesVM.playChime()
-            if decision.askToConfirm {
+            if let blockLine {
+                lastWarning = blockLine
+                pendingReply = (alertID, step, Date().addingTimeInterval(Self.replyWindow))
+                hermesVM.speakCue(blockLine)
+            } else if decision.askToConfirm {
                 let line = "Couldn't verify step \(step + 1). Can you confirm it's right?"
                 lastWarning = line
                 pendingReply = (alertID, step, Date().addingTimeInterval(Self.replyWindow))
@@ -579,6 +636,10 @@ final class BuildCheckViewModel {
             append(.reply(t: now, step: pending.step, alertID: pending.alertID,
                           reply: command == .confirmed ? .confirmed : .ignore), force: true)
             pendingReply = nil
+            if t.phase == .blocked, pending.step == t.current {
+                hermesVM.speakCue("Logged. Step \(t.current + 1) is still blocked - say fixed or override.")
+                return
+            }
             showLens(flag: nil)
             hermesVM.speakCue("Noted.")
 
@@ -587,16 +648,36 @@ final class BuildCheckViewModel {
                 hermesVM.speakCue("Still checking step \(t.current + 1).")
                 return
             }
-            if let pending = pendingReply, pending.expires > now {
+            // "fixed" re-checks the FLAGGED step; with nothing flagged it spends nothing.
+            let pending = pendingReply.flatMap { $0.expires > now ? $0 : nil }
+            let targetStep: Int
+            if let pending {
+                targetStep = pending.step
+            } else if t.phase == .blocked {
+                targetStep = t.current
+            } else {
+                hermesVM.speakCue("There's no open warning.")
+                return
+            }
+            let recheckBlocked = t.phase == .blocked && targetStep == t.current
+            if recheckBlocked, checksDisabled {
+                hermesVM.speakCue("Checks are off. Say override to continue.")
+                return
+            }
+            if let pending {
                 append(.reply(t: now, step: pending.step, alertID: pending.alertID, reply: .fixed), force: true)
                 pendingReply = nil
-            } else if t.phase == .blocked, let id = blockingAlertID {
+            } else if let id = blockingAlertID {
                 append(.reply(t: now, step: t.current, alertID: id, reply: .fixed), force: true)
             }
-            let critical = t.fixed()
-            tracker = t
-            hermesVM.speakCue("Checking step \(t.current + 1) again.")
-            runFullCheck(step: t.current, criticalWaiting: critical)
+            if recheckBlocked {
+                _ = t.fixed()
+                tracker = t
+                recheckingBlockedStep = t.current
+                criticalVia = via
+            }
+            hermesVM.speakCue("Checking step \(targetStep + 1) again.")
+            runFullCheck(step: targetStep, criticalWaiting: recheckBlocked)
 
         case .override:
             guard t.phase == .blocked else {
@@ -615,20 +696,27 @@ final class BuildCheckViewModel {
 
         case .stepDone:
             let step = t.current
-            // Chimed notes for this step are read once before it can end.
-            if let notes = unreadNotes[step], !notes.isEmpty, notesReadForStep != step {
-                notesReadForStep = step
+            // Chimed notes (from this or any earlier step) are read out on
+            // "step done"; this utterance doesn't advance, the next one does.
+            let notes = unreadNotes.keys.sorted().flatMap { key in
+                (unreadNotes[key] ?? []).map { (step: key, alertID: $0.alertID, issue: $0.issue) }
+            }
+            if !notes.isEmpty, !notesReadThisCycle, t.phase == .working {
+                notesReadThisCycle = true
+                unreadNotes = [:]
                 let first = notes[0]
-                pendingReply = (first.alertID, step, now.addingTimeInterval(Self.replyWindow))
-                lastWarning = "Note on step \(step + 1): \(first.issue)"
+                pendingReply = (first.alertID, first.step, now.addingTimeInterval(Self.replyWindow))
+                lastWarning = "Note on step \(first.step + 1): \(first.issue)"
                 let more = notes.count > 1 ? " And \(notes.count - 1) more on the phone." : ""
-                hermesVM.speakCue("One note on step \(step + 1) before you move on: \(first.issue).\(more) Say confirmed, ignore, or fixed, then step done.")
+                hermesVM.speakCue("One note on step \(first.step + 1) before you move on: \(first.issue).\(more) Say confirmed, ignore, or fixed, then step done.")
                 return
             }
             let outcome = t.stepDone()
             tracker = t
             switch outcome {
             case .awaitingCheck:
+                criticalVia = via
+                recheckingBlockedStep = nil
                 hermesVM.speakCue("Checking step \(step + 1).")
                 runFullCheck(step: step, criticalWaiting: true)
             case .refused:
@@ -648,7 +736,7 @@ final class BuildCheckViewModel {
             append(.stepChange(t: Date(), from: from, to: to, via: via), force: true)
             policy.stepChanged()
             settledFrames = []
-            unreadNotes[from] = nil
+            notesReadThisCycle = false
             announceStep(prefix: nil)
         case .finished:
             append(.stepChange(t: Date(), from: from, to: from + 1, via: via), force: true)

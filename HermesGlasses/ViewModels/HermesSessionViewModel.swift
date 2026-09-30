@@ -1946,6 +1946,10 @@ final class HermesSessionViewModel {
     func startConversationCapture() {
         guard !conversationCaptureActive,
               connectionState != .disconnected else { return }
+        guard buildRunClaimer == nil else {
+            show(notice: "End the build check before recording a conversation.")
+            return
+        }
         conversationCaptureActive = true
         captureModel = ConversationCaptureModel()
         capturePhotos = []
@@ -1996,6 +2000,12 @@ final class HermesSessionViewModel {
     func toggleConversationCapture() {
         if conversationCaptureActive {
             finishConversationCapture()
+            return
+        }
+        // A running Build Check claims every utterance and owns the session;
+        // a capture would steal its utterances and could end the session.
+        guard buildRunClaimer == nil else {
+            show(notice: "End the build check before recording a conversation.")
             return
         }
         guard connectionState == .disconnected else {
