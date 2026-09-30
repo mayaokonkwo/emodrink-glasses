@@ -106,6 +106,7 @@
 		AAAA00000000000000000A08 /* AiSeeSequencing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A11 /* AiSeeSequencing.swift */; };
 		AAAA00000000000000000A09 /* AiSeeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A12 /* AiSeeTypes.swift */; };
 		AAAA00000000000000000A57 /* AiSeeClipRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */; };
+		AAAA00000000000000000A63 /* ChangeGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A64 /* ChangeGate.swift */; };
 		AAAA00000000000000000A61 /* AlertPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A62 /* AlertPolicy.swift */; };
 		AAAA00000000000000000A5F /* BuildCheckPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A60 /* BuildCheckPrompt.swift */; };
 		AAAA00000000000000000A5D /* ProcedureParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A5E /* ProcedureParser.swift */; };
@@ -255,6 +256,7 @@
 		AAAA00000000000000000A11 /* AiSeeSequencing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeSequencing.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A12 /* AiSeeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeTypes.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeClipRecorder.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A64 /* ChangeGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ChangeGate.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A62 /* AlertPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/AlertPolicy.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A60 /* BuildCheckPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildCheckPrompt.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A5E /* ProcedureParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ProcedureParser.swift; sourceTree = "<group>"; };
@@ -429,6 +431,7 @@
 				AAAA00000000000000000A11 /* AiSeeSequencing.swift */,
 				AAAA00000000000000000A12 /* AiSeeTypes.swift */,
 				AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */,
+				AAAA00000000000000000A64 /* ChangeGate.swift */,
 				AAAA00000000000000000A62 /* AlertPolicy.swift */,
 				AAAA00000000000000000A60 /* BuildCheckPrompt.swift */,
 				AAAA00000000000000000A5E /* ProcedureParser.swift */,
@@ -646,6 +649,7 @@
 				AAAA00000000000000000A08 /* AiSeeSequencing.swift in Sources */,
 				AAAA00000000000000000A09 /* AiSeeTypes.swift in Sources */,
 				AAAA00000000000000000A57 /* AiSeeClipRecorder.swift in Sources */,
+				AAAA00000000000000000A63 /* ChangeGate.swift in Sources */,
 				AAAA00000000000000000A61 /* AlertPolicy.swift in Sources */,
 				AAAA00000000000000000A5F /* BuildCheckPrompt.swift in Sources */,
 				AAAA00000000000000000A5D /* ProcedureParser.swift in Sources */,
