@@ -376,6 +376,52 @@ photo via the DAT camera API.
   in the gap can't be dispatched to a brain that was never connected. The
   Record quick action is deliberately NOT a `HermesApp` - it is an action
   with no screen to present.
+- **Build Check owns the utterance stream during a run.** `BuildCheckViewModel`
+  (owned by the App struct, not a screen - runs survive dismissal) installs
+  `hermesVM.buildRunClaimer`; EVERY finalized utterance is a command
+  (`IntentDetector.buildRunCommand`, whole-utterance) or narration logged to
+  the current step. Nothing reaches the brain. It starts a recording-only
+  session from cold, and ends it only if it started it. A conversation
+  capture cannot start while a run is active (`toggleConversationCapture` /
+  `startConversationCapture` refuse when `buildRunClaimer != nil`).
+- **Build Check frames come from the live stream, never per-tick stills.**
+  On AiSee a still closes and reopens the mic (~700 ms) - at a 5 s interval
+  that chops every voice command. Phone mode observes the shared stream
+  (`frameObserverKey` "build-check"). On AiSee the run and a video clip share
+  the ONE stream through `AiSeeSequencing.StreamUsers` (the coordinator stops
+  it only when the last user leaves), so finishing a clip can't kill a run.
+  Only one of Lens / conversation capture / Build Check can own a glasses
+  stream at a time otherwise.
+- **Every Build Check AI call goes through `BuildChecker`.** It is the seam
+  for future local-only routing. Checks use `askOneShot` (never `ask()`);
+  the end-of-step check sends ONE composite JPEG (reference + NOW tiles)
+  because askOneShot carries a single image. Procedure splitting uses
+  `askOneShotText(maxTokens: 8192)` - `AIRequest.maxTokens` exists because
+  every provider hard-coded 1024.
+- **Alert escalation is pure and tested** (`AlertPolicy`, `tests/buildcheck-alerts`).
+  Quick checks need two consecutive mismatches and are suppressed for 120 s
+  per similar issue; full checks ("step done", "fixed") always deliver.
+  Only a confident mismatch (>= 0.75) on a critical step blocks the tracker.
+- **Unblocking is narrow.** "fixed" re-checks the FLAGGED step (the pending
+  reply's step); with no open warning it is refused with NO AI call. A
+  BLOCKED critical step advances only on a re-check whose verdict is match,
+  or on "override"; failed / unclear re-checks keep it blocked, and with
+  checks off "fixed" cannot unblock (say "override").
+- **Chimed notes outlive the step.** A mid-confidence mismatch chimes and
+  is kept; it survives step advance and is read out at the next "step done",
+  which then does NOT advance (say confirmed / ignore / fixed, then step
+  done again).
+- **ChangeGate thresholds are provisional** (0.35 change / 0.12 settle) until
+  measured with `tools/changegate-probe.swift` on real glasses footage.
+- **Run logs are append-only and lossy-decoded.** An unknown event kind is
+  dropped, not fatal; replies are separate events; `BuildRunSummary`
+  derives flags/statuses. Reference photos are COPIED into the run folder.
+  `BuildRunStore` path getters are PURE (no filesystem side effects); only
+  the writers create directories.
+- **The procedure review sheet cannot be swipe-dismissed**
+  (`interactiveDismissDisabled`); Close / Mark ready are the exits and both
+  persist, so an edit can't be lost to a stray swipe.
+- **New files: `tools/pbx-register.py`** does the four pbxproj edits.
 - **Badge assist must never outlive `badge_ocr_enabled`.** The assist pass
   selects sightings whose badge is nil. With on-device OCR off, EVERY sighting
   is nil, so assist would run at its full 6-call maximum - turning OCR off to

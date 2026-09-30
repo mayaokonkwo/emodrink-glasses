@@ -87,6 +87,11 @@ A standalone, MIT-licensed project.
 - 🗣️ **"Record this conversation"** - captures the full transcript plus
   automatic snaps of the people you're talking to (a 2 s look triggers a
   snap), then re-transcribes from the recording for a cleaner result
+- ✅ **"Start build check"** - photographs your work every few seconds and
+  checks it against an imported procedure (PDF, text, or pasted steps, with
+  optional reference photos). Critical-step mistakes are spoken at once and
+  hold the run until fixed or overridden; everything is logged per step
+  with a PDF report.
 - 📛 **Badge reading** - name badges in snaps are read by on-device OCR and
   used to group sightings into a timeline per person; an opt-in AI pass can
   fill in badges the on-device reader missed
