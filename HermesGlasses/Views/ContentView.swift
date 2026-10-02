@@ -69,6 +69,20 @@ struct ContentView: View {
     /// Set when Settings should open straight onto a sub-page.
     @State private var settingsRoute: SettingsRoute?
     @State private var showAppDrawer: Bool = false
+    /// Apps the user has opened at least once / What's-new cards they
+    /// closed (comma-separated ids; see HermesAppRegistry.idSet).
+    @AppStorage("apps_opened") private var appsOpenedRaw = ""
+    @AppStorage("whats_new_dismissed") private var whatsNewDismissedRaw = ""
+
+    private var openedAppIDs: Set<String> { HermesAppRegistry.idSet(from: appsOpenedRaw) }
+    private var unseenNewAppIDs: Set<String> {
+        Set(HermesAppRegistry.unseenNew(opened: openedAppIDs).map(\.id))
+    }
+    private var whatsNewApp: HermesApp? {
+        HermesAppRegistry.whatsNew(
+            opened: openedAppIDs,
+            dismissed: HermesAppRegistry.idSet(from: whatsNewDismissedRaw))
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -87,6 +101,15 @@ struct ContentView: View {
             // own - without this the wearer can't tell it's recording.
             if hermesVM.clipStarting || hermesVM.clipRecording {
                 ClipStatusBanner(hermesVM: hermesVM)
+            } else if let app = whatsNewApp {
+                WhatsNewCard(
+                    app: app,
+                    onOpen: { open(app) },
+                    onDismiss: {
+                        var dismissed = HermesAppRegistry.idSet(from: whatsNewDismissedRaw)
+                        dismissed.insert(app.id)
+                        whatsNewDismissedRaw = HermesAppRegistry.idString(dismissed)
+                    })
             }
             bottomBar
         }
@@ -126,7 +149,8 @@ struct ContentView: View {
             AppDrawerView(
                 apps: HermesAppRegistry.all,
                 unavailable: unavailableReason,
-                onOpen: open
+                onOpen: open,
+                isNew: { unseenNewAppIDs.contains($0.id) }
             )
             .presentationDetents([.medium, .large])
         }
@@ -706,6 +730,10 @@ struct ContentView: View {
             // The row scrolls horizontally: five apps plus Record outgrew
             // one screen width, and shrinking the tiles to fit would have
             // made every target smaller to keep a rarely-used one visible.
+            // More sits OUTSIDE the scroll, always on screen: the drawer used
+            // to be reachable only through the grab handle above, a gesture
+            // nobody was told about, so apps that lived there went unfound.
+            HStack(spacing: 8) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     // Record is an action, not a screen, so it is deliberately
@@ -721,7 +749,10 @@ struct ContentView: View {
                         quickAction(app)
                     }
                 }
-                .padding(.horizontal, 16)
+                .padding(.leading, 16)
+            }
+            moreQuickAction
+                .padding(.trailing, 16)
             }
         }
         .padding(.bottom, 10)
@@ -747,6 +778,11 @@ struct ContentView: View {
     /// run owns the camera, so they are refused rather than left to take
     /// it (the run would log a frozen frame).
     private func open(_ app: HermesApp) {
+        // First open clears the app's "New" dot and its What's-new card.
+        var opened = openedAppIDs
+        if opened.insert(app.id).inserted {
+            appsOpenedRaw = HermesAppRegistry.idString(opened)
+        }
         if hermesVM.buildRunClaimer != nil, app.id == "lens" || app.id == "lookup" {
             hermesVM.showNoticeMessage(
                 "End the build check before opening \(app.id == "lens" ? "Lens" : "Lookup").")
@@ -805,8 +841,18 @@ struct ContentView: View {
 
     private func quickAction(_ app: HermesApp) -> some View {
         let blocked = unavailableReason(app) != nil
-        return quickAction(app.title, icon: app.systemImage, enabled: !blocked) {
+        return quickAction(app.title, icon: app.systemImage, enabled: !blocked,
+                           isNew: unseenNewAppIDs.contains(app.id)) {
             open(app)
+        }
+    }
+
+    /// Opens the drawer. Carries the "New" dot when a new app is in there.
+    private var moreQuickAction: some View {
+        let pinnedIDs = Set(HermesAppRegistry.pinned.map(\.id))
+        let newInDrawer = !unseenNewAppIDs.subtracting(pinnedIDs).isEmpty
+        return quickAction("More", icon: "square.grid.2x2", isNew: newInDrawer) {
+            showAppDrawer = true
         }
     }
 
@@ -814,6 +860,7 @@ struct ContentView: View {
         _ title: String,
         icon: String,
         enabled: Bool = true,
+        isNew: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -832,6 +879,9 @@ struct ContentView: View {
                 in: RoundedRectangle(cornerRadius: 14, style: .continuous)
             )
             .shadow(color: .black.opacity(0.04), radius: 1, y: 1)
+            .overlay(alignment: .topTrailing) {
+                if isNew { NewDot().offset(x: -6, y: 6) }
+            }
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
@@ -1086,5 +1136,59 @@ private struct ClipStatusBanner: View {
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// The "not opened yet" marker: one accent dot, the app's only colour.
+struct NewDot: View {
+    var body: some View {
+        Circle()
+            .fill(HermesTheme.accent)
+            .frame(width: 8, height: 8)
+            .accessibilityLabel("New")
+    }
+}
+
+/// One-time announcement of a new app. Open clears it (and the dot);
+/// the close button hides the card but leaves the dot until first open.
+private struct WhatsNewCard: View {
+    let app: HermesApp
+    let onOpen: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            HermesIconTile(systemName: app.systemImage, size: 36)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text("New")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(HermesTheme.accentOnCard)
+                    Text(app.title)
+                        .font(.system(size: 15, weight: .semibold))
+                }
+                Text(app.summary)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Open \(app.title)", action: onOpen)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(HermesTheme.accentOnCard)
+                    .padding(.top, 2)
+            }
+            Spacer(minLength: 0)
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Dismiss")
+        }
+        .padding(14)
+        .background(HermesTheme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
     }
 }

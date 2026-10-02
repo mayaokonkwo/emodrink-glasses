@@ -98,6 +98,36 @@ enum HermesAppRegistry {
         all.first { $0.id == id }
     }
 
+    // MARK: What's new
+
+    /// Apps announced as new in this release. Each carries a "New" dot (on
+    /// the More tile and its drawer row) until it is opened once, and the
+    /// first unopened one gets a one-time card on the session screen. An app
+    /// living in the drawer is otherwise invisible to anyone who never pulls
+    /// the drawer up - this is how it gets found. Remove an id once the
+    /// feature is no longer news.
+    static let newAppIDs: [String] = ["buildcheck"]
+
+    static func unseenNew(opened: Set<String>) -> [HermesApp] {
+        newAppIDs.compactMap(app(id:)).filter { !opened.contains($0.id) }
+    }
+
+    /// The app the What's-new card announces, or nil. Dismissing the card
+    /// hides it for good; the dot stays until the app is opened.
+    static func whatsNew(opened: Set<String>, dismissed: Set<String>) -> HermesApp? {
+        unseenNew(opened: opened).first { !dismissed.contains($0.id) }
+    }
+
+    /// Opened / dismissed ids are stored as one comma-separated string
+    /// (@AppStorage holds no sets).
+    static func idSet(from stored: String) -> Set<String> {
+        Set(stored.split(separator: ",").map(String.init).filter { !$0.isEmpty })
+    }
+
+    static func idString(_ ids: Set<String>) -> String {
+        ids.sorted().joined(separator: ",")
+    }
+
     // MARK: - The four
 
     static let lens = HermesApp(

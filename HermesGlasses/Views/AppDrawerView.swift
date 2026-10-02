@@ -18,6 +18,8 @@ struct AppDrawerView: View {
     /// Nil while nothing is unavailable; otherwise why, per app id.
     var unavailable: (HermesApp) -> String?
     let onOpen: (HermesApp) -> Void
+    /// Not opened yet - shown with a "New" badge until first open.
+    var isNew: (HermesApp) -> Bool = { _ in false }
 
     @Environment(\.dismiss) private var dismiss
 
@@ -61,6 +63,9 @@ struct AppDrawerView: View {
                         Text(app.title)
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.primary)
+                        if isNew(app) {
+                            HermesBadge(text: "New", prominent: true)
+                        }
                         if app.isVoiceLaunchable {
                             HermesBadge(text: "Voice", prominent: true)
                         }

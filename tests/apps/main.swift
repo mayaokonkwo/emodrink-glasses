@@ -125,5 +125,25 @@ expect(HermesAppRegistry.all.contains(HermesAppRegistry.buildCheck), "Build Chec
 expect(HermesAppRegistry.buildCheck.isVoiceLaunchable, "Build Check is voice-launchable")
 expect(!HermesAppRegistry.buildCheck.requiresGlasses, "Build Check works in phone mode")
 
+// MARK: - What's new
+
+expect(HermesAppRegistry.newAppIDs.allSatisfy { HermesAppRegistry.app(id: $0) != nil },
+       "every 'new' id names a registered app")
+expect(HermesAppRegistry.newAppIDs.contains("buildcheck"), "Build Check is announced as new")
+expect(HermesAppRegistry.unseenNew(opened: []).map(\.id) == HermesAppRegistry.newAppIDs,
+       "nothing opened yet → every new app is unseen, in declared order")
+expect(HermesAppRegistry.unseenNew(opened: ["buildcheck"]).isEmpty,
+       "opening an app clears its 'new' state")
+expect(HermesAppRegistry.whatsNew(opened: [], dismissed: [])?.id == "buildcheck",
+       "the card announces the first unseen new app")
+expect(HermesAppRegistry.whatsNew(opened: [], dismissed: ["buildcheck"]) == nil,
+       "a dismissed card stays dismissed")
+expect(HermesAppRegistry.whatsNew(opened: ["buildcheck"], dismissed: []) == nil,
+       "no card for an app already opened")
+expect(HermesAppRegistry.idSet(from: "") == [], "empty storage → empty set")
+expect(HermesAppRegistry.idSet(from: "a,b,,a") == ["a", "b"], "storage parses, drops blanks and duplicates")
+expect(HermesAppRegistry.idSet(from: HermesAppRegistry.idString(["lens", "buildcheck"])) == ["lens", "buildcheck"],
+       "storage round-trips")
+
 print(failures == 0 ? "\nALL PASS" : "\n\(failures) FAILURE(S)")
 exit(failures == 0 ? 0 : 1)
