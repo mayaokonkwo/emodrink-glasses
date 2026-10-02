@@ -30,6 +30,12 @@ final class AiSeeClipRecorder: @unchecked Sendable {
     private var audioFormat: CMFormatDescription?
     private var finished = false
     private var videoFrames = 0
+    // What reached the recorder, written or not - the only way to tell "no
+    // keyframe arrived" from "nothing arrived" after an empty clip.
+    private var videoSamplesSeen = 0
+    private var keyframesSeen = 0
+    private var audioSamplesSeen = 0
+    private let createdAt = Date()
     private var reportedAppendFailure = false
 
     /// - Parameter audioFormat: the stream's audio format, if the SDK reported
@@ -55,8 +61,12 @@ final class AiSeeClipRecorder: @unchecked Sendable {
         lock.withLock {
             guard !finished, let format = sample.formatDescription else { return }
             switch format.mediaType {
-            case .video: appendVideo(sample, format: format)
-            case .audio: appendAudio(sample, format: format)
+            case .video:
+                videoSamplesSeen += 1
+                appendVideo(sample, format: format)
+            case .audio:
+                audioSamplesSeen += 1
+                appendAudio(sample, format: format)
             default: break
             }
         }
@@ -65,6 +75,7 @@ final class AiSeeClipRecorder: @unchecked Sendable {
     private func appendVideo(_ sample: CMSampleBuffer, format: CMFormatDescription) {
         if writer == nil {
             guard Self.isKeyframe(sample) else { return }
+            keyframesSeen += 1
             guard startWriter(video: format, at: sample.presentationTimeStamp) else {
                 finished = true
                 return
@@ -137,6 +148,16 @@ final class AiSeeClipRecorder: @unchecked Sendable {
         } catch {
             log("clip: cannot create writer: \(error)")
             return false
+        }
+    }
+
+    /// One line for an empty-clip report: how long the clip ran and what the
+    /// stream delivered ("4.1 s, 0 video samples, 0 audio" = no stream data;
+    /// "4.1 s, 96 video samples, 0 keyframes" = waiting on an IDR).
+    var diagnostics: String {
+        lock.withLock {
+            let seconds = String(format: "%.1f", Date().timeIntervalSince(createdAt))
+            return "\(seconds) s, \(videoSamplesSeen) video samples, \(keyframesSeen) keyframes, \(audioSamplesSeen) audio"
         }
     }
 

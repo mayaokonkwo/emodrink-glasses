@@ -120,6 +120,7 @@ final class HermesSessionViewModel {
     /// AiSee video clip in progress. `clipStarting` covers the stream open,
     /// which takes seconds - a second press then is ignored rather than
     /// queued, so a quick double press can't leave a clip running unseen.
+    static let clipWifiHintKey = "aisee_clip_wifi_hint_shown"
     var clipRecording = false
     var clipStarting = false
     var clipStartedAt: Date? = nil
@@ -2774,11 +2775,20 @@ final class HermesSessionViewModel {
         }
         clipStarting = true
         defer { clipStarting = false }
+        // Opening the stream takes seconds (and, the first time, an iOS
+        // "join Wi-Fi" prompt). Say so at once: with no feedback the wearer
+        // presses again - which stops the clip they just started.
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        speakCue(UserDefaults.standard.bool(forKey: Self.clipWifiHintKey)
+                 ? "Starting video"
+                 : "Starting video. Your phone may ask to join the glasses' Wi-Fi.")
+        UserDefaults.standard.set(true, forKey: Self.clipWifiHintKey)
         do {
             try await aiseeCoordinator.startClip()
             clipRecording = true
             clipStartedAt = Date()
-            speakCue("Recording video")
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            speakCue("Recording", queued: true)
         } catch {
             show("Could not start the clip: \(error.localizedDescription)")
         }
@@ -2788,7 +2798,8 @@ final class HermesSessionViewModel {
         clipRecording = false
         clipStartedAt = nil
         guard let file else {
-            show("The clip was not saved\(interruption.map { " - \($0)" } ?? "") - no video reached the phone.")
+            // The kit appends what the stream delivered, so this says WHY.
+            show("The clip was not saved - no video was written (\(interruption ?? "no details")).")
             return
         }
         Task { await saveClipToPhotos(file, interruption: interruption) }

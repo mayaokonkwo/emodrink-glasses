@@ -503,26 +503,42 @@ private struct DevicesPage: View {
     private var aiseeButtonsSection: some View {
         HermesSection(
             header: "Button",
-            footer: "The glasses tell Hermes whether you tapped, double-tapped or triple-tapped. Developer › AiSee button shows the last one received."
+            footer: "The glasses tell Hermes whether you tapped, double-tapped or triple-tapped. Developer › AiSee button shows the last one received. A video clip streams over the glasses' own Wi-Fi - the first time, your iPhone asks to join it."
         ) {
             ForEach(GlassesKeyMap.keys, id: \.self) { key in
-                HStack {
-                    Text(GlassesKeyMap.label(forKey: key))
-                        .font(.system(size: 15))
-                    Spacer()
-                    Picker("", selection: Binding(
-                        get: { hermesVM.glassesKeyMap.action(forKey: key) },
-                        set: { hermesVM.glassesKeyMap.set($0, forKey: key) }
-                    )) {
+                let selection = Binding(
+                    get: { hermesVM.glassesKeyMap.action(forKey: key) },
+                    set: { hermesVM.glassesKeyMap.set($0, forKey: key) }
+                )
+                // A Menu with a one-line label, not an inline Picker: the
+                // picker's own label wrapped long action names onto two lines
+                // and spilled out of the row.
+                Menu {
+                    Picker("", selection: selection) {
                         ForEach(GlassesKeyAction.allCases) { action in
                             Text(action.label).tag(action)
                         }
                     }
-                    .labelsHidden()
-                    .tint(.secondary)
+                } label: {
+                    HStack(spacing: 8) {
+                        Text(GlassesKeyMap.label(forKey: key))
+                            .font(.system(size: 17))
+                            .foregroundStyle(.primary)
+                            .fixedSize()
+                        Spacer(minLength: 8)
+                        Text(selection.wrappedValue.label)
+                            .font(.system(size: 15))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(minHeight: 52)
+                    .contentShape(Rectangle())
                 }
                 .padding(.horizontal, 16)
-                .padding(.vertical, 6)
                 if key != GlassesKeyMap.keys.last { HermesDivider() }
             }
         }

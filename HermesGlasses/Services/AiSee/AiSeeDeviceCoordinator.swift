@@ -314,6 +314,7 @@ actor AiSeeDeviceCoordinator {
     /// Every clip end — `stopClip()`, the length cap, the stream dying, a
     /// disconnect — is reported here exactly once: the finished file (nil when
     /// nothing usable was written) and, for an end the host did not ask for, why.
+    /// When the file is nil the text also carries the recorder's diagnostics.
     func setClipObserver(_ observer: (@Sendable (_ file: URL?, _ interruption: String?) -> Void)?) {
         clipObserver = observer
     }
@@ -359,7 +360,10 @@ actor AiSeeDeviceCoordinator {
         liveStream?.setRecorder(nil)
         _ = streamUsers.remove(.clip)
         let file = await recorder.finish()
-        clipObserver?(file, capped ? "reached the \(AiSeeSequencing.maxClipSeconds / 60)-minute limit" : nil)
+        let reason = capped ? "reached the \(AiSeeSequencing.maxClipSeconds / 60)-minute limit" : nil
+        // An empty clip always carries what the stream delivered, so the host
+        // can say WHY ("0 keyframes") instead of just "nothing saved".
+        clipObserver?(file, file == nil ? [reason, recorder.diagnostics].compactMap { $0 }.joined(separator: "; ") : reason)
         // Decided AFTER the finish await, not before: the camera (or a new clip)
         // may have joined the still-running stream meanwhile.
         if streamUsers.isEmpty { await closeStream() }
@@ -373,7 +377,7 @@ actor AiSeeDeviceCoordinator {
         let observer = clipObserver
         Task {
             let file = await recorder.finish()
-            observer?(file, reason)
+            observer?(file, file == nil ? "\(reason); \(recorder.diagnostics)" : reason)
         }
     }
 

@@ -83,6 +83,11 @@ struct ContentView: View {
                 conversationArea
                 quickActions
             }
+            // A clip started from the glasses button has no screen of its
+            // own - without this the wearer can't tell it's recording.
+            if hermesVM.clipStarting || hermesVM.clipRecording {
+                ClipStatusBanner(hermesVM: hermesVM)
+            }
             bottomBar
         }
         .background(showsPhoneModeStage
@@ -1040,5 +1045,46 @@ struct WaveformView: View {
 
     private var amplitude: Double {
         min(1.0, Double(level) * 10)
+    }
+}
+
+/// AiSee video clip status: "Starting…" (with the Wi-Fi join hint, since the
+/// glasses stream over their own hotspot and iOS asks to join it) or a
+/// running timer with Stop.
+private struct ClipStatusBanner: View {
+    let hermesVM: HermesSessionViewModel
+
+    var body: some View {
+        HStack(spacing: 10) {
+            if hermesVM.clipRecording, let started = hermesVM.clipStartedAt {
+                Circle().fill(HermesTheme.destructive).frame(width: 10, height: 10)
+                TimelineView(.periodic(from: started, by: 1)) { context in
+                    let seconds = max(0, Int(context.date.timeIntervalSince(started)))
+                    Text("Recording video  \(seconds / 60):\(String(format: "%02d", seconds % 60))")
+                        .font(.system(size: 15, weight: .semibold).monospacedDigit())
+                }
+                Spacer(minLength: 8)
+                Button("Stop") { Task { await hermesVM.toggleClipRecording() } }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(HermesTheme.destructive)
+            } else {
+                ProgressView()
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Starting video clip…")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text("Your iPhone may ask to join the glasses' Wi-Fi - tap Join. The video streams over it.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(HermesTheme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+        .accessibilityElement(children: .combine)
     }
 }
