@@ -62,5 +62,12 @@ cg.recordSent(at: t0); cg.recordSent(at: t0 + 10)
 expect(cg.oldestSent(now: t0 + 20) == t0, "oldest in window")
 expect(cg.oldestSent(now: t0 + 3605) == t0 + 10, "aged-out sends are ignored")
 
+// isYes skips leading non-letters.
+expect(VendingMachineDetector.isYes("**YES**"), "markdown bold YES is YES")
+expect(VendingMachineDetector.isYes("\"Yes, a machine\""), "quoted Yes is YES")
+expect(VendingMachineDetector.isYes("- YES"), "bulleted YES is YES")
+expect(!VendingMachineDetector.isYes("1. Yesterday"), "numbered Yesterday is NO")
+expect(!VendingMachineDetector.isYes("**NO**"), "markdown bold NO is NO")
+
 print(failures == 0 ? "ALL PASS" : "\(failures) FAILED")
 exit(failures == 0 ? 0 : 1)

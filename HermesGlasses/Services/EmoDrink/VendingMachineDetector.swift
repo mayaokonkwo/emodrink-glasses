@@ -15,7 +15,8 @@ enum VendingMachineDetector {
 
     static func isYes(_ reply: String) -> Bool {
         let trimmed = reply.trimmingCharacters(in: .whitespacesAndNewlines)
-        let firstWord = trimmed.unicodeScalars.prefix { CharacterSet.letters.contains($0) }
+        let scalars = trimmed.unicodeScalars.drop { !CharacterSet.letters.contains($0) }
+        let firstWord = scalars.prefix { CharacterSet.letters.contains($0) }
         return String(String.UnicodeScalarView(firstWord)).uppercased() == "YES"
     }
 }
