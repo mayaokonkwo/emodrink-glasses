@@ -95,6 +95,12 @@ final class EmoDrinkViewModel {
     @ObservationIgnored private var isStarting = false
     private(set) var currentSnapshot: PhysiologySnapshot?
     @ObservationIgnored private var currentSourceLabel = ""
+    /// The persona prompt of the moment on the lens, for "why".
+    @ObservationIgnored private var currentPrompt: String?
+    /// The card on the lens, redrawn when a reply's dwell ends.
+    @ObservationIgnored private var currentCard: (title: String, subtitle: String, reason: String, source: String)?
+    @ObservationIgnored private var cameraLostAnnounced = false
+    @ObservationIgnored private var drinkModeStartedAt: Date?
 
     init(hermesVM: HermesSessionViewModel) {
         self.hermesVM = hermesVM
@@ -107,6 +113,12 @@ final class EmoDrinkViewModel {
         hermesVM.onEmoDrinkIntent = { [weak self] intent in self?.handleIntent(intent) }
         hermesVM.onEmoDrinkKey = { [weak self] action in self?.handleKey(action) }
         hermesVM.emoDrinkClaimer = { [weak self] text in self?.claim(text) ?? false }
+        hermesVM.emoDrinkLensIdle = { [weak self] in
+            guard let self else { return false }
+            if self.momentActive { self.reshowMoment(); return true }
+            if self.drinkModeOn { self.hermesVM.showEmoDrinkWatchingOnLens(); return true }
+            return false
+        }
     }
 
     // MARK: Snapshot
@@ -202,7 +214,9 @@ final class EmoDrinkViewModel {
         let prompt = EmoDrinkPersona.systemPrompt(snapshot: snapshot, pick: pick, recommendation: rec,
                                                   catalog: catalog, sourceLabel: currentSourceLabel)
         if hermesVM.backend == .direct { hermesVM.setPersonaOverride(prompt) }
+        currentPrompt = prompt
         let sourceLine = snapshotNotice ?? currentSourceLabel
+        currentCard = (title: pick.name, subtitle: pick.nameJa, reason: rec.reasonLine, source: sourceLine)
         hermesVM.showEmoDrinkOnLens(title: pick.name, subtitle: pick.nameJa, reason: rec.reasonLine,
                                     source: sourceLine, choices: EmoDrinkCommands.choices)
         resetMomentTimer()
@@ -235,13 +249,36 @@ final class EmoDrinkViewModel {
         }
     }
 
+    /// Redraws the moment's card, e.g. when a reply's dwell ends.
+    private func reshowMoment() {
+        guard momentActive, let card = currentCard else { return }
+        hermesVM.showEmoDrinkOnLens(title: card.title, subtitle: card.subtitle, reason: card.reason,
+                                    source: card.source, choices: EmoDrinkCommands.choices)
+    }
+
+    /// Spoken only: the card stays on the lens. A one-shot call so the
+    /// answer cannot replace the card; any failure speaks the rule-based reason.
     func why() {
         guard momentActive, let rec = recommendation else { return }
         resetMomentTimer()
-        if hermesVM.backend == .direct, hermesVM.hasDirectKey {
-            hermesVM.askPersona(EmoDrinkPersona.whyQuestion)
-        } else {
-            say(EmoDrinkPersona.whyFallback(recommendation: rec))
+        let fallback = EmoDrinkPersona.whyFallback(recommendation: rec)
+        guard hermesVM.backend == .direct, hermesVM.hasDirectKey, let prompt = currentPrompt else {
+            say(fallback)
+            return
+        }
+        let pickAtAsk = currentPick
+        Task {
+            do {
+                let answer = try await oneShot.askOneShotText(systemPrompt: prompt, userText: EmoDrinkPersona.whyQuestion,
+                                                              maxTokens: 120, timeout: Self.firstLineTimeout)
+                guard momentActive, currentPick == pickAtAsk else { return }
+                let trimmed = answer.trimmingCharacters(in: .whitespacesAndNewlines)
+                say(trimmed.isEmpty ? fallback : trimmed)
+            } catch {
+                aiNotice = "why answer skipped: \(Self.shortReason(error))"
+                guard momentActive, currentPick == pickAtAsk else { return }
+                say(fallback)
+            }
         }
     }
 
@@ -262,6 +299,8 @@ final class EmoDrinkViewModel {
         momentTimer = nil
         guard momentActive else { return }
         momentActive = false
+        currentPrompt = nil
+        currentCard = nil
         hermesVM.setPersonaOverride(nil)
         if !drinkModeOn { hermesVM.onEmoDrinkSessionEnding = nil }
         gate.startCooldown(at: Date())
@@ -354,7 +393,9 @@ final class EmoDrinkViewModel {
         sentCount = 0
         budgetUsed = 0
         restingUntil = nil
+        cameraLostAnnounced = false
         drinkModeOn = true
+        drinkModeStartedAt = Date()
         hermesVM.onEmoDrinkSessionEnding = { [weak self] in self?.stopDrinkMode(sessionEnding: true) }
         await refreshSnapshot()
         guard drinkModeOn else { return }
@@ -376,6 +417,7 @@ final class EmoDrinkViewModel {
     private func stopDrinkMode(sessionEnding: Bool) {
         guard drinkModeOn else { return }
         drinkModeOn = false
+        drinkModeStartedAt = nil
         ticker?.cancel()
         ticker = nil
         stopStream()
@@ -395,6 +437,10 @@ final class EmoDrinkViewModel {
             self.latestImage = image
             self.latestImageAt = Date()
             self.liveImage = image
+            if self.cameraLostAnnounced {
+                self.cameraLostAnnounced = false
+                if self.drinkModeOn && !self.momentActive { self.hermesVM.showEmoDrinkWatchingOnLens() }
+            }
         }
         if hermesVM.visionStreamIsShared {
             guard drinkModeOn else { return }
@@ -410,14 +456,41 @@ final class EmoDrinkViewModel {
                     Task { @MainActor in onImage(image) }
                 },
                 onError: { [weak self] message in
-                    Task { @MainActor in self?.errorMessage = "The camera stream stopped (\(message))." }
+                    Task { @MainActor in self?.streamFailed(message) }
                 })
             streamStarted = true
             if !drinkModeOn { hermesVM.vision.stopLiveStream(); streamStarted = false }
         } catch {
             guard drinkModeOn else { return }
+            cameraLostAnnounced = true
             errorMessage = "The camera stream didn't open (\(error.localizedDescription)). Say \"what should I drink\" to pick without the camera."
+            say("The camera didn't open. Say what should I drink to pick without it.")
         }
+    }
+
+    /// The live stream reported an error: say so once.
+    private func streamFailed(_ message: String) {
+        guard drinkModeOn else { return }
+        latestImage = nil
+        latestImageAt = nil
+        liveImage = nil
+        errorMessage = "The camera stream stopped (\(message))."
+        guard !cameraLostAnnounced else { return }
+        cameraLostAnnounced = true
+        say("The camera stream stopped.")
+    }
+
+    /// Frames went stale or never arrived: stop trusting the last frame and
+    /// say so once. Frames arriving again reset it.
+    private func cameraLost() {
+        guard drinkModeOn else { return }
+        latestImage = nil
+        latestImageAt = nil
+        liveImage = nil
+        guard !cameraLostAnnounced else { return }
+        cameraLostAnnounced = true
+        errorMessage = "Camera lost. Drink mode is paused until the camera is back; say \"what should I drink\" to pick without it."
+        say("Camera lost. Drink mode is paused.")
     }
 
     private func stopStream() {
@@ -433,7 +506,11 @@ final class EmoDrinkViewModel {
     private func sampleFrame() async {
         guard drinkModeOn else { return }
         let now = Date()
-        guard let image = latestImage, let at = latestImageAt, now.timeIntervalSince(at) <= staleAfter else { return }
+        guard let image = latestImage, let at = latestImageAt, now.timeIntervalSince(at) <= staleAfter else {
+            let started = latestImageAt ?? drinkModeStartedAt ?? now
+            if latestImage != nil || now.timeIntervalSince(started) > staleAfter { cameraLost() }
+            return
+        }
         frameCount += 1
         let print: VNFeaturePrintObservation? = await Task.detached {
             image.cgImage.flatMap(FramePrint.observation(for:))

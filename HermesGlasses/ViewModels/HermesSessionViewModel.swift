@@ -149,6 +149,8 @@ final class HermesSessionViewModel {
     @ObservationIgnored var onEmoDrinkKey: (@MainActor (GlassesKeyAction) -> Void)?
     /// The session is being torn down; drink mode must stop its stream.
     @ObservationIgnored var onEmoDrinkSessionEnding: (@MainActor () -> Void)?
+    /// When the lens would otherwise blank after a reply's dwell, EmoDrink may restore its card. Returns true when it drew something.
+    @ObservationIgnored var emoDrinkLensIdle: (@MainActor () -> Bool)?
     @ObservationIgnored private var chimePlayer: AVAudioPlayer?
     /// Queued cues (`speakCue(_:queued: true)`) waiting for the current one
     /// to finish; drained one at a time by `speechSynthesizer.onFinished`.
@@ -1854,12 +1856,15 @@ final class HermesSessionViewModel {
             self?.navigation.stop()
         }
         // When a reply/definition dwell ends: restore the navigation map if
-        // still navigating, otherwise blank the lens as usual.
+        // still navigating, else let EmoDrink restore its card, otherwise
+        // blank the lens as usual.
         displayManager.idleHandler = { [weak self] in
             guard let self else { return }
             if self.navigation.isActive {
                 self.navigation.displaySuppressed = false
                 self.navigation.refreshDisplay()
+            } else if self.emoDrinkLensIdle?() == true {
+                // EmoDrink redrew its card.
             } else {
                 self.displayManager.clear()
             }
