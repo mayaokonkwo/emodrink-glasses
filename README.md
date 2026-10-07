@@ -13,14 +13,16 @@ seconds. Built as a thank-you for Taka, who ran the study and lent the
 glasses.
 
 It is a fork of [Hermes Glasses](https://github.com/prasanthsasikumar/hermes-glasses),
-MIT licensed, and keeps every Hermes feature.
+MIT licensed; everything Hermes does (voice, vision, navigation, people,
+Build Check, phone mode) is still here and described in that repo's README.
 
 ## What it does
 
 - **Reads your morning.** Last night's sleep hours and score, HRV and
   resting heart rate against your usual, steps and stress, from a small
   JSON document at a URL you control (the repo's own `mock/physiology.json`
-  by default, so it works out of the box). Three sample profiles (rested,
+  by default, so it works out of the box). That default is a fixed sample
+  document, not a watch; the card says so. Three sample profiles (rested,
   short night, stressed) for an offline demo.
 - **Picks one drink, on the phone.** A small deterministic rule maps the
   numbers to a coarse recovery and arousal state, the way EmoDrink did, and
@@ -51,7 +53,31 @@ MIT licensed, and keeps every Hermes feature.
 | "Something else" | The next drink in rank order |
 | "Thanks" | Ends the moment |
 
-## Setup
+## Your own data
+
+Point the feed URL (More › EmoDrink) at a JSON document of this shape,
+for example one a watch sync writes:
+
+```json
+{
+  "date": "2026-10-07",
+  "source": "Garmin Venu 3S",
+  "sleep": { "hours": 6.2, "score": 61 },
+  "hrv_ms": 38,
+  "hrv_baseline_ms": 52,
+  "resting_hr": 58,
+  "resting_hr_baseline": 54,
+  "steps": 4200,
+  "stress": 46
+}
+```
+
+`stress`, `steps` and the baselines are optional; unknown keys are ignored.
+The URL must be https. The app keeps the last fetch and fetches again when
+that copy is older than 30 minutes, or when you tap "Fetch again". The
+three sample profiles under "Use sample data" work offline.
+
+## Setup for EmoDrink
 
 Same as Hermes Glasses (below): a Meta Wearables app id in
 `Config/Secrets.xcconfig`, and an AI provider key in Settings for the
@@ -268,9 +294,14 @@ HermesGlasses/
 │   ├── Providers/                     # AIProvider seam (Claude/OpenAI/Gemini/Ollama)
 │   ├── Navigation/                    # voice intents, routing, bearing, lens maps, Wikipedia
 │   ├── Social/                        # encounters, conversation capture, badge OCR
-│   └── Lens/                          # object detection, dwell tracking, object log
+│   ├── Lens/                          # object detection, dwell tracking, object log
+│   └── EmoDrink/                      # physiology feed, drink picker, persona, vending machine gate
+├── Resources/EmoDrink/asahi-drinks.json   # the drink catalogue
 ├── ViewModels/                        # session orchestration, registration
+│   └── EmoDrinkViewModel.swift        # the EmoDrink moment and drink mode
 └── Views/                             # SwiftUI screens (design system: HermesDesign.swift)
+    └── EmoDrinkView.swift             # More › EmoDrink sheet
+mock/physiology.json                   # default EmoDrink feed (a fixed sample document)
 bridge/
 ├── hermes_bridge.py                   # WebSocket bridge on the Mac
 ├── .env.example                       # bridge configuration template

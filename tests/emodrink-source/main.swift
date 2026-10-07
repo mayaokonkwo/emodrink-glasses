@@ -28,7 +28,7 @@ expect(MockProfile.allCases.count == 3, "three profiles")
 let feed = FileManager.default.contents(atPath: "mock/physiology.json")
 expect(feed != nil, "mock/physiology.json exists")
 let feedSnap = try? PhysiologySnapshot.decode(feed ?? Data())
-expect(feedSnap != nil && feedSnap?.source == "Garmin Venu 3S", "mock feed decodes")
+expect(feedSnap != nil && feedSnap?.source == "EmoDrink sample feed", "mock feed decodes")
 
 // Defaults.
 expect(EmoDrinkDefaults.defaultSourceURL == "https://raw.githubusercontent.com/mayaokonkwo/emodrink-glasses/main/mock/physiology.json", "default URL points at the repo's mock feed")
