@@ -39,7 +39,7 @@ struct EmoDrinkView: View {
     // MARK: Today
 
     private var snapshot: PhysiologySnapshot? {
-        vm.useMock ? vm.mockProfile.snapshot(date: EmoDrinkDay.string()) : vm.cached?.snapshot
+        vm.useMock ? vm.mockProfile.snapshot(date: EmoDrinkDay.string()) : vm.currentSnapshot
     }
 
     private var todaySection: some View {
@@ -56,7 +56,7 @@ struct EmoDrinkView: View {
                 .padding(.vertical, 8)
                 HermesDivider()
                 HermesRow("Source", icon: "antenna.radiowaves.left.and.right", subtitle: s.date,
-                          value: vm.useMock ? s.source : (vm.cached?.sourceLabel ?? s.source), showsChevron: false)
+                          value: vm.useMock ? s.source : (vm.snapshotNotice ?? (vm.cached?.sourceLabel ?? s.source)), showsChevron: false)
             } else {
                 HermesRow("No data yet", icon: "moon.zzz", subtitle: vm.fetching ? "Fetching…" : "Pull the feed or switch to sample data",
                           showsChevron: false)
@@ -126,11 +126,6 @@ struct EmoDrinkView: View {
                 Task { await vm.pickNow() }
             }
             .padding(16)
-            HermesDivider()
-            Toggle(isOn: $vm.lowSugar) {
-                HermesRow("Prefer low sugar", icon: "leaf", showsChevron: false)
-            }
-            .padding(.trailing, 16)
         }
     }
 
@@ -175,13 +170,31 @@ struct EmoDrinkView: View {
 
     // MARK: Catalogue
 
+    private var catalogueGroups: [(function: DrinkFunction, drinks: [Drink])] {
+        guard let drinks = vm.catalog?.drinks else { return [] }
+        return DrinkFunction.allCases.compactMap { f in
+            let group = drinks.filter { $0.functions.first == f }
+            return group.isEmpty ? nil : (function: f, drinks: group)
+        }
+    }
+
     private var catalogueSection: some View {
-        HermesSection(header: "Catalogue", footer: "Public Asahi Group soft drinks, tagged by what they are for. Edit asahi-drinks.json to change the list.") {
-            if let drinks = vm.catalog?.drinks {
-                ForEach(Array(drinks.enumerated()), id: \.element.id) { index, drink in
-                    if index > 0 { HermesDivider() }
-                    HermesRow(drink.name, icon: "cup.and.saucer", subtitle: "\(drink.nameJa) · \(drink.kind)",
-                              value: drink.functions.map(\.label).joined(separator: ", "), showsChevron: false)
+        HermesSection(header: "Catalogue", footer: "Public Asahi Group soft drinks, grouped by what they are for. Edit asahi-drinks.json to change the list.") {
+            Toggle(isOn: $vm.lowSugar) {
+                HermesRow("Prefer low sugar", icon: "leaf", showsChevron: false)
+            }
+            .padding(.trailing, 16)
+            HermesDivider()
+            if vm.catalog != nil {
+                ForEach(catalogueGroups, id: \.function) { group in
+                    HermesSectionHeader(title: group.function.label)
+                        .padding(.top, 10)
+                        .padding(.bottom, 4)
+                    ForEach(Array(group.drinks.enumerated()), id: \.element.id) { index, drink in
+                        if index > 0 { HermesDivider() }
+                        HermesRow(drink.name, icon: "cup.and.saucer", subtitle: "\(drink.nameJa) · \(drink.kind)",
+                                  value: drink.functions.map(\.label).joined(separator: ", "), showsChevron: false)
+                    }
                 }
             } else {
                 HermesRow("Catalogue missing from this build", icon: "exclamationmark.triangle", showsChevron: false)

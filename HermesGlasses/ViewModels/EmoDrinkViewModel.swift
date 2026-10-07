@@ -93,7 +93,7 @@ final class EmoDrinkViewModel {
     @ObservationIgnored private var checkedPrint: VNFeaturePrintObservation?
     @ObservationIgnored private var checkInFlight = false
     @ObservationIgnored private var isStarting = false
-    @ObservationIgnored private var currentSnapshot: PhysiologySnapshot?
+    private(set) var currentSnapshot: PhysiologySnapshot?
     @ObservationIgnored private var currentSourceLabel = ""
 
     init(hermesVM: HermesSessionViewModel) {
