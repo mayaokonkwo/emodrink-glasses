@@ -73,8 +73,9 @@ for example one a watch sync writes:
 ```
 
 `stress`, `steps` and the baselines are optional; unknown keys are ignored.
-The URL must be https. The app keeps the last fetch and fetches again when
-that copy is older than 30 minutes, or when you tap "Fetch again". The
+An https URL is recommended; plain http also works. The app keeps the last
+fetch and fetches again when that copy is older than 30 minutes, or when you
+tap "Fetch again". The
 three sample profiles under "Use sample data" work offline.
 
 ## Setup for EmoDrink
