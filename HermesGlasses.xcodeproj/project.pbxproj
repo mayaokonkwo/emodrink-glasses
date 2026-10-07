@@ -152,6 +152,8 @@
 		AAAA00000000000000000E07 /* DrinkRecommender.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E08 /* DrinkRecommender.swift */; };
 		AAAA00000000000000000E09 /* PhysiologySource.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E0A /* PhysiologySource.swift */; };
 		AAAA00000000000000000E0B /* PhysiologyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E0C /* PhysiologyStore.swift */; };
+		AAAA00000000000000000E0D /* VendingMachineGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E0E /* VendingMachineGate.swift */; };
+		AAAA00000000000000000E0F /* VendingMachineDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E10 /* VendingMachineDetector.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -313,6 +315,8 @@
 		AAAA00000000000000000E08 /* DrinkRecommender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/DrinkRecommender.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E0A /* PhysiologySource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/PhysiologySource.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E0C /* PhysiologyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/PhysiologyStore.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E0E /* VendingMachineGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/VendingMachineGate.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E10 /* VendingMachineDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/VendingMachineDetector.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -499,6 +503,8 @@
 				AAAA00000000000000000E08 /* DrinkRecommender.swift */,
 				AAAA00000000000000000E0A /* PhysiologySource.swift */,
 				AAAA00000000000000000E0C /* PhysiologyStore.swift */,
+				AAAA00000000000000000E0E /* VendingMachineGate.swift */,
+				AAAA00000000000000000E10 /* VendingMachineDetector.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -737,6 +743,8 @@
 				AAAA00000000000000000E07 /* DrinkRecommender.swift in Sources */,
 				AAAA00000000000000000E09 /* PhysiologySource.swift in Sources */,
 				AAAA00000000000000000E0B /* PhysiologyStore.swift in Sources */,
+				AAAA00000000000000000E0D /* VendingMachineGate.swift in Sources */,
+				AAAA00000000000000000E0F /* VendingMachineDetector.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

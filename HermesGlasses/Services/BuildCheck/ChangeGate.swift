@@ -31,6 +31,12 @@ struct ChangeGate {
         sent.filter { now.timeIntervalSince($0) < 3600 }.count
     }
 
+    /// The earliest send still inside the hour window; the budget frees up
+    /// 3600 s after it. Nil when nothing counts against the budget.
+    func oldestSent(now: Date) -> Date? {
+        sent.filter { now.timeIntervalSince($0) < 3600 }.min()
+    }
+
     /// - Parameters:
     ///   - distanceFromChecked: nil when nothing has been checked yet (counts as changed).
     ///   - distanceFromPrevious: nil on the first frame (counts as unsettled).
