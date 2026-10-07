@@ -19,7 +19,7 @@ struct SimulatedLensView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HermesScreenTitle(
-                text: "HERMES", size: 13, tint: HermesTheme.accentLight.opacity(0.9)
+                text: "EMODRINK", size: 13, tint: HermesTheme.accentLight.opacity(0.9)
             )
 
             if let imageURL = content.imageURL, let url = URL(string: imageURL) {
