@@ -136,6 +136,19 @@ final class HermesSessionViewModel {
     @ObservationIgnored var onBuildKey: (@MainActor (GlassesKeyAction) -> Void)?
     /// The session is being torn down; a run must save itself.
     @ObservationIgnored var onSessionEnding: (@MainActor () -> Void)?
+
+    // MARK: EmoDrink hooks (set by EmoDrinkViewModel)
+
+    /// While a drink is on the lens, every finalized utterance is offered
+    /// here first; true = it was a reply (why / something else / thanks) and
+    /// nothing reaches the brain. False = a question for the drink persona.
+    @ObservationIgnored var emoDrinkClaimer: (@MainActor (String) -> Bool)?
+    /// "what should I drink" / "start drink mode" / "stop drink mode".
+    @ObservationIgnored var onEmoDrinkIntent: (@MainActor (HermesIntent) -> Void)?
+    /// A glasses button mapped to an EmoDrink action.
+    @ObservationIgnored var onEmoDrinkKey: (@MainActor (GlassesKeyAction) -> Void)?
+    /// The session is being torn down; drink mode must stop its stream.
+    @ObservationIgnored var onEmoDrinkSessionEnding: (@MainActor () -> Void)?
     @ObservationIgnored private var chimePlayer: AVAudioPlayer?
     /// Queued cues (`speakCue(_:queued: true)`) waiting for the current one
     /// to finish; drained one at a time by `speechSynthesizer.onFinished`.
@@ -1309,12 +1322,32 @@ final class HermesSessionViewModel {
             return
         }
 
+        // A drink on the lens claims its three replies; anything else it
+        // leaves for the brain, which answers in the drink persona.
+        if let claim = emoDrinkClaimer, claim(trimmed) {
+            liveTranscript = ""
+            lastTranscript = trimmed
+            completeTestOutcome(.failure(TestFailure(
+                "EmoDrink claimed this utterance as a reply - say thanks to end the drink moment before running this test."
+            )))
+            return
+        }
+
         // "start build check" needs no brain, so it must work in a
         // recording-only session too (Build Check starts one itself).
         if case .startBuildCheck = IntentDetector.detect(trimmed) {
             liveTranscript = ""
             lastTranscript = trimmed
             onStartBuildCheck?()
+            return
+        }
+
+        // EmoDrink launchers need no brain either (the pick is on-device).
+        let earlyIntent = IntentDetector.detect(trimmed)
+        if earlyIntent == .recommendDrink || earlyIntent == .startDrinkMode || earlyIntent == .stopDrinkMode {
+            liveTranscript = ""
+            lastTranscript = trimmed
+            onEmoDrinkIntent?(earlyIntent)
             return
         }
 
@@ -1481,8 +1514,7 @@ final class HermesSessionViewModel {
     /// The options offered by the most recent reply, if any - drives the
     /// chips under the last bubble.
     var replyChoices: [ReplyChoice] {
-        guard case .reply(_, _, let choices) = lensContent else { return [] }
-        return choices
+        lensContent.choices
     }
 
     /// Switch the running route between walking and driving.
@@ -2749,7 +2781,7 @@ final class HermesSessionViewModel {
         case .buildStepDone, .buildRepeatWarning:
             onBuildKey?(action)
         case .recommendDrink, .toggleDrinkMode:
-            break // Task 10 wires these.
+            onEmoDrinkKey?(action)
         }
     }
 
@@ -2876,6 +2908,33 @@ final class HermesSessionViewModel {
         displayManager.showBuildCheck(step: step, total: total, text: text, flag: flag)
     }
 
+    // MARK: EmoDrink surface
+
+    func setPersonaOverride(_ prompt: String?) {
+        directClient.systemPromptOverride = prompt
+    }
+
+    func showEmoDrinkOnLens(title: String, subtitle: String, reason: String, source: String, choices: [ReplyChoice]) {
+        displayManager.showEmoDrink(title: title, subtitle: subtitle, reason: reason, source: source, choices: choices)
+    }
+
+    func showEmoDrinkWatchingOnLens() {
+        displayManager.showEmoDrinkWatching()
+    }
+
+    func clearLens() {
+        displayManager.clear()
+    }
+
+    /// A question for the active persona. Skips the claimers (it was built
+    /// from a claimed "why"), otherwise the normal query path.
+    func askPersona(_ text: String) {
+        let savedClaimer = emoDrinkClaimer
+        emoDrinkClaimer = nil
+        defer { emoDrinkClaimer = savedClaimer }
+        submitQuery(text)
+    }
+
     private func ensureSessionThen(_ body: @escaping @MainActor () -> Void) async {
         if connectionState == .disconnected {
             await startSession()
@@ -2889,6 +2948,9 @@ final class HermesSessionViewModel {
         let ending = onSessionEnding
         onSessionEnding = nil
         ending?()
+        let emoEnding = onEmoDrinkSessionEnding
+        onEmoDrinkSessionEnding = nil
+        emoEnding?()
         // Unlike a half-finished "remember this person", a running
         // conversation capture is saved, not discarded - an hour of notes
         // must not vanish because the session dropped. Silent: the audio

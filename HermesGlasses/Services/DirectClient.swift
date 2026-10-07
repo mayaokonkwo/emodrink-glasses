@@ -93,6 +93,11 @@ final class DirectClient: @unchecked Sendable {
     private static let historyKey = "claude_direct_history"
     private static let historyDateKey = "claude_direct_history_date"
 
+    /// When set, `ask` uses this instead of the Hermes prompt. EmoDrink sets
+    /// it for the length of a drink moment and clears it after. Read once
+    /// at the start of `ask`; set and cleared on the main actor.
+    var systemPromptOverride: String?
+
     private static let systemPrompt = """
         You are a voice assistant running on the user's smart glasses. Your \
         answers are spoken aloud: keep them to 1-3 conversational sentences \
@@ -146,7 +151,7 @@ final class DirectClient: @unchecked Sendable {
         if provider.requiresKey, (key ?? "").isEmpty { throw AIProviderError.missingKey }
 
         let request = AIRequest(
-            systemPrompt: Self.systemPrompt,
+            systemPrompt: systemPromptOverride ?? Self.systemPrompt,
             contextLine: contextLine,
             history: Self.loadHistory(),
             userText: text,
