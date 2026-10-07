@@ -128,9 +128,8 @@ final class EmoDrinkViewModel {
             return snap
         }
 
-        if !force, let cached, cached.snapshot.isToday(today),
-           now.timeIntervalSince(cached.fetchedAt) <= Self.snapshotMaxAge {
-            snapshotNotice = nil
+        if !force, let cached, now.timeIntervalSince(cached.fetchedAt) <= Self.snapshotMaxAge {
+            snapshotNotice = cached.snapshot.isToday(today) ? nil : "feed dated \(cached.snapshot.date)"
             currentSnapshot = cached.snapshot
             currentSourceLabel = cached.sourceLabel
             return cached.snapshot
@@ -147,7 +146,8 @@ final class EmoDrinkViewModel {
             let fresh = CachedSnapshot(snapshot: snap, fetchedAt: now, sourceLabel: label)
             try? store.save(fresh)
             cached = fresh
-            snapshotNotice = nil
+            let stale = !snap.isToday(today)
+            snapshotNotice = stale ? "feed dated \(snap.date)" : nil
             currentSnapshot = snap
             currentSourceLabel = label
             return snap
@@ -198,6 +198,7 @@ final class EmoDrinkViewModel {
     private func startMoment(snapshot: PhysiologySnapshot, recommendation rec: Recommendation, pick: Drink, speak: MomentSpeech) {
         guard let catalog else { return }
         momentActive = true
+        if !drinkModeOn { hermesVM.onEmoDrinkSessionEnding = { [weak self] in self?.endMoment(saying: nil) } }
         let prompt = EmoDrinkPersona.systemPrompt(snapshot: snapshot, pick: pick, recommendation: rec,
                                                   catalog: catalog, sourceLabel: currentSourceLabel)
         if hermesVM.backend == .direct { hermesVM.setPersonaOverride(prompt) }
@@ -262,6 +263,7 @@ final class EmoDrinkViewModel {
         guard momentActive else { return }
         momentActive = false
         hermesVM.setPersonaOverride(nil)
+        if !drinkModeOn { hermesVM.onEmoDrinkSessionEnding = nil }
         gate.startCooldown(at: Date())
         if drinkModeOn { hermesVM.showEmoDrinkWatchingOnLens() } else { hermesVM.clearLens() }
         if let line { say(line) }
@@ -290,7 +292,7 @@ final class EmoDrinkViewModel {
         case nil: break
         }
         switch IntentDetector.detect(text) {
-        case .stopDrinkMode: stopDrinkMode(); return true
+        case .stopDrinkMode: if drinkModeOn { stopDrinkMode() } else { endMoment(saying: nil) }; return true
         case .recommendDrink: Task { await pickNow() }; return true
         default: return false
         }
@@ -355,8 +357,11 @@ final class EmoDrinkViewModel {
         drinkModeOn = true
         hermesVM.onEmoDrinkSessionEnding = { [weak self] in self?.stopDrinkMode(sessionEnding: true) }
         await refreshSnapshot()
+        guard drinkModeOn else { return }
         await startStream()
+        guard drinkModeOn else { return }
         if !momentActive { hermesVM.showEmoDrinkWatchingOnLens() }
+        ticker?.cancel()
         ticker = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.sampleFrame()
@@ -392,6 +397,7 @@ final class EmoDrinkViewModel {
             self.liveImage = image
         }
         if hermesVM.visionStreamIsShared {
+            guard drinkModeOn else { return }
             hermesVM.addVisionFrameObserver(Self.frameObserverKey) { frame in
                 MainActor.assumeIsolated { if let image = frame.image { onImage(image) } }
             }
