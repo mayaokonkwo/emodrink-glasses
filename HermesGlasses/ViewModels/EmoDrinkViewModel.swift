@@ -1,7 +1,7 @@
 //
 // EmoDrinkViewModel.swift
 //
-// Runs EmoDrink. Owned by the App struct (like BuildCheckViewModel) so drink
+// Runs EmoDrink. Owned by the App struct so drink
 // mode keeps watching with the phone in a pocket. Borrows mic, camera,
 // speech and lens from HermesSessionViewModel through its EmoDrink hooks.
 //

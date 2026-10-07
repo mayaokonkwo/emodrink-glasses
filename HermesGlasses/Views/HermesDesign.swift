@@ -767,7 +767,7 @@ struct HermesScrollPage<Content: View>: View {
 extension View {
     /// Stock `Form`/`List` pages keep their controls but pick up the themed
     /// canvas, so a sub-page never flashes iOS grey against the hub. The one
-    /// real definition - `SettingsView` and `PeopleView` each used to carry
+    /// real definition - Settings and the old People screen each used to carry
     /// their own copy of these three modifiers.
     func hermesFormStyle() -> some View {
         self

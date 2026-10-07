@@ -125,7 +125,7 @@ final class HermesSessionViewModel {
     var clipStarting = false
     var clipStartedAt: Date? = nil
 
-    // MARK: Build Check hooks (set by BuildCheckViewModel)
+    // MARK: Build Check hooks
 
     /// During a run, every finalized utterance is offered here first; true =
     /// claimed (command or narration), and nothing reaches the brain.
@@ -2409,7 +2409,7 @@ final class HermesSessionViewModel {
         // localise a badge it could not read, that sighting has a badge
         // object (kind, box, maybe a barcode) with no name - and it is
         // precisely the sighting assist exists to rescue. Selecting on
-        // `badge == nil` would skip it. PeopleView's own "unnamed" filter
+        // `badge == nil` would skip it. The old People screen's "unnamed" filter
         // already uses this predicate; this brings assist in line.
         let unnamed = encounter.events.filter {
             $0.kind == .sighting && $0.badge?.name == nil
