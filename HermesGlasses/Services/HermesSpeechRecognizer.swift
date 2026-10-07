@@ -37,7 +37,20 @@ final class HermesSpeechRecognizer: NSObject, @unchecked Sendable {
     // MARK: - Private
 
     private let logger = Logger(subsystem: "com.flowsxr.hermesglasses", category: "speech")
-    private let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    /// Replaced between sessions by `setLocale`; never while running.
+    private var recognizer: SFSpeechRecognizer? = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+
+    /// Switch the recognition language. Call only while stopped. Returns
+    /// false (and keeps the current recognizer) when this iPhone cannot
+    /// recognise that locale right now.
+    @discardableResult
+    func setLocale(_ identifier: String) -> Bool {
+        guard let next = SFSpeechRecognizer(locale: Locale(identifier: identifier)), next.isAvailable else {
+            return false
+        }
+        recognizer = next
+        return true
+    }
 
     /// Every mutable field lives here, behind one lock. Four threads reach
     /// this state: the audio-render thread (`append`), the Speech callback

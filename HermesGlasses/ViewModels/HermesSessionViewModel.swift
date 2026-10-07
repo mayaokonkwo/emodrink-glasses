@@ -18,6 +18,13 @@ import SwiftUI
 final class HermesSessionViewModel {
     // MARK: - Published state
 
+    /// The language the session hears and speaks right now. Japanese only
+    /// when both a ja-JP recognizer and a ja-JP voice exist.
+    private(set) var activeLanguage: Language = .en
+    /// Only a default-quality voice is installed for the language.
+    private(set) var voiceNeedsInstallHint = false
+    private(set) var voiceName: String?
+
     var connectionState: HermesConnectionState = .disconnected
     var isGlassesConnected: Bool = false
     /// Words recognized so far in the current utterance (live)
@@ -412,6 +419,7 @@ final class HermesSessionViewModel {
         // Wired at init, NOT at session start: lens callbacks must exist
         // before any session does (see CLAUDE.md, display callbacks).
         wireDisplay()
+        applyLanguage()
     }
 
     deinit {
@@ -442,6 +450,29 @@ final class HermesSessionViewModel {
     }
 
     // MARK: - Public API
+
+    /// Resolve the EmoDrink language setting into a recognizer locale and a
+    /// voice. Falls back to English, with a notice, when Japanese speech
+    /// recognition is unavailable; falls back to an English voice when no
+    /// ja-JP voice is installed. Runs only while the recognizer is stopped:
+    /// at init, at session start (state `.connecting`, before
+    /// `speechRecognizer.start()`), and from Settings with no session. A
+    /// change made mid-session applies from the next session.
+    @discardableResult
+    func applyLanguage() -> Language {
+        guard connectionState == .disconnected || connectionState == .connecting else { return activeLanguage }
+        var language = EmoDrinkLanguage.resolved
+        if !speechRecognizer.setLocale(language.sttLocale) {
+            if language == .ja { show(notice: EmoDrinkLanguage.sttFallbackNotice) }
+            language = .en
+            speechRecognizer.setLocale(Language.en.sttLocale)
+        }
+        let voice = speechSynthesizer.configure(for: language)
+        activeLanguage = voice.language
+        voiceNeedsInstallHint = voice.needsHint
+        voiceName = voice.voiceName
+        return activeLanguage
+    }
 
     func startSession() async {
         await startSession(engagingBrain: true)
@@ -494,6 +525,7 @@ final class HermesSessionViewModel {
             }
         }
 
+        applyLanguage()
         let speechOK = await speechRecognizer.requestAuthorization()
         if !speechOK {
             show(HermesSpeechError.notAuthorized.localizedDescription)

@@ -21,23 +21,41 @@ final class HermesSpeechSynthesizer: NSObject, @unchecked Sendable {
 
     private let logger = Logger(subsystem: "com.flowsxr.hermesglasses", category: "tts")
     private let synthesizer = AVSpeechSynthesizer()
-    private let voice: AVSpeechSynthesisVoice?
+    private var voice: AVSpeechSynthesisVoice?
+    private var rate: Float = VoicePicker.rate
+    private var pitch: Float = VoicePicker.pitch
 
     override init() {
-        // Best installed English voice: premium > enhanced > default.
-        // Users can download nicer voices in Settings → Accessibility →
-        // Spoken Content → Voices.
-        let english = AVSpeechSynthesisVoice.speechVoices()
-            .filter { $0.language.hasPrefix("en") }
-        let preferred = english.filter { $0.language == "en-US" }
-        voice = (preferred.isEmpty ? english : preferred)
-            .max { $0.quality.rawValue < $1.quality.rawValue }
-
         super.init()
         synthesizer.delegate = self
-        if let voice {
-            logger.info("TTS voice: \(voice.name, privacy: .public) (quality \(voice.quality.rawValue))")
+        configure(for: .en)
+    }
+
+    /// Every installed voice as a plain descriptor for VoicePicker.
+    static func installedVoices() -> [VoiceDescriptor] {
+        AVSpeechSynthesisVoice.speechVoices().map { v in
+            VoiceDescriptor(identifier: v.identifier, name: v.name, language: v.language,
+                            quality: v.quality.rawValue, isNovelty: v.voiceTraits.contains(.isNoveltyVoice))
         }
+    }
+
+    /// Pick and use the best voice for `language`. Returns the language the
+    /// voice actually speaks (English when no voice for `language` exists),
+    /// whether only a default-quality voice was found, and the voice's name.
+    @discardableResult
+    func configure(for language: Language) -> (language: Language, needsHint: Bool, voiceName: String?) {
+        let installed = Self.installedVoices()
+        let choice = VoicePicker.choose(for: language, available: installed)
+        configure(voice: choice.voice.flatMap { AVSpeechSynthesisVoice(identifier: $0.identifier) }, rate: VoicePicker.rate)
+        if let name = choice.voice?.name {
+            logger.info("TTS voice: \(name, privacy: .public) for \(language.rawValue, privacy: .public)")
+        }
+        return (choice.language, VoicePicker.needsEnhancedHint(for: language, available: installed), choice.voice?.name)
+    }
+
+    func configure(voice: AVSpeechSynthesisVoice?, rate: Float) {
+        self.voice = voice
+        self.rate = rate
     }
 
     // MARK: - Public API
@@ -55,6 +73,8 @@ final class HermesSpeechSynthesizer: NSObject, @unchecked Sendable {
         }
         let utterance = AVSpeechUtterance(string: trimmed)
         utterance.voice = voice
+        utterance.rate = rate
+        utterance.pitchMultiplier = pitch
         logger.info("Speaking \(trimmed.count) chars on-device")
         synthesizer.speak(utterance)
     }
