@@ -1,6 +1,0 @@
-framework module RTKAIDeviceConnection {
-  umbrella header "RTKAIDeviceConnection.h"
-  export *
-
-  module * { export * }
-}

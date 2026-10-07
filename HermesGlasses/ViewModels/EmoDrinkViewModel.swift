@@ -111,7 +111,6 @@ final class EmoDrinkViewModel {
             errorMessage = "The drink catalogue is missing from this build. Picks are disabled."
         }
         hermesVM.onEmoDrinkIntent = { [weak self] intent in self?.handleIntent(intent) }
-        hermesVM.onEmoDrinkKey = { [weak self] action in self?.handleKey(action) }
         hermesVM.emoDrinkClaimer = { [weak self] text in self?.claim(text) ?? false }
         hermesVM.emoDrinkLensIdle = { [weak self] in
             guard let self else { return false }
@@ -213,7 +212,7 @@ final class EmoDrinkViewModel {
         if !drinkModeOn { hermesVM.onEmoDrinkSessionEnding = { [weak self] in self?.endMoment(saying: nil) } }
         let prompt = EmoDrinkPersona.systemPrompt(snapshot: snapshot, pick: pick, recommendation: rec,
                                                   catalog: catalog, sourceLabel: currentSourceLabel)
-        if hermesVM.backend == .direct { hermesVM.setPersonaOverride(prompt) }
+        hermesVM.setPersonaOverride(prompt)
         currentPrompt = prompt
         let sourceLine = snapshotNotice ?? currentSourceLabel
         currentCard = (title: pick.name, subtitle: pick.nameJa, reason: rec.reasonLine, source: sourceLine)
@@ -230,8 +229,8 @@ final class EmoDrinkViewModel {
 
     private func speakFirstLine(prompt: String, pick: Drink, recommendation rec: Recommendation) async {
         let fallback = EmoDrinkPersona.fallbackLine(pick: pick, recommendation: rec)
-        guard hermesVM.backend == .direct, hermesVM.hasDirectKey else {
-            aiNotice = hermesVM.backend == .direct ? "no API key, spoken from the rules" : "bridge mode, spoken from the rules"
+        guard hermesVM.hasDirectKey else {
+            aiNotice = "no API key, spoken from the rules"
             say(fallback)
             return
         }
@@ -262,7 +261,7 @@ final class EmoDrinkViewModel {
         guard momentActive, let rec = recommendation else { return }
         resetMomentTimer()
         let fallback = EmoDrinkPersona.whyFallback(recommendation: rec)
-        guard hermesVM.backend == .direct, hermesVM.hasDirectKey, let prompt = currentPrompt else {
+        guard hermesVM.hasDirectKey, let prompt = currentPrompt else {
             say(fallback)
             return
         }
@@ -342,14 +341,6 @@ final class EmoDrinkViewModel {
         case .recommendDrink: Task { await pickNow() }
         case .startDrinkMode: Task { await startDrinkMode() }
         case .stopDrinkMode: stopDrinkMode()
-        default: break
-        }
-    }
-
-    private func handleKey(_ action: GlassesKeyAction) {
-        switch action {
-        case .recommendDrink: Task { await pickNow() }
-        case .toggleDrinkMode: toggleDrinkMode()
         default: break
         }
     }
