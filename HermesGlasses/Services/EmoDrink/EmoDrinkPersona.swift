@@ -79,9 +79,19 @@ enum EmoDrinkPersona {
     /// Spoken for "why" when there is no AI to answer.
     static func whyFallback(recommendation: Recommendation) -> String {
         guard let first = recommendation.reasons.first else { return "Because it fits how you slept." }
-        let rest = recommendation.reasons.dropFirst().prefix(2)
-        let tail = rest.isEmpty ? "" : ", and " + rest.joined(separator: ", ")
-        return "Because you \(first)\(tail)."
+        let rest = Array(recommendation.reasons.dropFirst().prefix(2))
+        let afterCutoff = "it is after 3 pm"
+        let nounish = rest.filter { $0 != afterCutoff }
+        var sentence = "Because you \(first)"
+        if !nounish.isEmpty { sentence += ", with " + joinedWithAnd(nounish) }
+        if rest.contains(afterCutoff) { sentence += ", and \(afterCutoff)" }
+        return sentence + "."
+    }
+
+    /// "a", "a and b", "a, b and c".
+    private static func joinedWithAnd(_ items: [String]) -> String {
+        guard items.count > 1 else { return items.first ?? "" }
+        return items.dropLast().joined(separator: ", ") + " and " + items[items.count - 1]
     }
 
     private static func functionList(_ d: Drink) -> String {
