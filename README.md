@@ -1,114 +1,77 @@
-# Hermes Glasses
+# EmoDrink Glasses
 
-Talk to your own AI through smart glasses - **Meta Ray-Ban**, or **AiSee**
-and other sub-$100 Realtek-based AI glasses (RTL8773D + RTL8735B reference
-design) - with hands-free voice conversations, live on-device transcription,
-computer vision through the glasses camera ("what am I looking at?"),
-voice-started navigation on the lens, and a private, on-device memory of the
-people you meet. Bring your own
-API key for a zero-infrastructure setup, or point it at a Hermes Agent for
-full agentic, tool-using conversations. No glasses at hand? Phone mode runs
-every feature from the iPhone alone, with a simulated lens on screen.
+One drink, picked from how you slept, offered the moment you reach the
+vending machine. On **Meta Ray-Ban Display** glasses (and AiSee or other
+Realtek-based glasses, or an iPhone alone in phone mode).
 
-A standalone, MIT-licensed project.
+EmoDrink Glasses continues the [EmoDrink](https://dl.acm.org/doi/full/10.1145/3795011.3797399)
+work (Augmented Humans 2026, AHLab with Asahi as the study's industry
+partner): a physiological signal is only useful at the moment a person can
+act on it. The study did that in a Quest 3 with a room-anchored virtual
+machine. This does it on glasses, in the real world, hands-free, in a few
+seconds. Built as a thank-you for Taka, who ran the study and lent the
+glasses.
 
-## Demo
-
-<p align="center">
-  <img src="docs/media/demo-hud.gif" width="300" alt="A spoken reply on the Ray-Ban Display HUD, hands-free">
-  &nbsp;&nbsp;
-  <img src="docs/media/demo-listening.gif" width="300" alt="Live transcription on the glasses lens">
-</p>
-<p align="center"><em>On the Ray-Ban Display lens - a spoken reply (left) and live transcription (right), fully hands-free.</em></p>
-
-<p align="center">
-  <img src="docs/media/home.png" width="220" alt="Home screen in phone mode with the Record, Lens, People, Map and Log quick actions">
-  &nbsp;&nbsp;
-  <img src="docs/media/lens-live.png" width="220" alt="Phone mode: live camera feed with the simulated Ray-Ban Display lens overlaid">
-  &nbsp;&nbsp;
-  <img src="docs/media/settings.png" width="220" alt="Settings hub: assistant, voice and microphone, glasses display, people, object log, navigation">
-</p>
-<p align="center"><em>Home with the quick actions, the simulated lens in phone mode, and the settings hub.</em></p>
-
-<p align="center">
-  <img src="docs/media/navigation.png" width="220" alt="Voice-started walking route on the in-app map with the lens HUD banner">
-  &nbsp;&nbsp;
-  <img src="docs/media/people.png" width="220" alt="People: recorded conversations and spoken notes with snaps (names and photos redacted)">
-  &nbsp;&nbsp;
-  <img src="docs/media/object-log.png" width="220" alt="Object Log: dwell-snapped objects grouped by day">
-</p>
-<p align="center"><em>Voice-started navigation, People (conversation captures and spoken notes), and the Object Log.</em></p>
-
-<p align="center">
-  <img src="docs/media/bridge-terminal.png" width="620" alt="Bridge log: a visual query captures a glasses photo and answers in 5.3 seconds">
-</p>
-<p align="center"><em>Bridge mode: a visual query captures a glasses photo and answers in ~5&nbsp;s.</em></p>
+It is a fork of [Hermes Glasses](https://github.com/prasanthsasikumar/hermes-glasses),
+MIT licensed, and keeps every Hermes feature.
 
 ## What it does
 
-### Talk
+- **Reads your morning.** Last night's sleep hours and score, HRV and
+  resting heart rate against your usual, steps and stress, from a small
+  JSON document at a URL you control (the repo's own `mock/physiology.json`
+  by default, so it works out of the box). Three sample profiles (rested,
+  short night, stressed) for an offline demo.
+- **Picks one drink, on the phone.** A small deterministic rule maps the
+  numbers to a coarse recovery and arousal state, the way EmoDrink did, and
+  ranks a catalogue of twelve public Asahi Group soft drinks (water,
+  sparkling, Calpis, teas, canned coffee, isotonic). The pick is
+  reproducible; the AI never chooses.
+- **Offers it on the lens.** Drink name, Japanese name, a one-line reason,
+  and three buttons: Why, Something else, Thanks. Tap or just say them.
+- **Talks about it.** Anything else you say goes to your AI provider in a
+  drink persona that knows your numbers and the catalogue, and follows the
+  study's rule: suggestive, never diagnostic. No emotion labels, no health
+  claims.
+- **Drink mode.** Say "start drink mode" and the glasses watch quietly. A
+  frame goes to the vision provider only when the scene changes and
+  settles (at most 150 small calls an hour), with one yes or no question:
+  is there a vending machine? Yes shows the pick. Two minutes of quiet
+  follow every pick.
+- **Works without the camera.** "What should I drink" picks anywhere.
+  Without an API key the pick still appears, spoken from the rules.
 
-- 🎙️ **Live transcription** - your words appear on screen as you speak, using
-  Apple's on-device speech recognition (no audio leaves the phone for STT)
-- 🤖 **Ask anything** - finished utterances go straight to your chosen AI
-  provider (Direct mode) or to a Hermes Agent running on your Mac (bridge
-  mode), and the answer is spoken back through text-to-speech
-- 👓 **Lens HUD** - on Ray-Ban Display glasses, transcription and replies
-  render on the lens itself; silent mode shows the text without speaking it
-- 🔘 **Choice buttons** - a reply that offers options ("A) Sydney, B)
-  Melbourne…") becomes tappable buttons on the lens and chips in the chat;
-  tapping one submits the option's words
-- 🧠 **Device context** - queries can carry the moment (time, location,
-  motion, connectivity, battery, weather) so "where can I get coffee?" gets a
-  local answer
+## Say
 
-### See
+| Say | What happens |
+|---|---|
+| "What should I drink" | The pick, now |
+| "Start drink mode" / "Stop drink mode" | Camera watching on / off |
+| "Why" | The reason, in the persona |
+| "Something else" | The next drink in rank order |
+| "Thanks" | Ends the moment |
 
-- 📷 **Vision** - say "what am I looking at?" and the app captures a photo
-  from the glasses camera and the AI answers about the image
-- 🔍 **Object Snap (Lens)** - a live glasses feed with on-device YOLO object
-  detection; hold an object in the reticle for 2 s and it's snapped into the
-  Object Log - no AI, no network
-- 🧭 **Navigation** - "take me to the station" starts a walking or driving
-  route with no AI round-trip: a turn-by-turn banner and a heading-aware map
-  on the lens, and a full map screen (with place search) in the app
-- 📖 **Definitions** - "what is a quokka?" answers as usual and puts a
-  Wikipedia image next to the text on the lens
-- 👓 **AiSee and other Realtek-based glasses** - a second glasses vendor
-  alongside Meta: pick it under Settings › Devices › Glasses. Camera stills
-  for visual queries and "remember this person", the live feed for Lens, the
-  glasses' Opus microphone for the voice loop, and the temple button mapped
-  to actions (tap / double tap / triple tap → start-stop listening, "what am
-  I looking at?", snap a photo, remember this person). No HUD. Any glasses
-  built on Realtek's AI-glasses SDK (`RTKAIDeviceConnection`) should work -
-  these typically retail under $100.
-- 🤝 **"Remember this person"** - snaps a glasses photo while you speak a
-  note about who you just met
-- 🗣️ **"Record this conversation"** - captures the full transcript plus
-  automatic snaps of the people you're talking to (a 2 s look triggers a
-  snap), then re-transcribes from the recording for a cleaner result
-- ✅ **"Start build check"** - photographs your work every few seconds and
-  checks it against an imported procedure (PDF, text, or pasted steps, with
-  optional reference photos). Critical-step mistakes are spoken at once and
-  hold the run until fixed or overridden; everything is logged per step
-  with a PDF report.
-- 📛 **Badge reading** - name badges in snaps are read by on-device OCR and
-  used to group sightings into a timeline per person; an opt-in AI pass can
-  fill in badges the on-device reader missed
-- 🔒 **Private by design** - encounters, snaps and transcripts are stored on
-  this iPhone only and never touch the AI, the bridge, or the network (the
-  one exception, AI badge reading, is off by default)
+## Setup
 
-### No glasses? Phone mode
+Same as Hermes Glasses (below): a Meta Wearables app id in
+`Config/Secrets.xcconfig`, and an AI provider key in Settings for the
+conversation and drink mode. Open **More › EmoDrink** on the phone to see
+today's numbers, switch to sample data, change the feed URL, or toggle
+drink mode. The bundle id is `com.flowsxr.emodrinkglasses`; register it in
+the Meta Wearables Developer Center or build with the Hermes bundle id to
+reuse an existing registration.
 
-- 📱 **The iPhone is the eye** - a Glasses/Phone toggle picks the camera; a
-  simulated Ray-Ban Display lens renders on screen, so every feature above
-  works with no glasses at all (and Auto falls back when glasses are out of
-  reach)
-- 🎧 **Headset mode** - mic and TTS live in your earbuds while the glasses
-  lens keeps the HUD - the pocket setup
-- 💬 **"What can I say?"** - a settings page listing every voice command,
-  generated from the intent detectors themselves so it never drifts
+## Design
+
+- Spec: `docs/superpowers/specs/2026-10-07-emodrink-glasses-design.md`
+  (the implementation plan lives beside it locally; `docs/superpowers/plans` is gitignored, as in Hermes)
+
+Tests: the EmoDrink units are pure Swift with standalone suites under
+`tests/emodrink-*` (compile lines in each `main.swift`).
+
+---
+
+# What it is built on: Hermes Glasses
 
 ## Architecture
 

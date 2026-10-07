@@ -494,6 +494,20 @@ photo via the DAT camera API.
   device (`tests/roster/`); the filesystem half is `RosterImport.swift`.
   Filename stems are names VERBATIM - "Malsha de Zoysa", "Sahan H",
   "anjana viduranga" are all real entries and any tidying would damage them.
+- **EmoDrink (this fork's app):** the pick is on-device (`DrinkRecommender`,
+  pure, tested) and the AI only phrases and converses. `EmoDrinkViewModel`
+  mirrors `BuildCheckViewModel`: owned by the App struct, borrows the
+  session through hooks (`emoDrinkClaimer`, `onEmoDrinkIntent`,
+  `onEmoDrinkKey`, `onEmoDrinkSessionEnding`). While a drink is on the lens
+  the claimer takes ONLY "why" / "something else" / "thanks" (and the
+  drink-mode commands); everything else goes to the brain with
+  `DirectClient.systemPromptOverride` set to the persona. `askPersona`
+  detaches the claimer for one query so the generated "why" question can't
+  loop. Drink mode reuses `ChangeGate` through `VendingMachineGate` (8 s
+  spacing, 150/h, 120 s cooldown after a pick) and `BuildChecker
+  .canRunVisionChecks` as its preflight. The default physiology feed is this
+  repo's `mock/physiology.json` on raw.githubusercontent.com: pushing a
+  change to that file changes what every install reads.
 
 ## Build & run
 
