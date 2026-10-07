@@ -30,7 +30,6 @@
 		AAAA00000000000000000023 /* EmoDrink/IntentDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000126 /* EmoDrink/IntentDetector.swift */; };
 		AAAA00000000000000000032 /* VoiceCommandCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000135 /* VoiceCommandCatalog.swift */; };
 		AAAA00000000000000000033 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000136 /* SettingsView.swift */; };
-		AAAA00000000000000000038 /* yolo11n.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000141 /* yolo11n.mlpackage */; };
 		AAAA00000000000000000801 /* MWDATCore in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA00000000000000000701 /* MWDATCore */; };
 		AAAA00000000000000000802 /* MWDATCamera in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA00000000000000000702 /* MWDATCamera */; };
 		AAAA00000000000000000803 /* MWDATMockDevice in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA00000000000000000703 /* MWDATMockDevice */; };
@@ -60,8 +59,10 @@
 		AAAA00000000000000000E22 /* Intents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E23 /* Intents.swift */; };
 		AAAA00000000000000000E20 /* FrameTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E21 /* FrameTools.swift */; };
 		AAAA00000000000000000E15 /* EmoDrinkViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */; };
+		AAAA00000000000000000E2A /* SessionTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E2B /* SessionTypes.swift */; };
+		AAAA00000000000000000E2E /* HermesSessionViewModel+Developer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E2F /* HermesSessionViewModel+Developer.swift */; };
+		AAAA00000000000000000E2C /* HermesSessionViewModel+Glasses.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E2D /* HermesSessionViewModel+Glasses.swift */; };
 		AAAA00000000000000000E17 /* EmoDrinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E18 /* EmoDrinkView.swift */; };
-		AAAA0000000000000000895 /* faceid.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000896 /* faceid.mlpackage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -105,7 +106,6 @@
 		AAAA0000000000000000012A /* Config/Hermes.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Hermes.xcconfig; sourceTree = SOURCE_ROOT; };
 		AAAA00000000000000000135 /* VoiceCommandCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandCatalog.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000136 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000141 /* yolo11n.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = yolo11n.mlpackage; sourceTree = "<group>"; };
 		AAAA00000000000000000818 /* HermesDesign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesDesign.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000822 /* LensContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensContent.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000824 /* VisionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionSource.swift; sourceTree = "<group>"; };
@@ -131,8 +131,10 @@
 		AAAA00000000000000000E23 /* Intents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/Intents.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E21 /* FrameTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/FrameTools.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrinkViewModel.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E2B /* SessionTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTypes.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E2F /* HermesSessionViewModel+Developer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HermesSessionViewModel+Developer.swift"; sourceTree = "<group>"; };
+		AAAA00000000000000000E2D /* HermesSessionViewModel+Glasses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HermesSessionViewModel+Glasses.swift"; sourceTree = "<group>"; };
 		AAAA00000000000000000E18 /* EmoDrinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrinkView.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000896 /* faceid.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = faceid.mlpackage; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,7 +176,6 @@
 				AAAA0000000000000000002 /* Views */,
 				AAAA0000000000000000003 /* ViewModels */,
 				AAAA0000000000000000004 /* Services */,
-				AAAA0000000000000000006 /* Models */,
 				AAAA00000000000000000108 /* Assets.xcassets */,
 				AAAA00000000000000000E06 /* Resources/EmoDrink/asahi-drinks.json */,
 				AAAA00000000000000000109 /* Info.plist */,
@@ -204,6 +205,9 @@
 				AAAA00000000000000000104 /* WearablesViewModel.swift */,
 				AAAA00000000000000000105 /* HermesSessionViewModel.swift */,
 				AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */,
+				AAAA00000000000000000E2B /* SessionTypes.swift */,
+				AAAA00000000000000000E2F /* HermesSessionViewModel+Developer.swift */,
+				AAAA00000000000000000E2D /* HermesSessionViewModel+Glasses.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -256,15 +260,6 @@
 				AAAA00000000000000000111 /* EmoDrink Glasses.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		AAAA0000000000000000006 /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				AAAA00000000000000000141 /* yolo11n.mlpackage */,
-				AAAA0000000000000000896 /* faceid.mlpackage */,
-			);
-			path = Models;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -371,6 +366,9 @@
 				AAAA00000000000000000821 /* LensContent.swift in Sources */,
 				AAAA00000000000000000841 /* ChoiceDetector.swift in Sources */,
 				AAAA00000000000000000E15 /* EmoDrinkViewModel.swift in Sources */,
+				AAAA00000000000000000E2A /* SessionTypes.swift in Sources */,
+				AAAA00000000000000000E2E /* HermesSessionViewModel+Developer.swift in Sources */,
+				AAAA00000000000000000E2C /* HermesSessionViewModel+Glasses.swift in Sources */,
 				AAAA00000000000000000E17 /* EmoDrinkView.swift in Sources */,
 				AAAA00000000000000000823 /* VisionSource.swift in Sources */,
 				AAAA00000000000000000835 /* VisionRouting.swift in Sources */,
@@ -380,8 +378,6 @@
 				AAAA00000000000000000831 /* SimulatedLensView.swift in Sources */,
 				AAAA00000000000000000833 /* PhoneModeSessionView.swift in Sources */,
 				AAAA00000000000000000033 /* SettingsView.swift in Sources */,
-				AAAA00000000000000000038 /* yolo11n.mlpackage in Sources */,
-				AAAA0000000000000000895 /* faceid.mlpackage in Sources */,
 				AAAA00000000000000000817 /* HermesDesign.swift in Sources */,
 				AAAA00000000000000000A63 /* EmoDrink/ChangeGate.swift in Sources */,
 				AAAA00000000000000000E01 /* EmoDrink/PhysiologySnapshot.swift in Sources */,

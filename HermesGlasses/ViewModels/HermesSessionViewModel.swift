@@ -11,53 +11,7 @@ import MWDATCamera
 import MWDATCore
 import Observation
 import os
-import Photos
 import SwiftUI
-
-/// Represents the current state of the Hermes conversation
-enum HermesConnectionState: Equatable {
-    case disconnected
-    case connecting
-    case listening
-    case recording
-    case processing
-    case speaking
-    case error(String)
-}
-
-/// Where voice is captured (and, on Bluetooth, where TTS plays - HFP is
-/// bidirectional)
-enum MicSource: String, CaseIterable {
-    case phone
-    case glasses
-    case headset
-
-    var label: String {
-        switch self {
-        case .phone: return "iPhone Mic"
-        case .glasses: return "Glasses Mic (call screen)"
-        case .headset: return "Headset Mic (AirPods etc.)"
-        }
-    }
-
-    /// Compact form for the settings hub row, where the caveat in `label`
-    /// doesn't fit.
-    var shortLabel: String {
-        switch self {
-        case .phone: return "iPhone"
-        case .glasses: return "Glasses"
-        case .headset: return "Headset"
-        }
-    }
-
-    var captureRoute: CaptureRoute {
-        switch self {
-        case .phone: return .phoneMic
-        case .glasses: return .glassesMic
-        case .headset: return .headsetMic
-        }
-    }
-}
 
 @Observable
 @MainActor
@@ -232,25 +186,42 @@ final class HermesSessionViewModel {
 
     // MARK: - Private
 
-    @ObservationIgnored private let wearables: WearablesInterface
-    @ObservationIgnored private var deviceSelector: AutoDeviceSelector
-    @ObservationIgnored private var deviceSession: DeviceSession?
-    @ObservationIgnored private let audioManager = HermesAudioManager()
-    @ObservationIgnored private var sessionObserverTask: Task<Void, Never>?
-    @ObservationIgnored private let cameraManager = HermesCameraManager()
+    // Internal, not private: the +Glasses / +Developer extensions use it.
+    @ObservationIgnored let wearables: WearablesInterface
+    // Internal, not private: the +Glasses / +Developer extensions use it.
+    @ObservationIgnored var deviceSelector: AutoDeviceSelector
+    // Internal, not private: the +Glasses / +Developer extensions use it.
+    @ObservationIgnored var deviceSession: DeviceSession?
+    // Internal, not private: the +Glasses / +Developer extensions use it.
+    @ObservationIgnored let audioManager = HermesAudioManager()
+    // Internal, not private: the +Glasses / +Developer extensions use it.
+    @ObservationIgnored var sessionObserverTask: Task<Void, Never>?
+    // Internal, not private: the +Glasses / +Developer extensions use it.
+    @ObservationIgnored let cameraManager = HermesCameraManager()
     @ObservationIgnored private let phoneCameraManager = PhoneCameraManager()
     @ObservationIgnored private let speechRecognizer = HermesSpeechRecognizer()
     @ObservationIgnored private let speechSynthesizer = HermesSpeechSynthesizer()
     @ObservationIgnored private let directClient = DirectClient()
-    @ObservationIgnored private let displayManager = HermesDisplayManager()
+    // Internal, not private: the +Glasses / +Developer extensions use it.
+    @ObservationIgnored let displayManager = HermesDisplayManager()
     @ObservationIgnored private let contextProvider = DeviceContextProvider()
-    @ObservationIgnored private var pendingPhoto: Data?
+    // Internal, not private: the +Glasses / +Developer extensions use it.
+    @ObservationIgnored var pendingPhoto: Data?
     /// Last photo sent in Direct mode, reused only when a fresh capture fails.
     @ObservationIgnored private var lastDirectPhoto: Data?
     @ObservationIgnored private var lastDirectPhotoAt: Date?
     /// Camera-only session owned by the Lens view (nil while the voice
     /// session provides the camera, or when Lens is closed).
-    @ObservationIgnored private var lensSession: DeviceSession?
+    // Internal, not private: the +Glasses / +Developer extensions use it.
+    @ObservationIgnored var lensSession: DeviceSession?
+
+    /// Resumed by the first reply (or error) that follows a test's query.
+    // Internal, not private: the +Glasses / +Developer extensions use it.
+    @ObservationIgnored
+    var pendingTestOutcome: CheckedContinuation<Void, Error>?
+
+    // Internal, not private: the +Glasses / +Developer extensions use it.
+    @ObservationIgnored var askedForCameraGrant = false
 
     /// Exposed for UI to show audio route
     var audio: HermesAudioManager { audioManager }
@@ -776,125 +747,6 @@ final class HermesSessionViewModel {
         }
     }
 
-    /// Step 1 for the glasses route: create the DeviceSession, hand the
-    /// camera its session, and surface camera permission. Returns false
-    /// (having already shown the reason) if the glasses can't be reached.
-    private func connectGlassesSession() async -> Bool {
-        // 1. Create and start a device session with the glasses
-        let session: DeviceSession
-        do {
-            session = try wearables.createSession(deviceSelector: deviceSelector)
-        } catch {
-            NSLog("[Hermes] createSession failed: \(error.localizedDescription)")
-            return false
-        }
-        deviceSession = session
-
-        // Single state observer - use a continuation to signal readiness
-        do {
-            // Boxed flag so both the Task and outer scope can access it
-            let done = OSAllocatedUnfairLock(initialState: false)
-
-            try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
-                let stateStream = session.stateStream()
-                let errorStream = session.errorStream()
-
-                sessionObserverTask = Task { [weak self] in
-                    await withTaskGroup(of: Void.self) { group in
-                        group.addTask {
-                            for await state in stateStream {
-                                if Task.isCancelled { return }
-                                switch state {
-                                case .started:
-                                    done.withLock { finished in
-                                        if !finished {
-                                            finished = true
-                                            cont.resume()
-                                        }
-                                    }
-                                    await self?.handleSessionState(state)
-                                case .stopped, .stopping:
-                                    done.withLock { finished in
-                                        if !finished {
-                                            finished = true
-                                            cont.resume(
-                                                throwing: DeviceSessionError.unexpectedError(
-                                                    description: "Session stopped unexpectedly"
-                                                )
-                                            )
-                                            return
-                                        }
-                                    }
-                                    await self?.handleSessionState(state)
-                                    return
-                                case .paused:
-                                    await self?.handleSessionState(state)
-                                case .starting, .idle:
-                                    break
-                                @unknown default:
-                                    break
-                                }
-                            }
-                        }
-                        group.addTask {
-                            for await error in errorStream {
-                                if Task.isCancelled { return }
-                                done.withLock { finished in
-                                    if !finished {
-                                        finished = true
-                                        cont.resume(throwing: error)
-                                        return
-                                    }
-                                }
-                                await self?.handleSessionError(error)
-                                return
-                            }
-                        }
-                    }
-                }
-
-                // Now start the session
-                do {
-                    try session.start()
-                } catch {
-                    done.withLock { finished in
-                        if !finished {
-                            finished = true
-                            cont.resume(throwing: error)
-                        }
-                    }
-                    return
-                }
-
-                // Check if already started (race: started before streams iterate)
-                done.withLock { finished in
-                    if !finished && session.state == .started {
-                        finished = true
-                        cont.resume()
-                    }
-                }
-            }
-        } catch DeviceSessionError.datAppOnTheGlassesUpdateRequired {
-            show("Glasses app needs update. Please update in Meta AI app.")
-            connectionState = .disconnected
-            return false
-        } catch {
-            // Caller decides whether this is fatal or a cue to use the phone,
-            // so no alert here - just the breadcrumb.
-            NSLog("[Hermes] glasses session failed: \(error.localizedDescription)")
-            deviceSession = nil
-            return false
-        }
-
-        // Session is started - set up Hermes and audio
-        isGlassesConnected = true
-        cameraManager.configure(session: session)
-        // Surface camera permission state early (non-interactive)
-        Task { await ensureCameraPermission(interactive: false) }
-
-        return true
-    }
-
     /// Step 1 for the phone route: start the iPhone camera stream that both
     /// the 5b feed and every visual query read from. A failure here is not
     /// fatal - the voice loop is the valuable half.
@@ -1129,71 +981,6 @@ final class HermesSessionViewModel {
         connectionState = .disconnected
     }
 
-    // MARK: - Camera-only session (Lens view)
-
-    /// Connect the glasses camera WITHOUT starting the voice loop - no mic,
-    /// no speech, no bridge. The Lens view opens straight from the home
-    /// screen: it reuses the live voice session when one exists, otherwise
-    /// it creates its own DeviceSession, torn down by
-    /// `releaseCameraSession()` when the view closes.
-    func ensureCameraSession() async throws {
-        if deviceSession != nil || lensSession != nil { return }
-
-        let session = try wearables.createSession(deviceSelector: deviceSelector)
-        try session.start()
-
-        // Wait until the session actually starts - the camera stream is
-        // rejected before that. Polling beats a state-stream subscription
-        // here: no replay races, and Lens has no ongoing observer needs.
-        let deadline = Date().addingTimeInterval(15)
-        while session.state != .started {
-            if case .stopped = session.state {
-                throw DeviceSessionError.unexpectedError(
-                    description: "Glasses session stopped before starting"
-                )
-            }
-            if Date() >= deadline {
-                session.stop()
-                throw HermesCameraError.timeout
-            }
-            try await Task.sleep(nanoseconds: 150_000_000)
-        }
-
-        lensSession = session
-        cameraManager.configure(session: session)
-        if await ensureCameraPermission(interactive: false) == false {
-            NSLog("[Hermes] glasses camera grant MISSING - streams will fail")
-        }
-    }
-
-    /// Tear down the Lens-owned camera session. No-op when the camera is
-    /// riding on the voice session (or nothing is connected).
-    func releaseCameraSession() {
-        guard let session = lensSession else { return }
-        lensSession = nil
-        if deviceSession == nil { cameraManager.reset() }
-        session.stop()
-    }
-
-    // MARK: - Display on a camera-only session
-
-    /// Attach the display HUD to a camera-only session, so Lookup can put
-    /// its result on the real lens without a voice session running. No-op
-    /// when a voice session exists (its display is already attached) or
-    /// the HUD is off. Best-effort like every display call.
-    func attachDisplayToCameraSession() {
-        guard displayHUDEnabled, deviceSession == nil, let session = lensSession else { return }
-        displayManager.start(session: session)
-    }
-
-    /// Undo `attachDisplayToCameraSession()`. Call BEFORE
-    /// `releaseCameraSession()` - the capability dies with the session.
-    /// No-op when the display belongs to a voice session.
-    func detachDisplayFromCameraSession() {
-        guard deviceSession == nil else { return }
-        displayManager.stop()
-    }
-
     func dismissError() {
         showError = false
     }
@@ -1202,278 +989,10 @@ final class HermesSessionViewModel {
         showNotice = false
     }
 
-    // MARK: - Test panel
-
-    /// Run `body` with a camera session available, creating a temporary
-    /// camera-only one if nothing is running and tearing it down after.
-    /// The test panel is for diagnosing a broken setup - insisting on a
-    /// working session first is exactly backwards.
-    private func withCameraSession<T>(
-        _ body: () async throws -> T
-    ) async throws -> T {
-        let borrowed = deviceSession == nil && lensSession == nil
-        try await ensureCameraSession()
-        defer { if borrowed { releaseCameraSession() } }
-        return try await body()
-    }
-
-    /// Camera alone - no Hermes involved. Runs the interactive permission
-    /// flow (opens Meta AI) if camera access was never granted, and brings
-    /// its own session so it works from a cold start.
-    func testPhoto() async {
-        await runTest("Photo") { [self] in
-            if visionRoute == .glasses {
-                guard await ensureCameraPermission(interactive: true) else {
-                    throw TestFailure("Camera permission denied in Meta AI app")
-                }
-            }
-            let source = vision.sourceLabel
-            let photo = try await withCameraSession {
-                try await captureVisionPhoto()
-            }
-            pendingPhoto = photo
-            lastTestPhoto = UIImage(data: photo)
-            lastTestPhotoSource = "\(photo.count / 1024) KB from the \(source)"
-            addTurn(
-                userText: "[Test Photo]",
-                agentText: "Captured \(photo.count / 1024) KB from the \(source)"
-            )
-        }
-    }
-
-    /// Check (and optionally request via Meta AI) the glasses camera
-    /// permission. The interactive request switches to the Meta AI app.
-    /// The Meta AI glasses-camera grant, requested interactively (it
-    /// app-switches to Meta AI). Nothing in the normal flow ever asked for
-    /// this - only the Photo test button did - so a user who never pressed
-    /// that button had every glasses camera feature fail: Lens with "camera
-    /// unavailable", "remember this person" with a note and no photo.
-    @discardableResult
-    func requestGlassesCameraAccess() async -> Bool {
-        await ensureCameraPermission(interactive: true)
-    }
-
-    /// Asked once, the moment glasses finish pairing. This grant is what
-    /// makes the glasses camera work at all, and leaving it to be discovered
-    /// via a failure was the single worst bug in this app: Lens said "camera
-    /// unavailable" and "remember this person" saved notes with no photo,
-    /// with nothing anywhere explaining why.
-    func ensureGlassesCameraAfterPairing() async {
-        guard !askedForCameraGrant else { return }
-        askedForCameraGrant = true
-        if await glassesCameraGranted() == false {
-            await requestGlassesCameraAccess()
-        }
-    }
-
-    @ObservationIgnored private var askedForCameraGrant = false
-
-    /// Non-interactive refresh, so the UI can warn before anything fails.
-    func refreshGlassesCameraStatus() async {
-        guard wearables.registrationState == .registered else { return }
-        _ = await glassesCameraGranted()
-    }
-
-    /// Cheap check for "will the glasses camera work at all".
-    func glassesCameraGranted() async -> Bool {
-        return await ensureCameraPermission(interactive: false)
-    }
-
-    func ensureCameraPermission(interactive: Bool) async -> Bool {
-        do {
-            let status = try await wearables.checkPermissionStatus(.camera)
-            if status == .granted {
-                cameraPermissionGranted = true
-                return true
-            }
-            if interactive {
-                let result = try await wearables.requestPermission(.camera)
-                cameraPermissionGranted = (result == .granted)
-                return result == .granted
-            }
-            cameraPermissionGranted = false
-            return false
-        } catch {
-            cameraPermissionGranted = false
-            return false
-        }
-    }
-
-    /// Round trip through the active brain → response text (+TTS)
-    func testQuery() async {
-        await runTest("Query") { [self] in
-            try await awaitTestReply {
-                submitQuery("Respond with exactly: OK")
-            }
-        }
-    }
-
-    /// Pure output test: play a locally generated tone through the current
-    /// audio route (glasses in glasses mode). No bridge or Hermes involved.
-    func testSound() async {
-        await runTest("Sound") { [self] in
-            if connectionState == .disconnected {
-                // No session: playback-only mode (phone speaker or whatever
-                // route iOS picks)
-                try audioManager.preparePlaybackOnly()
-            } else {
-                connectionState = .speaking
-            }
-            await audioManager.playResponse(HermesAudioManager.makeTestTone())
-            lastTestAudioRoute = audioManager.currentOutputName
-        }
-    }
-
-    /// Full photo pipeline via a canned visual query
-    func testVisualQuery() async {
-        await runTest("Visual") { [self] in
-            // Borrowed for the whole round trip: the capture happens inside
-            // submitQuery, so the session has to outlive this call - and
-            // waiting for the answer is what tells us it did. This used to
-            // call ensureCameraSession() and walk away, leaving a cold-start
-            // session running with nothing on any path to release it
-            // (endSession() only tears down the VOICE session).
-            try await withCameraSession {
-                try await awaitTestReply {
-                    submitQuery("What am I looking at? Answer in one short sentence.")
-                }
-            }
-        }
-    }
-
-    /// Attach (if needed) and push a static screen to the lens. Works
-    /// without a Hermes session: spins up a temporary device session just
-    /// for the test and tears it down after a few seconds.
-    func testDisplay() async {
-        await runTest("Display") { [self] in
-            if let session = deviceSession {
-                if displayManager.status != .connected {
-                    displayManager.stop()
-                    displayManager.start(session: session)
-                }
-                // Attach is async - wait up to 5 s for the capability
-                for _ in 0..<50 where displayManager.status != .connected {
-                    try await Task.sleep(nanoseconds: 100_000_000)
-                }
-                try await displayManager.sendTest()
-                return
-            }
-
-            // No session: temporary one, display only
-            let session = try wearables.createSession(deviceSelector: deviceSelector)
-            do {
-                try session.start()
-                for _ in 0..<50 where session.state != .started {
-                    try await Task.sleep(nanoseconds: 100_000_000)
-                }
-                guard session.state == .started else {
-                    throw TestFailure("Glasses didn't respond (check they're awake and connected in Meta AI)")
-                }
-                displayManager.stop()
-                displayManager.start(session: session)
-                for _ in 0..<50 where displayManager.status != .connected {
-                    try await Task.sleep(nanoseconds: 100_000_000)
-                }
-                try await displayManager.sendTest()
-            } catch {
-                displayManager.stop()
-                session.stop()
-                throw error
-            }
-            // Leave the test screen up briefly, then tear down - unless a
-            // real session started meanwhile (it re-attaches the display
-            // to its own session in startSession)
-            Task { @MainActor [weak self] in
-                try? await Task.sleep(nanoseconds: 8_000_000_000)
-                if let self, self.deviceSession == nil {
-                    self.displayManager.stop()
-                }
-                session.stop()
-            }
-        }
-    }
-
-    private struct TestFailure: LocalizedError {
-        let message: String
-        init(_ message: String) { self.message = message }
-        var errorDescription: String? { message }
-    }
-
-    /// Resumed by the first reply (or error) that follows a test's query.
-    @ObservationIgnored
-    private var pendingTestOutcome: CheckedContinuation<Void, Error>?
-
-    /// Longest a test waits for a brain before calling it a failure. Generous
-    /// on purpose: a bridge shelling out to `hermes chat` with an image
-    /// attached is slow, and a false failure is as useless as a false pass.
-    private static let testReplyTimeout: Double = 90
-
-    /// Run `submit` and wait for the answer it produces.
-    ///
-    /// The Query and Visual tests used to report a pass the moment
-    /// `submitQuery` returned - which only says the text was dispatched, not
-    /// that any brain answered. A panel that exists to diagnose a broken
-    /// setup must not go green on a dead bridge.
-    private func awaitTestReply(_ submit: () -> Void) async throws {
-        let timeout = Self.testReplyTimeout
-        let timer = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
-            guard !Task.isCancelled else { return }
-            self?.completeTestOutcome(
-                .failure(TestFailure("No answer within \(Int(timeout)) s"))
-            )
-        }
-        defer { timer.cancel() }
-        try await withCheckedThrowingContinuation { cont in
-            // A second test started while this one was waiting would strand
-            // the first continuation forever - fail it instead.
-            completeTestOutcome(.failure(TestFailure("Superseded by another test")))
-            pendingTestOutcome = cont
-            submit()
-        }
-    }
-
-    private func completeTestOutcome(_ result: Result<Void, Error>) {
-        guard let cont = pendingTestOutcome else { return }
-        pendingTestOutcome = nil
-        cont.resume(with: result)
-    }
-
-    private func runTest(_ name: String, _ body: () async throws -> Void) async {
-        testRunning.insert(name)
-        defer { testRunning.remove(name) }
-        do {
-            try await body()
-            testResults[name] = ""
-            lastTestFailure = nil
-        } catch {
-            testResults[name] = error.localizedDescription
-            lastTestFailure = error.localizedDescription
-        }
-    }
-
     // MARK: - Private
 
-    private func handleSessionState(_ state: DeviceSessionState) async {
-        switch state {
-        case .started:
-            isGlassesConnected = true
-        case .stopped, .stopping:
-            endSession()
-        case .paused:
-            connectionState = .disconnected
-        case .starting, .idle:
-            break
-        @unknown default:
-            break
-        }
-    }
-
-    private func handleSessionError(_ error: DeviceSessionError) async {
-        show(error.localizedDescription)
-    }
-
-    private func addTurn(userText: String, agentText: String) {
+    // Internal, not private: the +Glasses / +Developer extensions use it.
+    func addTurn(userText: String, agentText: String) {
         let turn = ConversationTurn(
             userText: userText,
             agentText: agentText,
@@ -1489,7 +1008,8 @@ final class HermesSessionViewModel {
         lastTranscript = ""
     }
 
-    private func show(_ message: String) {
+    // Internal, not private: the +Glasses / +Developer extensions use it.
+    func show(_ message: String) {
         errorMessage = message
         showError = true
         // A test waiting on a round trip has just learnt its outcome: this
@@ -1503,14 +1023,4 @@ final class HermesSessionViewModel {
         noticeMessage = message
         showNotice = true
     }
-}
-
-struct ConversationTurn: Identifiable {
-    let id = UUID()
-    let userText: String
-    let agentText: String
-    let timestamp: Date
-    var photo: Data? = nil
-    /// Which camera took `photo` ("Ray-Ban camera", "iPhone camera").
-    var photoSource: String? = nil
 }
