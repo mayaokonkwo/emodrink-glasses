@@ -108,7 +108,6 @@ final class HermesSessionViewModel {
     @ObservationIgnored var onEmoDrinkSessionEnding: (@MainActor () -> Void)?
     /// When the lens would otherwise blank after a reply's dwell, EmoDrink may restore its card. Returns true when it drew something.
     @ObservationIgnored var emoDrinkLensIdle: (@MainActor () -> Bool)?
-    @ObservationIgnored private var chimePlayer: AVAudioPlayer?
     /// Queued cues (`speakCue(_:queued: true)`) waiting for the current one
     /// to finish; drained one at a time by `speechSynthesizer.onFinished`.
     @ObservationIgnored private var cueQueue: [String] = []
@@ -2071,15 +2070,6 @@ final class HermesSessionViewModel {
     /// A notice on the main screen (the non-fault banner).
     func showNoticeMessage(_ message: String) {
         show(notice: message)
-    }
-
-    /// Soft "note for later" cue (ChimeTone). Plays over whatever route
-    /// speech uses; never suspends the recognizer (it's 0.35 s of tone).
-    func playChime() {
-        guard let player = try? AVAudioPlayer(data: ChimeTone.wav()) else { return }
-        player.volume = 0.6
-        chimePlayer = player
-        player.play()
     }
 
     /// Build Check on the lens (Ray-Ban Display) and the simulated lens.

@@ -2,12 +2,12 @@
 // ChangeGate.swift
 //
 // Which frames are worth a quick AI check. Distances are Vision feature-
-// print distances (BuildCheckVision): from the last frame that WAS checked
+// print distances (FramePrint in FrameTools.swift): from the last frame that WAS checked
 // (has the scene changed?) and from the previous frame (has it settled, or
 // are hands still moving?). Checking only settled, changed scenes is what
 // keeps the per-hour cost bounded without missing a new state of the work.
 // Thresholds are PROVISIONAL - measure with tools/changegate-probe.swift.
-// Foundation only; tested in tests/buildcheck-gate.
+// Foundation only; tested in tests/change-gate.
 //
 
 import Foundation

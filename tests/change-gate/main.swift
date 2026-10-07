@@ -1,7 +1,7 @@
 //
 // Standalone tests for ChangeGate. Build + run:
-//   xcrun swiftc HermesGlasses/Services/BuildCheck/ChangeGate.swift \
-//     tests/buildcheck-gate/main.swift -o /tmp/bc-gate && /tmp/bc-gate
+//   xcrun swiftc HermesGlasses/Services/EmoDrink/ChangeGate.swift \
+//     tests/change-gate/main.swift -o /tmp/bc-gate && /tmp/bc-gate
 //
 import Foundation
 

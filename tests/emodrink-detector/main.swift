@@ -1,7 +1,7 @@
 //
 // Standalone tests for the vending machine gate + detector parser. Run:
 //   xcrun swiftc \
-//     HermesGlasses/Services/BuildCheck/ChangeGate.swift \
+//     HermesGlasses/Services/EmoDrink/ChangeGate.swift \
 //     HermesGlasses/Services/EmoDrink/VendingMachineGate.swift \
 //     HermesGlasses/Services/EmoDrink/VendingMachineDetector.swift \
 //     tests/emodrink-detector/main.swift -o /tmp/ed-detector && /tmp/ed-detector

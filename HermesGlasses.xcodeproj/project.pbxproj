@@ -80,21 +80,7 @@
 		AAAA00000000000000000881 /* People/RosterStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000882 /* People/RosterStore.swift */; };
 		AAAA00000000000000000883 /* People/FaceMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000884 /* People/FaceMatcher.swift */; };
 		AAAA00000000000000000885 /* People/FaceAlignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000886 /* People/FaceAlignment.swift */; };
-		AAAA00000000000000000A59 /* BuildCheck/BuildCheckJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A5A /* BuildCheck/BuildCheckJSON.swift */; };
-		AAAA00000000000000000A5B /* BuildCheck/Procedure.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A5C /* BuildCheck/Procedure.swift */; };
-		AAAA00000000000000000A5D /* BuildCheck/ProcedureParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A5E /* BuildCheck/ProcedureParser.swift */; };
-		AAAA00000000000000000A5F /* BuildCheck/BuildCheckPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A60 /* BuildCheck/BuildCheckPrompt.swift */; };
-		AAAA00000000000000000A61 /* BuildCheck/AlertPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A62 /* BuildCheck/AlertPolicy.swift */; };
-		AAAA00000000000000000A63 /* BuildCheck/ChangeGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A64 /* BuildCheck/ChangeGate.swift */; };
-		AAAA00000000000000000A65 /* BuildCheck/BuildRunTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A66 /* BuildCheck/BuildRunTracker.swift */; };
-		AAAA00000000000000000A67 /* BuildCheck/BuildRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A68 /* BuildCheck/BuildRun.swift */; };
-		AAAA00000000000000000A69 /* BuildCheck/ProcedureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A6A /* BuildCheck/ProcedureStore.swift */; };
-		AAAA00000000000000000A6B /* BuildCheck/BuildRunStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A6C /* BuildCheck/BuildRunStore.swift */; };
-		AAAA00000000000000000A6D /* BuildCheck/ChimeTone.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A6E /* BuildCheck/ChimeTone.swift */; };
-		AAAA00000000000000000A6F /* BuildCheck/BuildCheckVision.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A70 /* BuildCheck/BuildCheckVision.swift */; };
-		AAAA00000000000000000A71 /* BuildCheck/BuildChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A72 /* BuildCheck/BuildChecker.swift */; };
-		AAAA00000000000000000A73 /* BuildCheck/ProcedureImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A74 /* BuildCheck/ProcedureImporter.swift */; };
-		AAAA00000000000000000A75 /* BuildCheck/BuildRunPDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A76 /* BuildCheck/BuildRunPDF.swift */; };
+		AAAA00000000000000000A63 /* EmoDrink/ChangeGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A64 /* EmoDrink/ChangeGate.swift */; };
 		AAAA00000000000000000E01 /* EmoDrink/PhysiologySnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E02 /* EmoDrink/PhysiologySnapshot.swift */; };
 		AAAA00000000000000000E03 /* EmoDrink/DrinkCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E04 /* EmoDrink/DrinkCatalog.swift */; };
 		AAAA00000000000000000E05 /* Resources/EmoDrink/asahi-drinks.json in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E06 /* Resources/EmoDrink/asahi-drinks.json */; };
@@ -106,6 +92,7 @@
 		AAAA00000000000000000E11 /* EmoDrink/EmoDrinkPersona.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E12 /* EmoDrink/EmoDrinkPersona.swift */; };
 		AAAA00000000000000000E13 /* EmoDrink/EmoDrinkCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E14 /* EmoDrink/EmoDrinkCommands.swift */; };
 		AAAA00000000000000000E19 /* BundledAIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E1A /* BundledAIKey.swift */; };
+		AAAA00000000000000000E20 /* FrameTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E21 /* FrameTools.swift */; };
 		AAAA00000000000000000E15 /* EmoDrinkViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */; };
 		AAAA00000000000000000E17 /* EmoDrinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E18 /* EmoDrinkView.swift */; };
 		AAAA0000000000000000887 /* People/FaceEmbedder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000888 /* People/FaceEmbedder.swift */; };
@@ -201,21 +188,7 @@
 		AAAA00000000000000000882 /* People/RosterStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/RosterStore.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000884 /* People/FaceMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/FaceMatcher.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000886 /* People/FaceAlignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/FaceAlignment.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A5A /* BuildCheck/BuildCheckJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildCheckJSON.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A5C /* BuildCheck/Procedure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/Procedure.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A5E /* BuildCheck/ProcedureParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ProcedureParser.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A60 /* BuildCheck/BuildCheckPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildCheckPrompt.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A62 /* BuildCheck/AlertPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/AlertPolicy.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A64 /* BuildCheck/ChangeGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ChangeGate.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A66 /* BuildCheck/BuildRunTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRunTracker.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A68 /* BuildCheck/BuildRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRun.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A6A /* BuildCheck/ProcedureStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ProcedureStore.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A6C /* BuildCheck/BuildRunStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRunStore.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A6E /* BuildCheck/ChimeTone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ChimeTone.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A70 /* BuildCheck/BuildCheckVision.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildCheckVision.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A72 /* BuildCheck/BuildChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildChecker.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A74 /* BuildCheck/ProcedureImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ProcedureImporter.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A76 /* BuildCheck/BuildRunPDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRunPDF.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A64 /* EmoDrink/ChangeGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/ChangeGate.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E02 /* EmoDrink/PhysiologySnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/PhysiologySnapshot.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E04 /* EmoDrink/DrinkCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/DrinkCatalog.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E06 /* Resources/EmoDrink/asahi-drinks.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "Resources/EmoDrink/asahi-drinks.json"; sourceTree = "<group>"; };
@@ -227,6 +200,7 @@
 		AAAA00000000000000000E12 /* EmoDrink/EmoDrinkPersona.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/EmoDrinkPersona.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E14 /* EmoDrink/EmoDrinkCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/EmoDrinkCommands.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E1A /* BundledAIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/BundledAIKey.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E21 /* FrameTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/FrameTools.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrinkViewModel.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E18 /* EmoDrinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrinkView.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000888 /* People/FaceEmbedder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/FaceEmbedder.swift; sourceTree = "<group>"; };
@@ -371,21 +345,7 @@
 				AAAA00000000000000000806 /* Lens/LensLogAggregator.swift */,
 				AAAA00000000000000000808 /* Lens/LensSession.swift */,
 				AAAA00000000000000000810 /* Lens/LensSessionStore.swift */,
-				AAAA00000000000000000A76 /* BuildCheck/BuildRunPDF.swift */,
-				AAAA00000000000000000A74 /* BuildCheck/ProcedureImporter.swift */,
-				AAAA00000000000000000A72 /* BuildCheck/BuildChecker.swift */,
-				AAAA00000000000000000A70 /* BuildCheck/BuildCheckVision.swift */,
-				AAAA00000000000000000A6E /* BuildCheck/ChimeTone.swift */,
-				AAAA00000000000000000A6C /* BuildCheck/BuildRunStore.swift */,
-				AAAA00000000000000000A6A /* BuildCheck/ProcedureStore.swift */,
-				AAAA00000000000000000A68 /* BuildCheck/BuildRun.swift */,
-				AAAA00000000000000000A66 /* BuildCheck/BuildRunTracker.swift */,
-				AAAA00000000000000000A64 /* BuildCheck/ChangeGate.swift */,
-				AAAA00000000000000000A62 /* BuildCheck/AlertPolicy.swift */,
-				AAAA00000000000000000A60 /* BuildCheck/BuildCheckPrompt.swift */,
-				AAAA00000000000000000A5E /* BuildCheck/ProcedureParser.swift */,
-				AAAA00000000000000000A5C /* BuildCheck/Procedure.swift */,
-				AAAA00000000000000000A5A /* BuildCheck/BuildCheckJSON.swift */,
+				AAAA00000000000000000A64 /* EmoDrink/ChangeGate.swift */,
 				AAAA00000000000000000E02 /* EmoDrink/PhysiologySnapshot.swift */,
 				AAAA00000000000000000E04 /* EmoDrink/DrinkCatalog.swift */,
 				AAAA00000000000000000E08 /* EmoDrink/DrinkRecommender.swift */,
@@ -396,6 +356,7 @@
 				AAAA00000000000000000E12 /* EmoDrink/EmoDrinkPersona.swift */,
 				AAAA00000000000000000E14 /* EmoDrink/EmoDrinkCommands.swift */,
 				AAAA00000000000000000E1A /* BundledAIKey.swift */,
+				AAAA00000000000000000E21 /* FrameTools.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -571,21 +532,7 @@
 				AAAA00000000000000000809 /* Lens/LensSessionStore.swift in Sources */,
 				AAAA00000000000000000811 /* Lens/LensPDFRenderer.swift in Sources */,
 				AAAA00000000000000000817 /* HermesDesign.swift in Sources */,
-				AAAA00000000000000000A75 /* BuildCheck/BuildRunPDF.swift in Sources */,
-				AAAA00000000000000000A73 /* BuildCheck/ProcedureImporter.swift in Sources */,
-				AAAA00000000000000000A71 /* BuildCheck/BuildChecker.swift in Sources */,
-				AAAA00000000000000000A6F /* BuildCheck/BuildCheckVision.swift in Sources */,
-				AAAA00000000000000000A6D /* BuildCheck/ChimeTone.swift in Sources */,
-				AAAA00000000000000000A6B /* BuildCheck/BuildRunStore.swift in Sources */,
-				AAAA00000000000000000A69 /* BuildCheck/ProcedureStore.swift in Sources */,
-				AAAA00000000000000000A67 /* BuildCheck/BuildRun.swift in Sources */,
-				AAAA00000000000000000A65 /* BuildCheck/BuildRunTracker.swift in Sources */,
-				AAAA00000000000000000A63 /* BuildCheck/ChangeGate.swift in Sources */,
-				AAAA00000000000000000A61 /* BuildCheck/AlertPolicy.swift in Sources */,
-				AAAA00000000000000000A5F /* BuildCheck/BuildCheckPrompt.swift in Sources */,
-				AAAA00000000000000000A5D /* BuildCheck/ProcedureParser.swift in Sources */,
-				AAAA00000000000000000A5B /* BuildCheck/Procedure.swift in Sources */,
-				AAAA00000000000000000A59 /* BuildCheck/BuildCheckJSON.swift in Sources */,
+				AAAA00000000000000000A63 /* EmoDrink/ChangeGate.swift in Sources */,
 				AAAA00000000000000000E01 /* EmoDrink/PhysiologySnapshot.swift in Sources */,
 				AAAA00000000000000000E03 /* EmoDrink/DrinkCatalog.swift in Sources */,
 				AAAA00000000000000000E07 /* EmoDrink/DrinkRecommender.swift in Sources */,
@@ -596,6 +543,7 @@
 				AAAA00000000000000000E11 /* EmoDrink/EmoDrinkPersona.swift in Sources */,
 				AAAA00000000000000000E13 /* EmoDrink/EmoDrinkCommands.swift in Sources */,
 				AAAA00000000000000000E19 /* BundledAIKey.swift in Sources */,
+				AAAA00000000000000000E20 /* FrameTools.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

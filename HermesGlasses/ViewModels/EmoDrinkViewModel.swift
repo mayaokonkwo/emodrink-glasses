@@ -369,7 +369,7 @@ final class EmoDrinkViewModel {
             if startedSession { startedSession = false; hermesVM.endSession() }
             return
         }
-        let preflight = BuildChecker.canRunVisionChecks
+        let preflight = FrameTools.canRunVisionChecks
         guard preflight.ok else {
             fail("Drink mode needs a vision provider with a key (\(preflight.reason ?? "not set up")). Say \"what should I drink\" instead.")
             if startedSession { startedSession = false; hermesVM.endSession() }
@@ -530,7 +530,7 @@ final class EmoDrinkViewModel {
 
     private func check(_ image: UIImage) async {
         defer { checkInFlight = false }
-        guard let jpeg = BuildCheckComposer.downscaledJPEG(image, maxSide: 768, quality: 0.6) else { return }
+        guard let jpeg = FrameTools.downscaledJPEG(image, maxSide: 768, quality: 0.6) else { return }
         do {
             let reply = try await oneShot.askOneShot(systemPrompt: VendingMachineDetector.systemPrompt,
                                                      userText: VendingMachineDetector.userText,
