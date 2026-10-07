@@ -7,7 +7,6 @@
 //
 
 import CoreMedia
-import MapKit
 import MWDATCamera
 import MWDATCore
 import Observation
@@ -86,16 +85,6 @@ final class HermesSessionViewModel {
     var lastTestPhotoSource: String? = nil
     var lastTestAudioRoute: String? = nil
 
-    // MARK: Build Check hooks
-
-    /// During a run, every finalized utterance is offered here first; true =
-    /// claimed (command or narration), and nothing reaches the brain.
-    @ObservationIgnored var buildRunClaimer: (@MainActor (String) -> Bool)?
-    /// "start build check" was heard.
-    @ObservationIgnored var onStartBuildCheck: (@MainActor () -> Void)?
-    /// The session is being torn down; a run must save itself.
-    @ObservationIgnored var onSessionEnding: (@MainActor () -> Void)?
-
     // MARK: EmoDrink hooks (set by EmoDrinkViewModel)
 
     /// While a drink is on the lens, every finalized utterance is offered
@@ -156,85 +145,6 @@ final class HermesSessionViewModel {
             UserDefaults.standard.set(displaySilentMode, forKey: "display_silent_mode")
         }
     }
-    /// "take me to X" -> map + directions on the lens. The EmoDrink gift
-    /// build hides this feature: it reads as false whatever an older install
-    /// stored.
-    var navigationEnabled: Bool = false {
-        didSet { UserDefaults.standard.set(navigationEnabled, forKey: "navigation_enabled") }
-    }
-    /// "what is X" -> answer + Wikipedia picture on the lens. Forced off in
-    /// the EmoDrink gift build (a stored true is ignored).
-    var definitionImagesEnabled: Bool = false {
-        didSet { UserDefaults.standard.set(definitionImagesEnabled, forKey: "definition_images_enabled") }
-    }
-    /// "remember this person" -> photo + spoken note saved for follow-ups.
-    /// Forced off in the EmoDrink gift build (a stored true is ignored).
-    var socialNotesEnabled: Bool = false {
-        didSet { UserDefaults.standard.set(socialNotesEnabled, forKey: "social_notes_enabled") }
-    }
-    /// Read name tags off the people snapped during a conversation capture.
-    /// On-device Vision only - nothing leaves the phone. Default on.
-    var badgeOCREnabled: Bool =
-        (UserDefaults.standard.object(forKey: "badge_ocr_enabled") as? Bool) ?? true {
-        didSet {
-            UserDefaults.standard.set(badgeOCREnabled, forKey: "badge_ocr_enabled")
-            // Assist exists to catch what on-device OCR missed. With OCR off
-            // every sighting is "missed", so leaving assist on would send the
-            // MOST photos off-device - the opposite of what turning OCR off
-            // suggests the user wants.
-            if !badgeOCREnabled { badgeAssistEnabled = false }
-        }
-    }
-    /// Keep the photograph printed on an ID card, cropped off the badge.
-    ///
-    /// Its own setting, and off by default, because it is the one payload
-    /// here a person would object to on sight. Everything else in badge
-    /// reading works without it, and the saved FILE never leaves the phone -
-    /// but badge assist sends a crop of the badge itself, and a printed
-    /// portrait is part of that badge, so its pixels are not exempt there.
-    var badgePortraitsEnabled: Bool =
-        (UserDefaults.standard.object(forKey: "badge_portraits_enabled") as? Bool) ?? false {
-        didSet {
-            UserDefaults.standard.set(badgePortraitsEnabled, forKey: "badge_portraits_enabled")
-        }
-    }
-    /// After a recording ends, ask the configured AI provider to read the
-    /// badges Vision could not. This is the ONLY part of the People feature
-    /// that leaves the phone, so it is off until the user turns it on.
-    var badgeAssistEnabled: Bool =
-        (UserDefaults.standard.object(forKey: "badge_assist_enabled") as? Bool) ?? false {
-        didSet { UserDefaults.standard.set(badgeAssistEnabled, forKey: "badge_assist_enabled") }
-    }
-    /// True between "remember this person" and the note being saved - drives
-    /// the "listening for a note" affordance in the phone UI.
-    var awaitingEncounterNote: Bool = false
-    /// True while a conversation capture runs ("record this conversation"):
-    /// every utterance becomes transcript, a 2 s person dwell snaps a photo,
-    /// and nothing reaches the AI until the stop command saves one note.
-    var conversationCaptureActive: Bool = false
-    /// Photos kept so far in the running capture (drives the UI chip).
-    var conversationCaptureSnapCount: Int = 0
-    /// True while a hand-triggered badge-assist pass runs, so the button that
-    /// started it can show progress and refuse to start a second one.
-    var badgeAssistIsRunning: Bool = false
-    /// True while a saved capture is being re-transcribed from its recording.
-    /// The entry is already readable throughout; this only tells the People
-    /// screen that a better transcript is on its way.
-    var transcriptionIsRunning: Bool = false
-    /// True when the session exists only to record (started from the Record
-    /// action with nothing else running). No brain is connected, so speech
-    /// that is not claimed by a capture is discarded rather than sent to a
-    /// provider that was never set up.
-    private(set) var recordingOnlySession: Bool = false
-    /// Bumped whenever an encounter is saved/edited/deleted so the People
-    /// screen re-reads the store.
-    var encounterRevision: Int = 0
-    var lensSessionRevision: Int = 0
-    /// Whether a Mapbox token is stored (drives Settings UI + notices).
-    var hasMapboxToken: Bool = MapCredentials.hasToken
-    /// The running route, mirrored for the in-app map screen (design 4f).
-    /// Nil whenever nothing is being navigated to.
-    var activeRoute: NavigationController.RouteSnapshot?
     /// Attach time/location/status context to every query
     var contextEnabled: Bool =
         (UserDefaults.standard.object(forKey: DeviceContextProvider.enabledKey) as? Bool) ?? true {
@@ -334,48 +244,10 @@ final class HermesSessionViewModel {
     @ObservationIgnored private let directClient = DirectClient()
     @ObservationIgnored private let displayManager = HermesDisplayManager()
     @ObservationIgnored private let contextProvider = DeviceContextProvider()
-    @ObservationIgnored private let navigation = NavigationController()
-    @ObservationIgnored private let encounterStore = EncounterStore()
-    @ObservationIgnored private let lensSessionStore = LensSessionStore()
-    /// In-flight glasses capture for the encounter whose note we're awaiting.
-    /// Joined by `finishEncounter`, so the note and the photo can land in
-    /// either order.
-    @ObservationIgnored private var encounterPhotoTask: Task<Data?, Never>?
-    /// Fires if no note arrives - saves the photo with an empty note.
-    @ObservationIgnored private var encounterTimeoutTask: Task<Void, Never>?
-    // Conversation capture ("record this conversation"): pure state plus
-    // the vision pipeline (live stream → person detections → dwell) that
-    // feeds it. All torn down by `stopCaptureVision()`.
-    @ObservationIgnored private var captureModel = ConversationCaptureModel()
-    @ObservationIgnored private var capturePhotos: [Data] = []
-    /// Portraits cropped off badges during the running capture. Parallel to
-    /// capturePhotos and deliberately NOT merged into it - see
-    /// EncounterStore.save.
-    @ObservationIgnored private var capturePortraits: [Data] = []
-    @ObservationIgnored private var captureDetector: ObjectDetector?
-    @ObservationIgnored private var captureDwell: DwellTracker?
-    @ObservationIgnored private var captureLatestFrame: UIImage?
-    /// Writes the capture's audio to disk. The transcript is made from this
-    /// file afterwards, not from the live recogniser - see
-    /// `ConversationRecorder` for why.
-    @ObservationIgnored private let recorder = ConversationRecorder()
-    /// Where the running capture is recording, before the encounter exists to
-    /// name the file after.
-    @ObservationIgnored private var captureRecordingURL: URL?
-    /// The post-capture transcription pass. Outlives the capture: the
-    /// encounter is already saved and this only improves its transcript.
-    @ObservationIgnored private var transcriptionTask: Task<Void, Never>?
-    @ObservationIgnored private var captureStreamRunning = false
-    @ObservationIgnored private var captureSetupTask: Task<Void, Never>?
-    /// The deferred badge-assist pass. Outlives the capture on purpose - the
-    /// encounter is already saved and this only fills in names.
-    @ObservationIgnored private var badgeAssistTask: Task<Void, Never>?
     @ObservationIgnored private var pendingPhoto: Data?
     /// Last photo sent in Direct mode, reused only when a fresh capture fails.
     @ObservationIgnored private var lastDirectPhoto: Data?
     @ObservationIgnored private var lastDirectPhotoAt: Date?
-    @ObservationIgnored private var pendingDefinitionSubject: String?
-    @ObservationIgnored private var definitionGeneration = 0
     /// Camera-only session owned by the Lens view (nil while the voice
     /// session provides the camera, or when Lens is closed).
     @ObservationIgnored private var lensSession: DeviceSession?
@@ -502,8 +374,7 @@ final class HermesSessionViewModel {
         voiceSession=\(deviceSession != nil) lensSession=\(lensSession != nil) \
         connection=\(connectionState) mic=\(micSource.rawValue) \
         display=\(displayStatus) hudEnabled=\(displayHUDEnabled) \
-        glassesStreaming=\(cameraManager.isStreaming) \
-        captureStream=\(captureStreamRunning) recording=\(conversationCaptureActive)
+        glassesStreaming=\(cameraManager.isStreaming)
         """
     }
 
@@ -569,7 +440,7 @@ final class HermesSessionViewModel {
         observeActiveDevice()
         // Wired at init, NOT at session start: lens callbacks must exist
         // before any session does (see CLAUDE.md, display callbacks).
-        wireDisplayAndNavigation()
+        wireDisplay()
     }
 
     deinit {
@@ -601,23 +472,7 @@ final class HermesSessionViewModel {
 
     // MARK: - Public API
 
-    /// Bring up mic + camera + lens for recording ONLY - no bridge, no
-    /// provider, no TTS answers.
-    ///
-    /// Recording a conversation uses none of the query path, so demanding a
-    /// full voice session first (which is what the Record chip's
-    /// `connectionState != .disconnected` gate amounted to) made the feature
-    /// unreachable until the user had connected a brain they were not going
-    /// to use. Same lesson as the test panel: a thing that works standalone
-    /// must start standalone.
-    func startSessionForRecording() async {
-        recordingOnlySession = true
-        await startSession(engagingBrain: false)
-        if connectionState == .disconnected { recordingOnlySession = false }
-    }
-
     func startSession() async {
-        recordingOnlySession = false
         await startSession(engagingBrain: true)
     }
 
@@ -781,42 +636,8 @@ final class HermesSessionViewModel {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
-        // A pending encounter claims the next utterance outright: it's a
-        // note about a person, not a question, so it must not be
-        // re-classified as navigation/define or sent to the AI.
-        if awaitingEncounterNote {
-            finishEncounter(note: trimmed)
-            return
-        }
-
-        // A running conversation capture claims every utterance next: it is
-        // all transcript until the stop command - nothing reaches the AI.
-        if conversationCaptureActive {
-            if IntentDetector.isConversationStop(trimmed) {
-                finishConversationCapture()
-            } else {
-                captureModel.addLine(trimmed, at: Date())
-                liveTranscript = ""
-            }
-            // No brain will answer this, so a Developer-panel test waiting on
-            // a reply would sit out its full timeout. Tell it now.
-            completeTestOutcome(.failure(TestFailure(
-                "A conversation recording is claiming every utterance - stop the recording before running this test."
-            )))
-            return
-        }
-
-        // A Build Check run claims every utterance, like a capture.
-        if let claim = buildRunClaimer, claim(trimmed) {
-            liveTranscript = ""
-            completeTestOutcome(.failure(TestFailure(
-                "A Build Check run is claiming every utterance - end the run before running this test."
-            )))
-            return
-        }
-
-        // A drink on the lens claims its three replies; anything else it
-        // leaves for the brain, which answers in the drink persona.
+        // While a drink is on the lens its replies (why, a choice, thanks)
+        // are claimed first and never reach the assistant.
         if let claim = emoDrinkClaimer, claim(trimmed) {
             liveTranscript = ""
             lastTranscript = trimmed
@@ -826,75 +647,12 @@ final class HermesSessionViewModel {
             return
         }
 
-        // "start build check" needs no brain, so it must work in a
-        // recording-only session too (Build Check starts one itself).
-        if case .startBuildCheck = IntentDetector.detect(trimmed) {
+        let intent = IntentDetector.detect(trimmed)
+        if intent != .none {
             liveTranscript = ""
             lastTranscript = trimmed
-            onStartBuildCheck?()
+            onEmoDrinkIntent?(intent)
             return
-        }
-
-        // EmoDrink launchers need no brain either (the pick is on-device).
-        let earlyIntent = IntentDetector.detect(trimmed)
-        if earlyIntent == .recommendDrink || earlyIntent == .startDrinkMode || earlyIntent == .stopDrinkMode {
-            liveTranscript = ""
-            lastTranscript = trimmed
-            onEmoDrinkIntent?(earlyIntent)
-            return
-        }
-
-        // A recording-only session has no brain wired up. Anything not
-        // claimed by the capture above (an utterance in the gap before
-        // recording starts, or after it stops) is dropped here rather than
-        // dispatched to a provider this session never connected.
-        guard !recordingOnlySession else {
-            liveTranscript = ""
-            completeTestOutcome(.failure(TestFailure(
-                "This session was started for recording only - no brain is connected to answer."
-            )))
-            return
-        }
-
-        // Bump so an in-flight definition-image fetch from a prior utterance
-        // can't paint over this new query or navigation.
-        definitionGeneration &+= 1
-
-        // On-device intents run before the AI brain.
-        switch IntentDetector.detect(trimmed) {
-        case .rememberPerson where socialNotesEnabled:
-            liveTranscript = ""
-            lastTranscript = trimmed
-            startEncounter()
-            return
-        case .startConversationCapture where socialNotesEnabled:
-            liveTranscript = ""
-            lastTranscript = trimmed
-            startConversationCapture()
-            return
-        case .stopNavigation where navigation.isActive:
-            navigation.stop()
-            return
-        case let .navigate(destination, mode) where navigationEnabled:
-            liveTranscript = ""
-            lastTranscript = trimmed
-            connectionState = .processing
-            speechRecognizer.isSuspended = true
-            displayManager.clear()
-            navigation.start(destination: destination, mode: mode)
-            return
-        case let .define(subject) where definitionImagesEnabled:
-            pendingDefinitionSubject = subject
-            // fall through to the normal answer path below
-        default:
-            pendingDefinitionSubject = nil
-        }
-
-        // While navigating, an answer temporarily overlays the map. Hold nav
-        // frames off the lens so a GPS tick doesn't cut the answer short; the
-        // map is restored when the answer's dwell ends (idleHandler).
-        if navigation.isActive {
-            navigation.displaySuppressed = true
         }
 
         let context = contextProvider.contextLine()
@@ -960,27 +718,6 @@ final class HermesSessionViewModel {
         speechRecognizer.finalizeNow()
     }
 
-    /// Stop the running route. Same effect as saying "stop navigation" -
-    /// the in-app map screen's End route button calls it.
-    func endNavigation() {
-        navigation.stop()
-    }
-
-    /// Start a route to a place picked from search. Unlike the voice path
-    /// this needs no resolution step - the user already chose which "Blue
-    /// Bottle" they meant.
-    func startNavigation(to place: MKMapItem, mode: TransportMode = .walking) {
-        guard navigationEnabled else {
-            show("Navigation is switched off in Settings.")
-            return
-        }
-        NSLog("[Hermes] startNavigation to \(place.name ?? "?") mode=\(mode)")
-        routeIsBuilding = true
-        // announce: false - the route was started by tapping a map, so a
-        // spoken "navigating to..." is noise. The lens still shows it.
-        navigation.start(place: place, mode: mode, announce: false)
-    }
-
     /// Answer a multiple-choice reply by picking one of its options. Sent
     /// as the option's words, so the transcript reads like a conversation
     /// rather than a row of letters.
@@ -994,15 +731,6 @@ final class HermesSessionViewModel {
     var replyChoices: [ReplyChoice] {
         lensContent.choices
     }
-
-    /// Switch the running route between walking and driving.
-    func setTransportMode(_ mode: TransportMode) {
-        navigation.setMode(mode)
-    }
-
-    /// True between "route requested" and the first frame (or failure).
-    /// Without it a slow geocode is indistinguishable from a dead tap.
-    var routeIsBuilding: Bool = false
 
     /// Forget the conversation: clears the on-device history immediately.
     func startNewConversation() {
@@ -1034,57 +762,17 @@ final class HermesSessionViewModel {
     /// Single reply path for both brains: lens card + (unless silent) TTS.
     private func presentReply(_ text: String) {
         let shown = HermesDisplayLogic.truncateReply(text)
-        let subject = pendingDefinitionSubject
-        pendingDefinitionSubject = nil
-
         if displaySilentActive {
-            // Trade-off: if the BLE send itself fails after this point, the
-            // reply is neither spoken nor shown (best-effort display).
-            if let subject {
-                showDefinitionReply(text: shown, subject: subject, speaking: false)
-            } else {
-                displayManager.showReply(
-                    text: shown,
-                    speaking: false,
-                    dwellSeconds: HermesDisplayLogic.readingDwellSeconds(
-                        charCount: shown.count
-                    )
-                )
-            }
-            // Nothing spoken → nothing to echo; listen again immediately
+            displayManager.showReply(text: shown, speaking: false,
+                                     dwellSeconds: HermesDisplayLogic.readingDwellSeconds(charCount: shown.count))
             connectionState = .listening
             speechRecognizer.isSuspended = false
         } else {
             connectionState = .speaking
-            if let subject {
-                showDefinitionReply(text: shown, subject: subject, speaking: true)
-            } else {
-                displayManager.showReply(text: shown, speaking: true, dwellSeconds: nil)
-            }
+            displayManager.showReply(text: shown, speaking: true, dwellSeconds: nil)
             speechSynthesizer.speak(text)
-            if audioManager.isUsingBluetoothInput {
-                // Glasses echo-cancel their own speaker - barge-in stays on
-                speechRecognizer.isSuspended = false
-            }
-        }
-    }
-
-    /// Show the definition text immediately, then fetch the Wikipedia picture
-    /// and add it - guarded so a slow fetch can't paint over a newer screen.
-    /// Dwell is decided by whether TTS is still going when the image arrives,
-    /// not when the fetch started. Falls back to text-only when no image.
-    private func showDefinitionReply(text: String, subject: String, speaking: Bool) {
-        displayManager.showDefinition(text: text, imageURL: nil, speaking: speaking)
-        let generation = definitionGeneration
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            let imageURL = await WikipediaImageClient.image(for: subject)
-            guard let imageURL,
-                  self.definitionGeneration == generation else { return }
-            let stillSpeaking = (self.connectionState == .speaking)
-            self.displayManager.showDefinition(
-                text: text, imageURL: imageURL, speaking: stillSpeaking
-            )
+            // Bluetooth mic: the speaker is not the mic, so keep listening.
+            if audioManager.isUsingBluetoothInput { speechRecognizer.isSuspended = false }
         }
     }
 
@@ -1237,715 +925,28 @@ final class HermesSessionViewModel {
         }
     }
 
-    /// Display-HUD and navigation callbacks. Wired for BOTH routes: in phone
+    /// Display-HUD callbacks. Wired for BOTH routes: in phone
     /// mode nothing goes out over BLE, but `displayManager.content` still
     /// updates, which is what the simulated lens renders.
-    private func wireDisplayAndNavigation() {
-        displayManager.onContentChanged = { [weak self] content in
-            self?.lensContent = content
-        }
+    private func wireDisplay() {
+        displayManager.onContentChanged = { [weak self] content in self?.lensContent = content }
         lensContent = displayManager.content
-        // Display HUD (Ray-Ban Display glasses) - best-effort, shares the
-        // same device session as the camera
         displayManager.onDebug = { message in NSLog("[EmoDrink] display: \(message)") }
-        displayManager.onStatusChanged = { [weak self] newStatus in
-            self?.displayStatus = newStatus
-        }
-        displayManager.onStop = { [weak self] in
-            self?.interruptSpeech()
-        }
-        displayManager.onRepeat = { [weak self] in
-            self?.repeatLastReply()
-        }
+        displayManager.onStatusChanged = { [weak self] newStatus in self?.displayStatus = newStatus }
+        displayManager.onStop = { [weak self] in self?.interruptSpeech() }
+        displayManager.onRepeat = { [weak self] in self?.repeatLastReply() }
         displayManager.onNewChat = { [weak self] in
             guard let self else { return }
             self.startNewConversation()
             self.displayManager.showNewConversationFlash()
         }
-        // Navigation: drive the lens + TTS through the existing managers.
-        navigation.onShow = { [weak self] mapURL, title, step, eta, mode in
-            self?.displayManager.showNavigation(
-                mapURL: mapURL, title: title, step: step, eta: eta, mode: mode)
-        }
-        // Walk/Drive on the lens re-routes to the same place.
-        displayManager.onSetTransportMode = { [weak self] mode in
-            self?.navigation.setMode(mode)
-        }
-        // Tapping an option answers as if it had been spoken.
-        displayManager.onChooseReplyOption = { [weak self] choice in
-            self?.chooseReplyOption(choice)
-        }
-        navigation.onRoute = { [weak self] snapshot in
-            self?.routeIsBuilding = false
-            self?.activeRoute = snapshot
-        }
-        navigation.onSpeak = { [weak self] text in
-            self?.speechSynthesizer.speak(text)
-        }
-        navigation.onNotice = { [weak self] text in
-            self?.show(text)
-        }
-        navigation.onEnd = { [weak self] in
-            guard let self else { return }
-            self.activeRoute = nil
-            self.routeIsBuilding = false
-            self.displayManager.clear()
-            // Only hand the mic back if there was a session to hand it back
-            // to - a map-screen route can run with nothing else going on.
-            guard self.connectionState != .disconnected else { return }
-            self.connectionState = .listening
-            self.speechRecognizer.isSuspended = false
-        }
-        navigation.onDebug = { message in NSLog("[EmoDrink] nav: \(message)") }
-        displayManager.onStopNavigation = { [weak self] in
-            self?.navigation.stop()
-        }
-        // When a reply/definition dwell ends: restore the navigation map if
-        // still navigating, else let EmoDrink restore its card, otherwise
-        // blank the lens as usual.
+        displayManager.onChooseReplyOption = { [weak self] choice in self?.chooseReplyOption(choice) }
+        // After a reply's dwell, EmoDrink restores its card or the watching
+        // screen; otherwise the lens blanks.
         displayManager.idleHandler = { [weak self] in
             guard let self else { return }
-            if self.navigation.isActive {
-                self.navigation.displaySuppressed = false
-                self.navigation.refreshDisplay()
-            } else if self.emoDrinkLensIdle?() == true {
-                // EmoDrink redrew its card.
-            } else {
-                self.displayManager.clear()
-            }
+            if self.emoDrinkLensIdle?() != true { self.displayManager.clear() }
         }
-        // NOTE: the display attaches AFTER audio setup (step 3 below) -
-        // whether the lens is free depends on the actual mic route: the
-        // HFP glasses mic brings up the glasses' call screen over the HUD.
-
-    }
-
-    // MARK: - Social encounters
-
-    /// "remember this person": start the photo capture and immediately begin
-    /// waiting for the spoken note. The two run in PARALLEL - the camera can
-    /// take several seconds to wake, and the user shouldn't have to stand
-    /// there silently while it does. `finishEncounter` joins the two.
-    private func startEncounter() {
-        encounterTimeoutTask?.cancel()
-        awaitingEncounterNote = true
-        // Hold nav frames off the lens or a GPS tick repaints over the
-        // prompt mid-capture; the dwell's idleHandler restores the map.
-        if navigation.isActive {
-            navigation.displaySuppressed = true
-        }
-        displayManager.showEncounterPrompt()
-
-        encounterPhotoTask = Task { @MainActor [weak self] in
-            guard let self else { return nil }
-            self.logVisionDiagnostics("encounter-photo")
-            guard self.hasVisionSource else {
-                NSLog("[Hermes] encounter: no vision source - photo skipped")
-                return nil
-            }
-            guard await self.ensureVisionPermission(interactive: false) else {
-                NSLog("[Hermes] encounter: \(self.visionRoute) camera permission denied - photo skipped")
-                if self.visionRoute == .glasses {
-                    self.show(
-                        "Saved the note, but the glasses camera isn't allowed yet. "
-                        + "Grant it in Settings → Devices → Glasses camera."
-                    )
-                }
-                return nil
-            }
-            // Note-only is a fine outcome: never lose the encounter over a
-            // camera failure.
-            return try? await self.captureVisionPhoto()
-        }
-
-        // Audible "your turn" cue, unless the lens is doing the talking.
-        if displaySilentActive {
-            connectionState = .listening
-            speechRecognizer.isSuspended = false
-        } else {
-            connectionState = .speaking
-            speechRecognizer.isSuspended = true
-            speechSynthesizer.speak("Go ahead")
-        }
-
-        encounterTimeoutTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(Self.encounterNoteTimeout * 1_000_000_000))
-            guard !Task.isCancelled, let self, self.awaitingEncounterNote else { return }
-            // Silence: keep the picture, leave the note for later.
-            self.finishEncounter(note: "")
-        }
-    }
-
-    /// How long to wait for the spoken note before saving the photo alone.
-    private static let encounterNoteTimeout: Double = 30
-
-    /// The note arrived (or timed out): join it with the photo and save.
-    private func finishEncounter(note: String) {
-        encounterTimeoutTask?.cancel()
-        encounterTimeoutTask = nil
-        awaitingEncounterNote = false
-        liveTranscript = ""
-
-        let photoTask = encounterPhotoTask
-        encounterPhotoTask = nil
-
-        if IntentDetector.isEncounterCancellation(note) {
-            photoTask?.cancel()
-            // Nothing to show, so go straight back to the map (if any)
-            // rather than waiting on a dwell that will never be scheduled.
-            if navigation.isActive {
-                navigation.displaySuppressed = false
-                navigation.refreshDisplay()
-            } else {
-                displayManager.clear()
-            }
-            connectionState = .listening
-            speechRecognizer.isSuspended = false
-            return
-        }
-
-        connectionState = .processing
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            let photo = await photoTask?.value ?? nil
-            self.encounterStore.save(note: note, photo: photo)
-            self.encounterRevision &+= 1
-
-            // Mirror it into the on-phone chat so the capture is visible
-            // immediately, photo and all.
-            self.pendingPhoto = photo
-            self.addTurn(
-                userText: note.isEmpty ? "[Person remembered - no note]" : note,
-                agentText: photo == nil
-                    ? "Saved to People (no photo)"
-                    : "Saved to People"
-            )
-
-            self.displayManager.showEncounterSaved(
-                note: note.isEmpty ? "No note - add one in the app" : note
-            )
-            if self.displaySilentActive {
-                self.connectionState = .listening
-                self.speechRecognizer.isSuspended = false
-            } else {
-                self.connectionState = .speaking
-                self.speechRecognizer.isSuspended = true
-                self.speechSynthesizer.speak("Saved")
-            }
-        }
-    }
-
-    // MARK: - Conversation capture
-
-    /// "record this conversation": from here until the stop command, every
-    /// finalized utterance is appended to one note and a 2 s dwell on a
-    /// person snaps their photo into it. The camera side is best-effort -
-    /// a transcript-only capture still saves if the stream won't start.
-    func startConversationCapture() {
-        guard !conversationCaptureActive,
-              connectionState != .disconnected else { return }
-        guard buildRunClaimer == nil else {
-            show(notice: "End the build check before recording a conversation.")
-            return
-        }
-        conversationCaptureActive = true
-        captureModel = ConversationCaptureModel()
-        capturePhotos = []
-        capturePortraits = []
-        conversationCaptureSnapCount = 0
-
-        // Audio first: everything below is best-effort decoration around the
-        // recording, and the recording is what the transcript is made from.
-        let staged = encounterStore.stagingRecordingURL()
-        if recorder.start(url: staged) {
-            captureRecordingURL = staged
-            audioManager.onRecordChunk = { [weak recorder] data in
-                // Audio thread. The recorder only enqueues.
-                recorder?.append(data)
-            }
-        } else {
-            captureRecordingURL = nil
-        }
-
-        if navigation.isActive {
-            navigation.displaySuppressed = true
-        }
-        displayManager.showRecordingStarted()
-
-        // Audible "it's on" cue, unless the lens is doing the talking.
-        if displaySilentActive {
-            connectionState = .listening
-            speechRecognizer.isSuspended = false
-        } else {
-            connectionState = .speaking
-            speechRecognizer.isSuspended = true
-            speechSynthesizer.speak("Recording. Say stop recording to save.")
-        }
-
-        captureSetupTask = Task { @MainActor [weak self] in
-            await self?.startCaptureVision()
-        }
-    }
-
-    /// UI toggle (the Record chip and the Record quick action) - same paths
-    /// as the voice commands, but usable from a cold start.
-    ///
-    /// Recording a conversation needs the microphone and (optionally) the
-    /// camera. It does NOT need the bridge, a provider, TTS or the query
-    /// path, so requiring a live voice session first was backwards - the same
-    /// mistake the test panel used to make. When nothing is running this
-    /// brings up just the mic and starts.
-    func toggleConversationCapture() {
-        if conversationCaptureActive {
-            finishConversationCapture()
-            return
-        }
-        // A running Build Check claims every utterance and owns the session;
-        // a capture would steal its utterances and could end the session.
-        guard buildRunClaimer == nil else {
-            show(notice: "End the build check before recording a conversation.")
-            return
-        }
-        guard connectionState == .disconnected else {
-            startConversationCapture()
-            return
-        }
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            await self.startSessionForRecording()
-            guard self.connectionState != .disconnected else { return }
-            self.startConversationCapture()
-        }
-    }
-
-    /// Spin up the person-snap pipeline: YOLO detector + a persistent live
-    /// stream (the same machinery as the Lens view, sharing
-    /// HermesCameraManager's single-live-stream slot).
-    private func startCaptureVision() async {
-        guard hasVisionSource,
-              await ensureVisionPermission(interactive: false) else { return }
-
-        let detector = ObjectDetector()
-        do {
-            try await detector.load()
-        } catch {
-            return  // transcript-only capture
-        }
-        guard conversationCaptureActive else { return }
-
-        captureDetector = detector
-        captureDwell = DwellTracker()
-        detector.onDetections = { [weak self] detections in
-            // ObjectDetector calls this on the main queue.
-            MainActor.assumeIsolated {
-                self?.handleCaptureDetections(detections)
-            }
-        }
-
-        // Phone mode already streams for the 5b feed, and the camera cannot
-        // be opened twice - observe those frames instead of competing.
-        if visionStreamIsShared {
-            addVisionFrameObserver(Self.captureObserverKey) { [weak self] frame in
-                MainActor.assumeIsolated {
-                    guard let self, self.conversationCaptureActive else { return }
-                    if let image = frame.image { self.captureLatestFrame = image }
-                    if let buffer = frame.pixelBuffer {
-                        self.captureDetector?.process(buffer)
-                    }
-                }
-            }
-            return
-        }
-
-        do {
-            try await vision.startLiveStream(
-                onFrame: { [weak self] frame in
-                    // Capture thread - hop to main before touching state.
-                    Task { @MainActor [weak self] in
-                        guard let self, self.conversationCaptureActive else { return }
-                        if let image = frame.image { self.captureLatestFrame = image }
-                        if let buffer = frame.pixelBuffer {
-                            self.captureDetector?.process(buffer)
-                        }
-                    }
-                },
-                onError: { _ in }  // stream death degrades to transcript-only
-            )
-            captureStreamRunning = true
-            // The capture may have been stopped while the camera was waking
-            // up - stopCaptureVision saw captureStreamRunning == false then,
-            // so the just-started stream is ours to tear down.
-            if !conversationCaptureActive {
-                vision.stopLiveStream()
-                captureStreamRunning = false
-            }
-        } catch {
-            // Lens view may own the stream, or the camera is asleep - the
-            // transcript is the valuable half; keep going without photos.
-            captureDetector?.onDetections = nil
-            captureDetector = nil
-            captureDwell = nil
-        }
-    }
-
-    /// A detection batch during capture: person boxes only → dwell → snap.
-    private func handleCaptureDetections(_ detections: [Detection]) {
-        guard conversationCaptureActive, let dwell = captureDwell else { return }
-        let now = CACurrentMediaTime()
-        let update = dwell.update(
-            detections: ConversationCaptureModel.people(detections), at: now
-        )
-        guard let snap = update.snap, let frame = captureLatestFrame,
-              captureModel.recordSnap(at: now) else { return }
-
-        let cropped = LensViewModel.crop(frame, to: snap.rect, padding: 0.25)
-        let personImage = cropped ?? frame
-        guard let jpeg = personImage.jpegData(
-            compressionQuality: HermesCameraManager.jpegQuality
-        ) else { return }
-        capturePhotos.append(jpeg)
-        conversationCaptureSnapCount = capturePhotos.count
-
-        let eventID = captureModel.addSighting(photoIndex: capturePhotos.count - 1)
-        displayManager.showPersonSighted(name: nil, subtitle: nil)
-
-        guard badgeOCREnabled else { return }
-        // OCR runs off the main actor and lands whenever it lands - the
-        // sighting is already recorded, so a slow read costs nothing.
-        Task { @MainActor [weak self] in
-            let badge = await BadgeReader.readBadge(from: personImage)
-            // conversationCaptureActive alone isn't enough: if this task is
-            // still in flight when one capture ends and a new one starts
-            // before it resumes, the flag is true again but eventID belongs
-            // to the OLD captureModel. Without the membership check the
-            // portrait would be appended to the NEW capture's array while
-            // updateBadge silently no-ops on the stale id - a photo written
-            // to disk that nothing ever references. The check is repeated
-            // AGAIN below, not merged into this one: `BadgeReader.portrait`
-            // is its own suspension point, so a capture can just as well end
-            // and restart during that second await. Guard once per await,
-            // immediately before the state each one feeds - never "guard
-            // once at the top and trust it downstream" across a suspend.
-            guard let self, let badge, self.conversationCaptureActive,
-                  self.captureModel.events.contains(where: { $0.id == eventID })
-            else { return }
-
-            var portraitData: Data?
-            if self.badgePortraitsEnabled, let rect = badge.badgeRect {
-                portraitData = await BadgeReader.portrait(
-                    from: personImage, badgeRect: rect
-                )
-            }
-
-            // Re-validated after the portrait await resumes - see the
-            // comment above. Everything from here on (the append and the
-            // updateBadge call) runs with no further suspension point, so
-            // this guard covers both.
-            guard self.conversationCaptureActive,
-                  self.captureModel.events.contains(where: { $0.id == eventID })
-            else { return }
-
-            var portraitIndex: Int?
-            if let portraitData {
-                self.capturePortraits.append(portraitData)
-                portraitIndex = self.capturePortraits.count - 1
-            }
-
-            self.captureModel.updateBadge(
-                eventID: eventID, badge: badge, portraitIndex: portraitIndex
-            )
-            self.displayManager.showPersonSighted(
-                name: badge.name, subtitle: badge.subtitle
-            )
-        }
-    }
-
-    /// Stop command (or UI toggle): save the whole capture as ONE encounter -
-    /// full transcript as the note, every snapped person attached.
-    func finishConversationCapture() {
-        guard conversationCaptureActive else { return }
-        stopCaptureVision()
-        conversationCaptureActive = false
-        liveTranscript = ""
-
-        // Stop feeding the recorder before closing it, or buffers still in
-        // flight write into a closed handle.
-        audioManager.onRecordChunk = nil
-        let recording = recorder.finish()
-        captureRecordingURL = nil
-
-        let photos = capturePhotos
-        capturePhotos = []
-        let portraits = capturePortraits
-        capturePortraits = []
-        conversationCaptureSnapCount = 0
-
-        // A recording on its own IS content: the live recogniser hearing
-        // nothing is exactly the failure this feature exists to survive, so
-        // "nothing was said" must be judged from the audio, not from it.
-        guard captureModel.hasContent || recording != nil else {
-            // Nothing said, no one snapped, nothing recorded - no entry.
-            displayManager.clear()
-            guard !recordingOnlySession else { endSession(); return }
-            connectionState = .listening
-            speechRecognizer.isSuspended = false
-            return
-        }
-
-        let saved = encounterStore.save(
-            events: captureModel.events, photos: photos, portraits: portraits
-        )
-        encounterRevision &+= 1
-
-        if let recording {
-            encounterStore.attachRecording(encounterID: saved.id, from: recording)
-        }
-
-        // Mirror into the on-phone chat, cover photo and all.
-        pendingPhoto = photos.first
-        addTurn(
-            userText: "[Conversation recorded]",
-            agentText: photos.isEmpty
-                ? "Saved to People (no photos)"
-                : "Saved to People (\(photos.count) photo\(photos.count == 1 ? "" : "s"))"
-        )
-
-        displayManager.showEncounterSaved(note: "Conversation saved")
-
-        // A session that exists only to record is FINISHED when the recording
-        // is. Returning it to .listening left the mic up with no brain to
-        // talk to, so the only way out was the End button - "stop recording"
-        // stopped the recording but not the thing it started.
-        //
-        // Teardown comes BEFORE the deferred passes because endSession()
-        // cancels badgeAssistTask; started after, they outlive the session,
-        // which is right - both work off the saved encounter and neither
-        // needs the mic, the camera or a socket. No spoken confirmation
-        // here: the audio stack is going away and cutting off "Saved"
-        // mid-word is worse than the lens card that already said it.
-        if recordingOnlySession {
-            endSession()
-            startBadgeAssist(for: saved)
-            startTranscription(for: saved.id)
-            return
-        }
-
-        // Only now, with the encounter safely on disk, may anything touch
-        // the network.
-        startBadgeAssist(for: saved)
-        startTranscription(for: saved.id)
-
-        if displaySilentActive {
-            connectionState = .listening
-            speechRecognizer.isSuspended = false
-        } else {
-            connectionState = .speaking
-            speechRecognizer.isSuspended = true
-            speechSynthesizer.speak("Saved")
-        }
-    }
-
-    private func stopCaptureVision() {
-        captureSetupTask?.cancel()
-        captureSetupTask = nil
-        captureDetector?.onDetections = nil
-        captureDetector = nil
-        captureDwell = nil
-        captureLatestFrame = nil
-        // Only tear down a stream this capture started. In phone mode it is
-        // the session's stream feeding the 5b view - stopping it would blank
-        // the screen the user is looking at.
-        removeVisionFrameObserver(Self.captureObserverKey)
-        if captureStreamRunning {
-            vision.stopLiveStream()
-            captureStreamRunning = false
-        }
-    }
-
-    /// Re-transcribe a saved capture from its recording, replacing the live
-    /// transcript.
-    ///
-    /// Deferred like badge assist, and for the same reason: the encounter is
-    /// already on disk, so a slow or failed pass costs nothing that was
-    /// already earned. The live transcript stays exactly as it was until a
-    /// better one exists to swap in - `replaceTranscript` ignores an empty
-    /// result rather than blanking the note.
-    ///
-    /// Entirely on-device (`TranscriptionService` requires it), so this is
-    /// not a second grant of trust the way badge assist is, and needs no
-    /// opt-in.
-    func startTranscription(for encounterID: UUID) {
-        guard let encounter = encounterStore.all().first(where: { $0.id == encounterID }),
-              let url = encounterStore.recordingURL(for: encounter)
-        else { return }
-
-        transcriptionTask?.cancel()
-        transcriptionIsRunning = true
-        transcriptionTask = Task { @MainActor [weak self] in
-            defer { self?.transcriptionIsRunning = false }
-            do {
-                let lines = try await TranscriptionService.transcribe(fileAt: url)
-                guard let self, !Task.isCancelled else { return }
-                self.encounterStore.replaceTranscript(
-                    encounterID: encounterID, lines: lines
-                )
-                self.encounterRevision &+= 1
-            } catch {
-                NSLog("[Hermes] transcription failed - \(error.localizedDescription)")
-            }
-        }
-    }
-
-    /// Deferred, opt-in: name the sightings on-device OCR left blank.
-    ///
-    /// Runs AFTER the encounter is saved, sequentially, capped, and gives up
-    /// on the whole pass the moment the provider says the key is bad. Each
-    /// result is written to the store and bumps `encounterRevision`; the
-    /// name shows up the next time that entry is opened, NOT live under a
-    /// reader's hands - a screen that rebuilds itself mid-read would lose an
-    /// in-progress name edit.
-    private func startBadgeAssist(for encounter: Encounter) {
-        // The guarantee belongs here, not at the call site: assist only
-        // makes sense as a top-up on sightings on-device OCR genuinely
-        // could not read. With OCR off every sighting has badge == nil, so
-        // without this guard the pass would run at its full cap on every
-        // recording instead of only the sightings Vision missed - the UI
-        // toggle clearing assist when OCR goes off is a courtesy, not the
-        // enforcement.
-        guard badgeOCREnabled, badgeAssistEnabled else { return }
-        runBadgeAssist(for: encounter.id)
-    }
-
-    /// The same pass, asked for by hand on one encounter.
-    ///
-    /// This deliberately does NOT consult `badgeAssistEnabled` or
-    /// `badgeOCREnabled`. Those flags govern the pass that fires by itself on
-    /// every recording, where the danger is unnoticed spend; a person tapping
-    /// "Read badges with AI" on one entry has already decided. Without this
-    /// the only way to name a sighting Vision missed was to flip a global
-    /// setting and record the conversation again - which is not a thing
-    /// anyone can do.
-    ///
-    /// Still capped by `BadgeAssist.maxReads` and still abandoned on the
-    /// first auth failure: explicit is not unlimited.
-    func readBadgesWithAI(for encounterID: UUID) {
-        guard !badgeAssistIsRunning else { return }
-        badgeAssistIsRunning = true
-        runBadgeAssist(for: encounterID) { [weak self] in
-            self?.badgeAssistIsRunning = false
-        }
-    }
-
-    /// Shared body of both paths. Re-reads the encounter from the store
-    /// rather than taking a snapshot, so a manual run started minutes later
-    /// sees any names the deferred pass already filled in.
-    private func runBadgeAssist(
-        for encounterID: UUID, completion: (() -> Void)? = nil
-    ) {
-        guard let encounter = encounterStore.all().first(where: { $0.id == encounterID })
-        else { completion?(); return }
-
-        // `badge?.name == nil`, NOT `badge == nil`. Once the detector can
-        // localise a badge it could not read, that sighting has a badge
-        // object (kind, box, maybe a barcode) with no name - and it is
-        // precisely the sighting assist exists to rescue. Selecting on
-        // `badge == nil` would skip it. The old People screen's "unnamed" filter
-        // already uses this predicate; this brings assist in line.
-        let unnamed = encounter.events.filter {
-            $0.kind == .sighting && $0.badge?.name == nil
-                && !$0.photoFilenames.isEmpty
-        }
-        guard !unnamed.isEmpty else { completion?(); return }
-
-        let targets = Array(unnamed.prefix(BadgeAssist.maxReads))
-        if unnamed.count > targets.count {
-            NSLog("[Hermes] badge assist: reading \(targets.count) of \(unnamed.count) sightings (capped)")
-        }
-
-        badgeAssistTask?.cancel()
-        badgeAssistTask = Task { @MainActor [weak self] in
-            defer { completion?() }
-            guard let self else { return }
-            for event in targets {
-                if Task.isCancelled { return }
-                guard let filename = event.photoFilenames.first,
-                      let photo = self.encounterStore.photoData(filename: filename)
-                else { continue }
-                let toSend = await BadgeReader.assistCrop(
-                    photoJPEG: photo, badgeRect: event.badge?.badgeRect
-                )
-                do {
-                    guard let badge = try await BadgeAssist.read(
-                        photoJPEG: toSend, client: self.directClient
-                    ) else { continue }
-                    self.encounterStore.update(
-                        encounterID: encounterID, eventID: event.id, badge: badge
-                    )
-                    self.encounterRevision &+= 1
-                } catch {
-                    if BadgeAssist.isFatal(error) {
-                        NSLog("[Hermes] badge assist: abandoning pass - \(error.localizedDescription)")
-                        return
-                    }
-                    NSLog("[Hermes] badge assist: one read failed - \(error.localizedDescription)")
-                }
-            }
-        }
-    }
-
-    private static let captureObserverKey = "conversation-capture"
-
-    /// People screen: read-through to the store (the view holds no state of
-    /// its own; `encounterRevision` tells it when to re-read).
-    func allEncounters() -> [Encounter] { encounterStore.all() }
-
-    func encounterPhoto(_ encounter: Encounter) -> Data? {
-        encounterStore.photoData(for: encounter)
-    }
-
-    /// One photo by filename - the timeline addresses photos per event.
-    func encounterPhotoData(filename: String) -> Data? {
-        encounterStore.photoData(filename: filename)
-    }
-
-    /// Rename a whole timeline row (every event it was merged from).
-    func renameEncounterSighting(
-        encounterID: UUID, eventIDs: [UUID], name: String?
-    ) {
-        encounterStore.updateBadgeName(
-            encounterID: encounterID, eventIDs: eventIDs, name: name
-        )
-        encounterRevision &+= 1
-    }
-
-    func updateEncounterNote(id: UUID, note: String) {
-        encounterStore.update(id: id, note: note)
-        encounterRevision &+= 1
-    }
-
-    func deleteEncounter(id: UUID) {
-        encounterStore.delete(id: id)
-        encounterRevision &+= 1
-    }
-
-    // MARK: - Lens object log (read-through, like People)
-
-    func saveLensSession(
-        startedAt: Date, endedAt: Date, entries: [LensSessionInput]
-    ) {
-        lensSessionStore.save(startedAt: startedAt, endedAt: endedAt, entries: entries)
-        lensSessionRevision &+= 1
-    }
-
-    func allLensSessions() -> [LensSession] { lensSessionStore.all() }
-
-    func lensSessionPhoto(_ entry: LensSession.Entry) -> Data? {
-        lensSessionStore.photoData(for: entry)
-    }
-
-    func deleteLensSession(id: UUID) {
-        lensSessionStore.delete(id: id)
-        lensSessionRevision &+= 1
     }
 
     /// On-lens Repeat button: re-speak (or re-show, in silent mode).
@@ -2072,12 +1073,6 @@ final class HermesSessionViewModel {
         show(notice: message)
     }
 
-    /// Build Check on the lens (Ray-Ban Display) and the simulated lens.
-    /// Best-effort, like every display call.
-    func showBuildCheckOnLens(step: Int, total: Int, text: String, flag: String?) {
-        displayManager.showBuildCheck(step: step, total: total, text: text, flag: flag)
-    }
-
     // MARK: EmoDrink surface
 
     func setPersonaOverride(_ prompt: String?) {
@@ -2106,82 +1101,27 @@ final class HermesSessionViewModel {
     }
 
     func endSession() {
-        // Take the hook first: the run's own teardown may call endSession().
-        let ending = onSessionEnding
-        onSessionEnding = nil
-        ending?()
         let emoEnding = onEmoDrinkSessionEnding
         onEmoDrinkSessionEnding = nil
         emoEnding?()
-        // Unlike a half-finished "remember this person", a running
-        // conversation capture is saved, not discarded - an hour of notes
-        // must not vanish because the session dropped. Silent: the audio
-        // stack is going away anyway.
-        if conversationCaptureActive {
-            stopCaptureVision()
-            conversationCaptureActive = false
-            audioManager.onRecordChunk = nil
-            let recording = recorder.finish()
-            captureRecordingURL = nil
-            if captureModel.hasContent || recording != nil {
-                // Same event stream the stop command saves - this is one of
-                // only two ways a capture ends, and both must produce a
-                // timeline. The badge-assist pass is deliberately NOT started
-                // here: the session is being torn down (badgeAssistTask is
-                // cancelled a few lines below), so a network pass into a
-                // dying session would be wrong.
-                let saved = encounterStore.save(
-                    events: captureModel.events, photos: capturePhotos,
-                    portraits: capturePortraits
-                )
-                encounterRevision &+= 1
-                if let recording {
-                    encounterStore.attachRecording(
-                        encounterID: saved.id, from: recording
-                    )
-                }
-                // Transcription, unlike badge assist, IS started here and is
-                // deliberately NOT cancelled with the session: it never
-                // touches the network, and the session going away is no
-                // reason to leave an hour of recorded audio untranscribed.
-                startTranscription(for: saved.id)
-            }
-            capturePhotos = []
-            capturePortraits = []
-            conversationCaptureSnapCount = 0
-        }
-        recordingOnlySession = false
-        badgeAssistTask?.cancel()
-        badgeAssistTask = nil
         sessionObserverTask?.cancel()
         sessionObserverTask = nil
         cueQueue.removeAll()
         speechSynthesizer.stop()
         speechRecognizer.stop()
         displayManager.stop()
-        navigation.stop()
         displayStatus = .off
         contextProvider.stop()
         liveTranscript = ""
         micLevel = 0
         audioManager.stopCapture()
         cameraManager.reset()
-        // Phone mode: the camera runs for the whole session, so it stops
-        // with it. Leaving it live would keep the torch-hot preview going
-        // behind a screen that is no longer showing it.
         phoneCameraManager.stopLiveStream()
         unpinVisionRoute()
         phoneModeActive = false
         phoneFeedImage = nil
         phoneCameraError = nil
         lensContent = .blank
-        // A half-finished encounter dies with the session; the photo alone
-        // isn't worth a note-less entry the user never asked for.
-        encounterTimeoutTask?.cancel()
-        encounterTimeoutTask = nil
-        encounterPhotoTask?.cancel()
-        encounterPhotoTask = nil
-        awaitingEncounterNote = false
         pendingPhoto = nil
         deviceSession?.stop()
         deviceSession = nil
@@ -2235,7 +1175,7 @@ final class HermesSessionViewModel {
         session.stop()
     }
 
-    // MARK: - Lookup app lens surface
+    // MARK: - Display on a camera-only session
 
     /// Attach the display HUD to a camera-only session, so Lookup can put
     /// its result on the real lens without a voice session running. No-op
@@ -2252,18 +1192,6 @@ final class HermesSessionViewModel {
     func detachDisplayFromCameraSession() {
         guard deviceSession == nil else { return }
         displayManager.stop()
-    }
-
-    /// Lookup is searching the web for a badge name - show it on the lens.
-    /// Lookup matches a face against the roster - there is no name to show
-    /// until it resolves, and nothing is being searched for.
-    func showLookupSearchingOnLens() {
-        displayManager.showThinking(query: "Matching…")
-    }
-
-    /// Lookup's finished card: name + roster details.
-    func showPersonLookupOnLens(name: String, info: String) {
-        displayManager.showPersonLookup(name: name, info: info)
     }
 
     func dismissError() {

@@ -2,12 +2,9 @@
 // LensContent.swift
 //
 // What is on the lens right now, as a value. The glasses render it through
-// the Meta SDK's own view DSL (HermesDisplayScreens); phone mode renders
-// the SAME value in SwiftUI (SimulatedLensView). Neither renderer knows
-// the other exists.
-//
-// Foundation only - no MWDATDisplay, no SwiftUI - so the text derivation
-// below unit-tests standalone with swiftc, like DwellTracker.
+// the Meta SDK's view DSL (HermesDisplayScreens); phone mode renders the
+// SAME value in SwiftUI (SimulatedLensView). Foundation only, so the text
+// derivation unit-tests standalone with swiftc (tests/lens-content).
 //
 
 import Foundation
@@ -17,32 +14,17 @@ enum LensContent: Equatable {
     case listening(partial: String)
     case thinking(query: String)
     case photoCaptured
-    /// A person was snapped during a conversation capture. `name` is nil
-    /// when no badge could be read - most of the time, at glasses range.
-    case personSighted(name: String?, subtitle: String?)
-    /// Lookup found someone online: their badge name and what the web says
-    /// about them. `info` is the searched summary, already trimmed to a
-    /// couple of sentences.
-    case personLookup(name: String, info: String)
     case reply(text: String, speaking: Bool, choices: [ReplyChoice] = [])
-    case definition(text: String, imageURL: String?)
-    case navigation(title: String, step: String, eta: String, mapURL: String?, mode: TransportMode)
-    case encounterPrompt
-    case recording
-    case encounterSaved(note: String)
     case newConversation
-    /// Build Check: the current step, or an open flag in place of it.
-    case buildCheck(step: Int, total: Int, text: String, flag: String?)
-    /// EmoDrink: the pick, with tappable replies.
+    /// EmoDrink: the chosen drink, with tappable replies.
     case emoDrink(title: String, subtitle: String, reason: String, source: String, choices: [ReplyChoice])
     /// EmoDrink drink mode, nothing in view yet.
     case emoDrinkWatching
 
-    /// Nothing to draw - the simulated lens shows its empty frame.
+    /// Nothing to draw: the simulated lens shows its empty frame.
     var isBlank: Bool { self == .blank }
 
-    /// Tappable replies the current screen offers (reply options, EmoDrink
-    /// buttons). Empty for every other screen.
+    /// Tappable replies the current screen offers. Empty for the others.
     var choices: [ReplyChoice] {
         switch self {
         case .reply(_, _, let choices): return choices
@@ -51,25 +33,13 @@ enum LensContent: Equatable {
         }
     }
 
-    /// Small all-caps line above the body, or nil when the body speaks for
-    /// itself (a reply has no label on the real lens either).
+    /// Small all-caps line above the body, or nil.
     var label: String? {
         switch self {
-        case .blank: return nil
+        case .blank, .thinking, .reply: return nil
         case .listening: return "LISTENING"
-        case .thinking: return nil
         case .photoCaptured: return "PHOTO"
-        case .personSighted: return "PERSON"
-        // The name is the label so the body is free for the summary.
-        case .personLookup(let name, _): return name.uppercased()
-        case .reply: return nil
-        case .definition: return nil
-        case .navigation: return "NAVIGATION"
-        case .encounterPrompt: return "WHO IS THIS?"
-        case .recording: return "RECORDING"
-        case .encounterSaved: return "SAVED"
         case .newConversation: return "NEW CHAT"
-        case .buildCheck(let step, let total, _, _): return "STEP \(step)/\(total)"
         case .emoDrink: return "DRINK"
         case .emoDrinkWatching: return "DRINK MODE"
         }
@@ -78,95 +48,37 @@ enum LensContent: Equatable {
     /// The main line. Empty string means "draw nothing".
     var body: String {
         switch self {
-        case .blank:
-            return ""
-        case .listening(let partial):
-            return partial
-        case .thinking(let query):
-            return query
-        case .photoCaptured:
-            return "Photo captured"
-        case .personSighted(let name, _):
-            return name ?? "Photo captured"
-        case .personLookup(_, let info):
-            return info
-        case .reply(let text, _, _):
-            return text
-        case .definition(let text, _):
-            return text
-        case .navigation(_, let step, _, _, _):
-            return step
-        case .encounterPrompt:
-            return "Say a note - name, where you met, follow-up"
-        case .recording:
-            return "Saving this conversation"
-        case .encounterSaved(let note):
-            return note.isEmpty ? "Note saved" : note
-        case .newConversation:
-            return "New conversation"
-        case .buildCheck(_, _, let text, let flag):
-            return flag ?? text
-        case .emoDrink(let title, _, _, _, _):
-            return title
-        case .emoDrinkWatching:
-            return "Watching for a vending machine"
+        case .blank: return ""
+        case .listening(let partial): return partial
+        case .thinking(let query): return query
+        case .photoCaptured: return "Photo captured"
+        case .reply(let text, _, _): return text
+        case .newConversation: return "New conversation"
+        case .emoDrink(let title, _, _, _, _): return title
+        case .emoDrinkWatching: return "Watching for a vending machine"
         }
     }
 
-    /// Monospaced status line under the body: what Hermes is doing, and any
-    /// running figures. Nil when there is nothing to add.
+    /// Monospaced status line under the body, or nil.
     var statusLine: String? {
         switch self {
-        case .blank, .photoCaptured, .encounterSaved, .newConversation:
-            return nil
-        case .personSighted(_, let subtitle):
-            return subtitle
-        case .personLookup:
-            return "web lookup"
-        case .listening:
-            return "listening"
-        case .thinking:
-            return "thinking…"
+        case .blank, .photoCaptured, .newConversation: return nil
+        case .listening: return "listening"
+        case .thinking: return "thinking…"
         case .reply(_, let speaking, let choices):
             if !choices.isEmpty { return "\(choices.count) options - tap one" }
             return speaking ? "speaking" : nil
-        case .definition:
-            return nil
-        case .navigation(let title, _, let eta, _, let mode):
-            return "\(mode == .driving ? "driving" : "walking") · \(eta) to \(title)"
-        case .encounterPrompt:
-            return "waiting for a note"
-        case .recording:
-            return "say \"stop recording\" to finish"
-        case .buildCheck(_, _, _, let flag):
-            return flag == nil ? "say \"step done\" when finished" : "confirmed · ignore · fixed"
-        case .emoDrink(_, _, let reason, let source, _):
-            return "\(reason) · \(source)"
-        case .emoDrinkWatching:
-            return "say \"what should I drink\" any time"
+        case .emoDrink(_, _, let reason, let source, _): return "\(reason) · \(source)"
+        case .emoDrinkWatching: return "say \"what should I drink\" any time"
         }
     }
 
-    /// A remote image to show above the body (Mapbox map, Wikipedia lead
-    /// image). Nil for text-only screens.
-    var imageURL: String? {
-        switch self {
-        case .definition(_, let url): return url
-        case .navigation(_, _, _, let url, _): return url
-        default: return nil
-        }
-    }
-
-    /// True while the lens is showing something the user is expected to
-    /// keep looking at, so the simulated lens keeps a live dot lit.
+    /// True while the wearer is expected to keep looking, so the simulated
+    /// lens keeps a live dot lit.
     var isLive: Bool {
         switch self {
-        case .blank, .photoCaptured, .encounterSaved, .newConversation,
-             .personSighted, .personLookup:
-            return false
-        case .listening, .thinking, .reply, .definition, .navigation,
-             .encounterPrompt, .recording, .buildCheck, .emoDrink, .emoDrinkWatching:
-            return true
+        case .blank, .photoCaptured, .newConversation: return false
+        case .listening, .thinking, .reply, .emoDrink, .emoDrinkWatching: return true
         }
     }
 }

@@ -22,20 +22,6 @@ struct SimulatedLensView: View {
                 text: "EMODRINK", size: 13, tint: HermesTheme.accentLight.opacity(0.9)
             )
 
-            if let imageURL = content.imageURL, let url = URL(string: imageURL) {
-                AsyncImage(url: url) { phase in
-                    if let image = phase.image {
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    } else {
-                        HermesTheme.cream.opacity(0.08)
-                    }
-                }
-                .frame(height: 92)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-            }
-
             if let label = content.label {
                 Text(label)
                     .font(.system(size: 10, weight: .bold))
@@ -86,13 +72,6 @@ struct SimulatedLensView: View {
                 }
             }
 
-            if case .navigation(_, _, _, _, let mode) = content {
-                HStack(spacing: 6) {
-                    modeChip("Walk", active: mode == .walking)
-                    modeChip("Drive", active: mode == .driving)
-                }
-            }
-
             if content.isBlank {
                 Text("Lens is idle")
                     .font(.system(size: 12, design: .monospaced))
@@ -125,18 +104,5 @@ struct SimulatedLensView: View {
                 .offset(x: 12, y: -9)
         }
         .animation(.easeOut(duration: 0.2), value: content)
-    }
-
-    /// Mirrors the buttons the wearer sees on the real lens.
-    private func modeChip(_ title: String, active: Bool) -> some View {
-        Text(title)
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(active ? .white : HermesTheme.cream.opacity(0.6))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(
-                active ? HermesTheme.accent : HermesTheme.cream.opacity(0.12),
-                in: Capsule()
-            )
     }
 }

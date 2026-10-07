@@ -1,8 +1,8 @@
 //
 // Standalone tests for EmoDrinkCommands. Run from the repo root:
 //   xcrun swiftc \
-//     HermesGlasses/Services/Navigation/NavigationTypes.swift \
-//     HermesGlasses/Services/Navigation/IntentDetector.swift \
+//     HermesGlasses/Services/EmoDrink/Intents.swift \
+//     HermesGlasses/Services/EmoDrink/IntentDetector.swift \
 //     HermesGlasses/Services/ChoiceDetector.swift \
 //     HermesGlasses/Services/EmoDrink/EmoDrinkCommands.swift \
 //     tests/emodrink-commands/main.swift -o /tmp/ed-commands && /tmp/ed-commands

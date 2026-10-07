@@ -356,8 +356,6 @@ final class EmoDrinkViewModel {
         isStarting = true
         defer { isStarting = false }
         guard catalog != nil else { fail("The drink catalogue is missing from this build."); return }
-        guard hermesVM.buildRunClaimer == nil else { fail("End the build check before starting drink mode."); return }
-        guard !hermesVM.conversationCaptureActive else { fail("Stop the conversation recording before starting drink mode."); return }
 
         if hermesVM.connectionState == .disconnected {
             await hermesVM.startSession()
