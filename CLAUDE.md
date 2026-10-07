@@ -78,11 +78,10 @@ mode.
   `setMicSource` returns whether it did.
 - **The Meta AI camera grant is requested AT PAIRING**
   (`ensureGlassesCameraAfterPairing`, fired from `ContentView.onChange` of
-  `registrationState`), offered again in onboarding, shown in Settings →
-  Devices → Glasses camera, warned about under the eye toggle, and
-  requestable from the Lens error state. It used to be requested in exactly
-  one place - the Photo test button - so anyone who never pressed it hit
-  "camera unavailable" in drink mode, with nothing
+  `registrationState`), offered again in onboarding, and shown on the
+  Settings Glasses page under the "Glasses camera" header. It used to be
+  requested in exactly one place - the Photo test button - so anyone who
+  never pressed it hit "camera unavailable" in drink mode, with nothing
   explaining why. Never gate a feature on this grant without offering the
   interactive request; `ensureCameraPermission(interactive: false)` alone is
   a dead end.
@@ -92,12 +91,12 @@ mode.
   `testVisualQuery` warms one first; `testDisplay` makes its own.
 - **Stream resolution is negotiated, never assumed.** `addStream` returns a
   bare `nil` (no thrown error, no reason) when the firmware won't serve the
-  config you asked for. The Lens live stream used to demand `.high` while
-  every path that works on device - one-shot capture, and Meta's own
-  CameraAccess sample - uses `.low`; the symptom was "Could not open the
-  glasses camera stream" plus a photo-less "remember this person".
-  `startLiveStream` now walks `.high → .medium → .low`, twice, and logs
-  which one opened. If you add a config knob, ladder it.
+  config you asked for. A live stream that demanded `.high` failed on device
+  while every path that works - one-shot capture, and Meta's own
+  CameraAccess sample - uses `.low`. `startLiveStream` now walks
+  `.high → .medium → .low`, twice, and logs which one opened. The one
+  persistent stream is drink mode's: started in `EmoDrinkViewModel.startStream`,
+  stopped in `stopStream`. If you add a config knob, ladder it.
 - **Display callbacks are wired in `init`, not `startSession`.** `wireDisplay()`
   must stay in the initialiser: the lens is reachable (display test, a pick by
   voice) before any session-scoped wiring exists.
@@ -110,16 +109,14 @@ mode.
   glasses answers, and in phone mode they are always no. Gating on
   those once silently disabled every phone-mode capture.
 - **One AVCaptureSession per camera.** In phone mode the session already
-  streams for the 5b feed, so a second consumer must observe rather than
-  start its own: `addVisionFrameObserver(_:_:)` (keys: `lens`,
-  `conversation-capture`) and `visionStreamIsShared`. Never call
-  `vision.stopLiveStream()` for a stream you didn't start - it blanks the
-  screen the user is looking at.
+  streams for drink mode, so a second consumer must observe rather than
+  start its own: `addVisionFrameObserver(_:_:)` (the only observer today is
+  `EmoDrinkViewModel.frameObserverKey`, "emodrink") and
+  `visionStreamIsShared`. Never call `vision.stopLiveStream()` for a stream
+  you didn't start - it blanks the screen the user is looking at.
 - **Never offer "Connect Glasses" to registered glasses.** `startRegistration`
   on an already-registered user throws "User is already registered", which
-  is a dead end. `ContentView.GlassesSetupState` splits `notPaired` (pair
-  them) from `pairedButUnreachable` (wake them, or re-pair via Settings →
-  Devices). Pairing errors route to Devices through `SettingsRoute`.
+  is a dead end. The Glasses page in Settings handles pairing and re-pair.
 - **"Are glasses paired" is NOT "can a glasses session start".**
   `registrationState == .registered` and a non-empty `wearables.devices`
   both stay true for glasses that are paired but out of range, while
@@ -131,26 +128,24 @@ mode.
   Route selection itself is pure and tested in `tests/vision-routing/`.
 - **Never predict hardware without a fallback.** Eligibility can lapse
   between the check and the start, so the glasses path falling through to
-  the phone is handled at three points: `startSession()`, `LensViewModel.start()`,
+  the phone is handled at two points: `startSession()`
   and `captureVisionPhoto()`. `PhoneCameraManager.capturePhoto()` will spin
   the camera up for a single frame if nothing is streaming, so either eye
   can serve a still. `logVisionDiagnostics(_:)` prints registration, device
   link states, `activeDevice`, and the chosen route - use it before
   theorising about which eye was picked.
 - **The vision route is pinned for the life of a session.** `visionRoute`
-  is recomputed only while nothing is pinned; a session or the Lens view
-  calls `pinVisionRoute`. Without this, a momentary SDK flap redirected a
-  capture to a camera that wasn't running (a "remember this person" note
-  saved with no photo).
-- **The visual language lives in `Views/HermesDesign.swift`** (imported
-  from the "Hermes Glasses UI" design doc, turns 4 + 5). ONE accent -
+  is recomputed only while nothing is pinned; the running session calls `pinVisionRoute`
+  (`startSession`) and `unpinVisionRoute` on teardown. Without this, a momentary SDK flap redirected a
+  capture to a camera that wasn't running.
+- **The visual language lives in `Views/HermesDesign.swift`**. ONE accent -
   terracotta `#C4622D` and its shades; warm neutrals (cream `#F7F5F2`
   canvas, warm black `#1C1B1A`), never stock iOS greys or per-row rainbow
   icons. Build screens out of the primitives there (`HermesSection`,
   `HermesCard`, `HermesRow`, `HermesIconTile`, `HermesChip`,
   `HermesStatusPill`, `HermesDeviceCard`, `HermesScrollPage`) rather than
-  re-styling a `List`; pages that keep a stock `Form` (Voice, Display,
-  Context…) call the local `hermesFormStyle()` so the canvas matches.
+  re-styling a `List`; pages that keep a stock `Form` (Language and
+  voice, Glasses status) call the local `hermesFormStyle()` so the canvas matches.
   `HermesMark` is the winged logo as a `Shape` (SVG polygons on a 140x72
   canvas); the wordmark is system `.heavy` + wide tracking, since no
   Montserrat file ships with the app.

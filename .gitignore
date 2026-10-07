@@ -17,7 +17,6 @@ build/
 Config/Secrets.xcconfig
 
 # Python
-bridge/__pycache__/
 *.pyc
 nohup.out
 
