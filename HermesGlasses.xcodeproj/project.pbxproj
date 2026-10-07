@@ -154,6 +154,7 @@
 		AAAA00000000000000000E0B /* PhysiologyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E0C /* PhysiologyStore.swift */; };
 		AAAA00000000000000000E0D /* VendingMachineGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E0E /* VendingMachineGate.swift */; };
 		AAAA00000000000000000E0F /* VendingMachineDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E10 /* VendingMachineDetector.swift */; };
+		AAAA00000000000000000E11 /* EmoDrinkPersona.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E12 /* EmoDrinkPersona.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -317,6 +318,7 @@
 		AAAA00000000000000000E0C /* PhysiologyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/PhysiologyStore.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E0E /* VendingMachineGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/VendingMachineGate.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E10 /* VendingMachineDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/VendingMachineDetector.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E12 /* EmoDrinkPersona.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/EmoDrinkPersona.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -505,6 +507,7 @@
 				AAAA00000000000000000E0C /* PhysiologyStore.swift */,
 				AAAA00000000000000000E0E /* VendingMachineGate.swift */,
 				AAAA00000000000000000E10 /* VendingMachineDetector.swift */,
+				AAAA00000000000000000E12 /* EmoDrinkPersona.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -745,6 +748,7 @@
 				AAAA00000000000000000E0B /* PhysiologyStore.swift in Sources */,
 				AAAA00000000000000000E0D /* VendingMachineGate.swift in Sources */,
 				AAAA00000000000000000E0F /* VendingMachineDetector.swift in Sources */,
+				AAAA00000000000000000E11 /* EmoDrinkPersona.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
