@@ -55,6 +55,7 @@ struct ContentView: View {
     let wearablesVM: WearablesViewModel
     let hermesVM: HermesSessionViewModel
     let buildCheckVM: BuildCheckViewModel
+    let emoDrinkVM: EmoDrinkViewModel
 
     @State private var showSettings: Bool = false
     @State private var showPeople: Bool = false
@@ -63,6 +64,7 @@ struct ContentView: View {
     @State private var showMap: Bool = false
     @State private var showLookup: Bool = false
     @State private var showBuildCheck: Bool = false
+    @State private var showEmoDrink: Bool = false
     /// In phone mode the 5b camera view is the session screen; this flips to
     /// the chat transcript so the conversation is never unreachable.
     @State private var showTranscript: Bool = false
@@ -164,6 +166,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showBuildCheck) {
             BuildCheckView(vm: buildCheckVM)
+        }
+        .sheet(isPresented: $showEmoDrink) {
+            EmoDrinkView(vm: emoDrinkVM)
         }
         .task {
             hermesVM.logVisionDiagnostics("app-launch")
@@ -788,6 +793,11 @@ struct ContentView: View {
                 "End the build check before opening \(app.id == "lens" ? "Lens" : "Lookup").")
             return
         }
+        if emoDrinkVM.drinkModeOn, app.id == "lens" || app.id == "lookup" {
+            hermesVM.showNoticeMessage(
+                "Stop drink mode before opening \(app.id == "lens" ? "Lens" : "Lookup").")
+            return
+        }
         switch app.id {
         case "lens": showLens = true
         case "people": showPeople = true
@@ -795,6 +805,7 @@ struct ContentView: View {
         case "log": showObjectLog = true
         case "lookup": showLookup = true
         case "buildcheck": showBuildCheck = true
+        case "emodrink": showEmoDrink = true
         default: break
         }
     }

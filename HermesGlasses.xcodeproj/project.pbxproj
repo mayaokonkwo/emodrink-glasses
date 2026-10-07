@@ -72,6 +72,7 @@
 		AAAA00000000000000000A7D /* BuildRunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A7E /* BuildRunView.swift */; };
 		AAAA00000000000000000A7B /* ProcedureEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A7C /* ProcedureEditorView.swift */; };
 		AAAA00000000000000000A79 /* BuildCheckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A7A /* BuildCheckView.swift */; };
+		AAAA00000000000000000E17 /* EmoDrinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E18 /* EmoDrinkView.swift */; };
 		AAAA00000000000000000843 /* HermesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000844 /* HermesApp.swift */; };
 		AAAA00000000000000000845 /* AppDrawerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000846 /* AppDrawerView.swift */; };
 		AAAA00000000000000000823 /* VisionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000824 /* VisionSource.swift */; };
@@ -251,6 +252,7 @@
 		AAAA00000000000000000A7E /* BuildRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildRunView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A7C /* ProcedureEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcedureEditorView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A7A /* BuildCheckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheckView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E18 /* EmoDrinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrinkView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000844 /* HermesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesApp.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000846 /* AppDrawerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDrawerView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000824 /* VisionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionSource.swift; sourceTree = "<group>"; };
@@ -395,6 +397,7 @@
 				AAAA00000000000000000A7E /* BuildRunView.swift */,
 				AAAA00000000000000000A7C /* ProcedureEditorView.swift */,
 				AAAA00000000000000000A7A /* BuildCheckView.swift */,
+				AAAA00000000000000000E18 /* EmoDrinkView.swift */,
 				AAAA0000000000000000892 /* RosterView.swift */,
 			);
 			path = Views;
@@ -695,6 +698,7 @@
 				AAAA00000000000000000A7D /* BuildRunView.swift in Sources */,
 				AAAA00000000000000000A7B /* ProcedureEditorView.swift in Sources */,
 				AAAA00000000000000000A79 /* BuildCheckView.swift in Sources */,
+				AAAA00000000000000000E17 /* EmoDrinkView.swift in Sources */,
 				AAAA00000000000000000845 /* AppDrawerView.swift in Sources */,
 				AAAA00000000000000000823 /* VisionSource.swift in Sources */,
 				AAAA00000000000000000835 /* VisionRouting.swift in Sources */,
