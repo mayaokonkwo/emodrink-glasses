@@ -88,6 +88,7 @@ enum AIProviderRegistry {
     static let all: [AIProvider] = [
         AnthropicProvider(),
         OpenAICompatibleProvider.openAI,
+        OpenAICompatibleProvider.openRouter,
         GeminiProvider(),
         OpenAICompatibleProvider.ollama,
     ]

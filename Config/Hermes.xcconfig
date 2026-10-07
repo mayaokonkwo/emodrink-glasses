@@ -11,4 +11,13 @@
 META_APP_ID = 0
 CLIENT_TOKEN =
 
+// EmoDrink gift build: a bundled assistant key, seeded into the Keychain on
+// first launch by BundledAIKey.seedIfNeeded() and read from Info.plist
+// (EmoDrinkBundledAI). Real values live only in the gitignored
+// Secrets.xcconfig; empty here, so a clone without secrets builds and the
+// app simply asks for a key as before.
+BUNDLED_AI_PROVIDER =
+BUNDLED_AI_MODEL =
+BUNDLED_AI_KEY =
+
 #include? "Secrets.xcconfig"

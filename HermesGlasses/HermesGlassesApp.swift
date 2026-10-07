@@ -37,6 +37,12 @@ struct HermesGlassesApp: App {
     }
 
     init() {
+        // Step 0: the gift build's bundled assistant key. First, so the
+        // session view model created below reads the seeded provider,
+        // model and key in its reloadDirectProviderState(). Never
+        // overwrites a key the user typed.
+        BundledAIKey.seedIfNeeded()
+
         // Step 1: Configure the DAT SDK once at launch
         do {
             try Wearables.configure()

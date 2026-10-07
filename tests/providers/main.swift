@@ -33,7 +33,8 @@ expectEqual(AIProviderRegistry.provider(id: "openai").id, "openai", "registry op
 expectEqual(AIProviderRegistry.provider(id: "gemini").id, "gemini", "registry gemini")
 expectEqual(AIProviderRegistry.provider(id: "ollama").id, "ollama", "registry ollama")
 expectEqual(AIProviderRegistry.provider(id: "nope").id, "anthropic", "registry unknown falls back to anthropic")
-expectEqual(AIProviderRegistry.all.count, 4, "four built-in providers")
+expectEqual(AIProviderRegistry.provider(id: "openrouter").id, "openrouter", "registry openrouter")
+expectEqual(AIProviderRegistry.all.count, 5, "five built-in providers")
 
 // Turn Codable round-trips
 let t = Turn(role: "user", text: "hi")
@@ -210,6 +211,24 @@ do {
     gm.maxTokens = 8192
     let cfg = bodyJSON(try! GeminiProvider().buildRequest(gm))["generationConfig"] as? [String: Any]
     expectEqual(cfg?["maxOutputTokens"] as? Int, 8192, "gemini honours maxTokens")
+}
+
+// ── OpenRouter (the EmoDrink gift build's bundled provider) ─────────────
+do {
+    let p = AIProviderRegistry.provider(id: "openrouter")
+    expectEqual(p.id, "openrouter", "openrouter is registered")
+    expectEqual(p.defaultBaseURL, "https://openrouter.ai/api", "openrouter base url")
+    expect(p.requiresKey, "openrouter requires a key")
+    expectEqual(p.curatedModels.first?.id, "google/gemini-2.5-flash-lite", "openrouter default model is Flash Lite")
+    let req = AIRequest(systemPrompt: "S", contextLine: nil, history: [], userText: "hi",
+                        imageJPEG: nil, model: "google/gemini-2.5-flash-lite",
+                        baseURL: p.defaultBaseURL, apiKey: "or-test-key")
+    let ur = try! p.buildRequest(req)
+    expectEqual(ur.url!.absoluteString, "https://openrouter.ai/api/v1/chat/completions", "openrouter url")
+    expectEqual(ur.value(forHTTPHeaderField: "Authorization"), "Bearer or-test-key", "openrouter bearer auth")
+    let ids = AIProviderRegistry.all.map(\.id)
+    expect(ids.firstIndex(of: "openrouter") == ids.firstIndex(of: "openai").map { $0 + 1 },
+           "openrouter sits right after openai")
 }
 
 if failures > 0 { print("\(failures) test(s) FAILED"); exit(1) }

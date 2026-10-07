@@ -151,6 +151,7 @@
 		AAAA00000000000000000E0F /* EmoDrink/VendingMachineDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E10 /* EmoDrink/VendingMachineDetector.swift */; };
 		AAAA00000000000000000E11 /* EmoDrink/EmoDrinkPersona.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E12 /* EmoDrink/EmoDrinkPersona.swift */; };
 		AAAA00000000000000000E13 /* EmoDrink/EmoDrinkCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E14 /* EmoDrink/EmoDrinkCommands.swift */; };
+		AAAA00000000000000000E19 /* BundledAIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E1A /* BundledAIKey.swift */; };
 		AAAA00000000000000000E15 /* EmoDrinkViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */; };
 		AAAA00000000000000000E17 /* EmoDrinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E18 /* EmoDrinkView.swift */; };
 		AAAA0000000000000000887 /* People/FaceEmbedder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000888 /* People/FaceEmbedder.swift */; };
@@ -318,6 +319,7 @@
 		AAAA00000000000000000E10 /* EmoDrink/VendingMachineDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/VendingMachineDetector.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E12 /* EmoDrink/EmoDrinkPersona.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/EmoDrinkPersona.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E14 /* EmoDrink/EmoDrinkCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/EmoDrinkCommands.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E1A /* BundledAIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/BundledAIKey.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrinkViewModel.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E18 /* EmoDrinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrinkView.swift; sourceTree = "<group>"; };
 		AAAA0000000000000000888 /* People/FaceEmbedder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/FaceEmbedder.swift; sourceTree = "<group>"; };
@@ -526,6 +528,7 @@
 				AAAA00000000000000000E10 /* EmoDrink/VendingMachineDetector.swift */,
 				AAAA00000000000000000E12 /* EmoDrink/EmoDrinkPersona.swift */,
 				AAAA00000000000000000E14 /* EmoDrink/EmoDrinkCommands.swift */,
+				AAAA00000000000000000E1A /* BundledAIKey.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -770,6 +773,7 @@
 				AAAA00000000000000000E0F /* EmoDrink/VendingMachineDetector.swift in Sources */,
 				AAAA00000000000000000E11 /* EmoDrink/EmoDrinkPersona.swift in Sources */,
 				AAAA00000000000000000E13 /* EmoDrink/EmoDrinkCommands.swift in Sources */,
+				AAAA00000000000000000E19 /* BundledAIKey.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -23,6 +23,18 @@ struct OpenAICompatibleProvider: AIProvider {
             ModelOption(id: "gpt-4o-mini", label: "GPT-4o mini - fastest"),
         ])
 
+    /// One key, many models. The EmoDrink gift build bundles an OpenRouter
+    /// key; Gemini 2.5 Flash Lite is the cheap default that still reads the
+    /// vending machine photo.
+    static let openRouter = OpenAICompatibleProvider(
+        id: "openrouter", displayName: "OpenRouter",
+        defaultBaseURL: "https://openrouter.ai/api", requiresKey: true,
+        curatedModels: [
+            ModelOption(id: "google/gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite - cheapest, sees images"),
+            ModelOption(id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash"),
+            ModelOption(id: "deepseek/deepseek-chat-v3-0324", label: "DeepSeek V3 - text only"),
+        ])
+
     static let ollama = OpenAICompatibleProvider(
         id: "ollama", displayName: "Local (Ollama)",
         defaultBaseURL: "http://localhost:11434", requiresKey: false,

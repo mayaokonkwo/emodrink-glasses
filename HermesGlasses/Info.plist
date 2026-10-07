@@ -53,5 +53,14 @@
 	<array>
 		<string>com.meta.ar.wearable</string>
 	</array>
+	<key>EmoDrinkBundledAI</key>
+	<dict>
+		<key>Key</key>
+		<string>$(BUNDLED_AI_KEY)</string>
+		<key>Model</key>
+		<string>$(BUNDLED_AI_MODEL)</string>
+		<key>Provider</key>
+		<string>$(BUNDLED_AI_PROVIDER)</string>
+	</dict>
 </dict>
 </plist>

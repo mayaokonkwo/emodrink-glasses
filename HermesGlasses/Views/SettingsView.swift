@@ -760,13 +760,19 @@ private struct AssistantPage: View {
     @State private var showSavePreset: Bool = false
     @State private var presetName: String = ""
     @State private var presetsVersion: Int = 0  // bump to refresh list
+    /// Reveals the key field over a bundled (managed) key.
+    @State private var useOwnKey: Bool = false
 
     var body: some View {
         // The EmoDrink gift build has no bridge: Direct is the only mode, so
         // the Brain picker and the Bridge connection section are not shown.
         // `brainRow` and `bridgeSection` stay below, compiled but unused.
         HermesScrollPage {
-            directSection
+            if BundledAIKey.isActive {
+                managedKeySection
+            } else {
+                directSection
+            }
         }
         .navigationTitle("Assistant")
         .navigationBarTitleDisplayMode(.inline)
@@ -829,6 +835,53 @@ private struct AssistantPage: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: Managed (bundled) key
+
+    /// This copy carries its own key: one read-only row instead of the
+    /// provider picker and key field. "Use my own key" reveals the field;
+    /// a key saved there replaces the bundled one for the same provider,
+    /// and from then on the full Direct section shows.
+    @ViewBuilder
+    private var managedKeySection: some View {
+        HermesSection(
+            footer: "A key for the drink assistant is built into this copy. Add your own key here to use it instead."
+        ) {
+            HermesRow(
+                "Assistant",
+                value: "included (\(hermesVM.directProvider.displayName), \(shortModelLabel))",
+                showsChevron: false
+            )
+            HermesDivider()
+            if useOwnKey {
+                fieldRow(title: "Your \(hermesVM.directProvider.displayName) API key") {
+                    SecureField("sk-…", text: $providerKey)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .font(.system(size: 15, design: .monospaced))
+                        .onSubmit {
+                            hermesVM.setProviderKey(providerKey)
+                            providerKey = ""
+                            // Re-evaluates isActive: the user's key now wins.
+                            useOwnKey = false
+                        }
+                }
+            } else {
+                Button {
+                    useOwnKey = true
+                } label: {
+                    Text("Use my own key")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(HermesTheme.accentOnCard)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 16)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 
     // MARK: Direct
@@ -902,6 +955,11 @@ private struct AssistantPage: View {
                 )
             }
         }
+    }
+
+    /// The model's name without its " - cheapest, …" note.
+    private var shortModelLabel: String {
+        modelLabel.components(separatedBy: " - ").first ?? modelLabel
     }
 
     private var modelLabel: String {
