@@ -47,6 +47,10 @@ struct VendingMachineGate {
         }
     }
 
+    /// "Check now": bypasses the change gate and the post-pick cooldown,
+    /// never the hourly budget.
+    func canCheckNow(now: Date) -> Bool { gate.budgetUsed(now: now) < gate.config.budgetPerHour }
+
     mutating func recordSent(at date: Date) { gate.recordSent(at: date) }
 
     mutating func startCooldown(at now: Date) {

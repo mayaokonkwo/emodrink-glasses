@@ -69,5 +69,16 @@ expect(VendingMachineDetector.isYes("- YES"), "bulleted YES is YES")
 expect(!VendingMachineDetector.isYes("1. Yesterday"), "numbered Yesterday is NO")
 expect(!VendingMachineDetector.isYes("**NO**"), "markdown bold NO is NO")
 
+// Check now: bypasses the change gate and the cooldown, never the budget.
+var checkGate = VendingMachineGate(config: ChangeGate.Config(changeThreshold: 0.35, settleThreshold: 0.12, minInterval: 8, budgetPerHour: 2))
+let c0 = Date(timeIntervalSince1970: 1_800_000_000)
+expect(checkGate.canCheckNow(now: c0), "check now allowed with budget left")
+checkGate.startCooldown(at: c0)
+expect(checkGate.canCheckNow(now: c0 + 1), "check now ignores the post-pick cooldown")
+checkGate.recordSent(at: c0 + 1)
+checkGate.recordSent(at: c0 + 2)
+expect(!checkGate.canCheckNow(now: c0 + 3), "check now refused when the hour's budget is spent")
+expect(checkGate.canCheckNow(now: c0 + 3602), "the budget frees an hour after the oldest send")
+
 print(failures == 0 ? "ALL PASS" : "\(failures) FAILED")
 exit(failures == 0 ? 0 : 1)

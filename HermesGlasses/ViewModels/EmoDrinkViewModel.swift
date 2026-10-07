@@ -1,17 +1,20 @@
 //
 // EmoDrinkViewModel.swift
 //
-// Runs EmoDrink. Owned by the App struct so drink
-// mode keeps watching with the phone in a pocket. Borrows mic, camera,
-// speech and lens from HermesSessionViewModel through its EmoDrink hooks.
+// Runs EmoDrink. Owned by the App struct so drink mode keeps watching with
+// the phone in a pocket. Borrows mic, camera, speech and lens from
+// HermesSessionViewModel through its EmoDrink hooks.
 //
-// Two loops. The MOMENT: a pick is on the lens, the persona is swapped in,
-// "why" / "something else" / "thanks" are claimed, anything else is a
-// question for the persona; ends on thanks, stop, a new pick, or 120 s of
-// silence. DRINK MODE: every `intervalSeconds` the latest frame is feature-
-// printed; VendingMachineGate decides whether to spend one vision call on
-// "is there a vending machine"; YES starts a moment. Every decision in
-// between is pure and tested; this file only wires.
+// The MOMENT has two steps. A (choices): three drinks on the lens as
+// numbered buttons, one spoken sentence naming them. B (chosen): the drink
+// the wearer tapped or said, its card with Why / Thanks, one warm spoken
+// line. Saying another number or name in B switches drink; "back" shows the
+// three again; "something else" offers the next three. Ends on thanks,
+// stop, or 120 s of silence. DRINK MODE: every `intervalSeconds` the latest
+// frame is feature-printed; VendingMachineGate decides whether to spend one
+// vision call on "is there a vending machine"; YES starts a moment. "Check
+// now" skips the change gate (never the budget). Every decision in between
+// is pure and tested; this file only wires.
 //
 
 import Foundation
@@ -27,6 +30,11 @@ final class EmoDrinkViewModel {
     static let snapshotMaxAge: TimeInterval = 30 * 60
     static let firstLineTimeout: TimeInterval = 4
     static let detectTimeout: TimeInterval = 12
+    static let noMachineSeconds: TimeInterval = 3
+    static let optionCount = 3
+    static let autoWatchKey = "emodrink_auto_watch"
+
+    enum MomentStep: Equatable { case choices, chosen }
 
     // MARK: Settings (UserDefaults-backed)
 
@@ -49,6 +57,10 @@ final class EmoDrinkViewModel {
     }() {
         didSet { UserDefaults.standard.set(intervalSeconds, forKey: EmoDrinkDefaults.intervalKey) }
     }
+    /// "Watch for vending machines when the app opens" (default on).
+    var autoWatch: Bool = UserDefaults.standard.object(forKey: EmoDrinkViewModel.autoWatchKey) as? Bool ?? true {
+        didSet { UserDefaults.standard.set(autoWatch, forKey: Self.autoWatchKey) }
+    }
 
     // MARK: Observable state
 
@@ -57,9 +69,12 @@ final class EmoDrinkViewModel {
     /// "sample data: short night", "this morning's cached data (fetch failed)". Nil when live.
     private(set) var snapshotNotice: String?
     private(set) var recommendation: Recommendation?
-    /// The drink on the lens right now (the pick, or an alternate after "something else").
+    /// Nil when no moment is on the lens.
+    private(set) var step: MomentStep?
+    /// The three drinks offered in step A (fewer if the catalogue is smaller).
+    private(set) var options: [Drink] = []
+    /// The drink chosen in step B.
     private(set) var currentPick: Drink?
-    private(set) var momentActive = false
     private(set) var drinkModeOn = false
     private(set) var frameCount = 0
     private(set) var sentCount = 0
@@ -67,11 +82,21 @@ final class EmoDrinkViewModel {
     private(set) var restingUntil: Date?
     private(set) var liveImage: UIImage?
     private(set) var fetching = false
+    private(set) var checkingNow = false
+    /// "No vending machine in view", shown for 3 s after a Check now NO.
+    private(set) var noMachineNotice: String?
+    /// Why the session could not start (no mic or speech permission).
+    private(set) var sessionBlocked: String?
     var errorMessage: String?
     /// Why the AI was skipped, when it was ("no API key", a timeout).
     private(set) var aiNotice: String?
+    private(set) var currentSnapshot: PhysiologySnapshot?
 
     var hasCatalog: Bool { catalog != nil }
+    var momentActive: Bool { step != nil }
+    var language: Language { hermesVM.activeLanguage }
+    var strings: EmoDrinkStrings { EmoDrinkStrings(language: language) }
+    var sourceLine: String { snapshotNotice ?? currentSourceLabel }
 
     // MARK: Collaborators
 
@@ -85,6 +110,7 @@ final class EmoDrinkViewModel {
     @ObservationIgnored private var gate = VendingMachineGate()
     @ObservationIgnored private var ticker: Task<Void, Never>?
     @ObservationIgnored private var momentTimer: Task<Void, Never>?
+    @ObservationIgnored private var noMachineTask: Task<Void, Never>?
     @ObservationIgnored private var streamStarted = false
     @ObservationIgnored private var startedSession = false
     @ObservationIgnored private var latestImage: UIImage?
@@ -93,14 +119,15 @@ final class EmoDrinkViewModel {
     @ObservationIgnored private var checkedPrint: VNFeaturePrintObservation?
     @ObservationIgnored private var checkInFlight = false
     @ObservationIgnored private var isStarting = false
-    private(set) var currentSnapshot: PhysiologySnapshot?
     @ObservationIgnored private var currentSourceLabel = ""
+    /// Index into `recommendation.ranked` of the first offered drink.
+    @ObservationIgnored private var offerOffset = 0
     /// The persona prompt of the moment on the lens, for "why".
     @ObservationIgnored private var currentPrompt: String?
-    /// The card on the lens, redrawn when a reply's dwell ends.
-    @ObservationIgnored private var currentCard: (title: String, subtitle: String, reason: String, source: String)?
     @ObservationIgnored private var cameraLostAnnounced = false
     @ObservationIgnored private var drinkModeStartedAt: Date?
+    /// Phone camera in the background: frames stop, so do not call it lost.
+    @ObservationIgnored private var pausedForBackground = false
 
     init(hermesVM: HermesSessionViewModel) {
         self.hermesVM = hermesVM
@@ -118,6 +145,27 @@ final class EmoDrinkViewModel {
             if self.drinkModeOn { self.hermesVM.showEmoDrinkWatchingOnLens(); return true }
             return false
         }
+    }
+
+    // MARK: Start / stop (home screen, app open)
+
+    /// Session first, then drink mode when the watch setting is on. Used by
+    /// the Start button and, with `autoWatch` on, when the home screen appears.
+    func start() async {
+        if hermesVM.connectionState == .disconnected {
+            await hermesVM.startSession()
+        }
+        guard hermesVM.connectionState != .disconnected else {
+            sessionBlocked = strings.micBlocked
+            return
+        }
+        sessionBlocked = nil
+        if autoWatch { await startDrinkMode() }
+    }
+
+    func stop() {
+        stopDrinkMode()
+        hermesVM.endSession()
     }
 
     // MARK: Snapshot
@@ -157,8 +205,7 @@ final class EmoDrinkViewModel {
             let fresh = CachedSnapshot(snapshot: snap, fetchedAt: now, sourceLabel: label)
             try? store.save(fresh)
             cached = fresh
-            let stale = !snap.isToday(today)
-            snapshotNotice = stale ? "feed dated \(snap.date)" : nil
+            snapshotNotice = snap.isToday(today) ? nil : "feed dated \(snap.date)"
             currentSnapshot = snap
             currentSourceLabel = label
             return snap
@@ -188,9 +235,9 @@ final class EmoDrinkViewModel {
         return f
     }()
 
-    // MARK: The pick and the moment
+    // MARK: Step A: three drinks
 
-    /// Voice, button, sheet or detection all land here.
+    /// Voice, button, or a detection all land here.
     func pickNow() async {
         guard let catalog else {
             fail("The drink catalogue is missing from this build.")
@@ -198,108 +245,145 @@ final class EmoDrinkViewModel {
         }
         guard let snapshot = await refreshSnapshot() else { return }
         let hour = Calendar.current.component(.hour, from: Date())
-        guard let rec = DrinkRecommender.recommend(snapshot: snapshot, catalog: catalog, hour: hour, lowSugar: lowSugar) else { return }
+        guard let rec = DrinkRecommender.recommend(snapshot: snapshot, catalog: catalog, hour: hour,
+                                                   lowSugar: lowSugar, language: language) else { return }
         recommendation = rec
-        currentPick = rec.pick
-        startMoment(snapshot: snapshot, recommendation: rec, pick: rec.pick, speak: .firstLine)
+        offerOffset = 0
+        offerChoices(speakWithAI: true)
     }
 
-    private enum MomentSpeech { case firstLine, alternate }
-
-    private func startMoment(snapshot: PhysiologySnapshot, recommendation rec: Recommendation, pick: Drink, speak: MomentSpeech) {
-        guard let catalog else { return }
-        momentActive = true
+    private func offerChoices(speakWithAI: Bool) {
+        guard let rec = recommendation, let catalog, let snapshot = currentSnapshot, !rec.ranked.isEmpty else { return }
+        let count = min(Self.optionCount, rec.ranked.count)
+        options = (0..<count).map { rec.ranked[(offerOffset + $0) % rec.ranked.count] }
+        currentPick = nil
+        step = .choices
         if !drinkModeOn { hermesVM.onEmoDrinkSessionEnding = { [weak self] in self?.endMoment(saying: nil) } }
-        let prompt = EmoDrinkPersona.systemPrompt(snapshot: snapshot, pick: pick, recommendation: rec,
-                                                  catalog: catalog, sourceLabel: currentSourceLabel)
+        let prompt = EmoDrinkPersona.systemPrompt(snapshot: snapshot, pick: options[0], recommendation: rec,
+                                                  catalog: catalog, sourceLabel: currentSourceLabel, language: language)
         hermesVM.setPersonaOverride(prompt)
         currentPrompt = prompt
-        let sourceLine = snapshotNotice ?? currentSourceLabel
-        currentCard = (title: pick.name, subtitle: pick.nameJa, reason: rec.reasonLine, source: sourceLine)
-        hermesVM.showEmoDrinkOnLens(title: pick.name, subtitle: pick.nameJa, reason: rec.reasonLine,
-                                    source: sourceLine, choices: EmoDrinkCommands.cardChoices(for: .en))  // Task 13 passes the resolved language
+        showChoicesOnLens()
         resetMomentTimer()
-        switch speak {
-        case .alternate:
-            say(EmoDrinkPersona.alternateLine(pick: pick))
-        case .firstLine:
-            Task { await speakFirstLine(prompt: prompt, pick: pick, recommendation: rec) }
+        let fallback = strings.choicesLine(names: options.map(name))
+        if speakWithAI {
+            let offered = options
+            Task { await speakAI(prompt: prompt, request: EmoDrinkPersona.choicesRequest(options: offered), fallback: fallback) {
+                [weak self] in self?.step == .choices && self?.options == offered
+            } }
+        } else {
+            say(fallback)
         }
     }
 
-    private func speakFirstLine(prompt: String, pick: Drink, recommendation rec: Recommendation) async {
-        let fallback = EmoDrinkPersona.fallbackLine(pick: pick, recommendation: rec)
+    private func showChoicesOnLens() {
+        guard let rec = recommendation else { return }
+        let lensOptions = options.map { LensDrinkOption(title: name($0), subtitle: otherName($0), reason: rec.reasonLine) }
+        hermesVM.showEmoDrinkChoicesOnLens(heading: strings.choiceHeading, options: lensOptions, source: sourceLine)
+    }
+
+    // MARK: Step B: the chosen drink
+
+    /// A tap on the home screen or the lens, or a number or name said aloud.
+    func choose(_ index: Int) {
+        guard momentActive, options.indices.contains(index), let rec = recommendation, let catalog,
+              let snapshot = currentSnapshot else { return }
+        let pick = options[index]
+        currentPick = pick
+        step = .chosen
+        let prompt = EmoDrinkPersona.systemPrompt(snapshot: snapshot, pick: pick, recommendation: rec,
+                                                  catalog: catalog, sourceLabel: currentSourceLabel, language: language)
+        hermesVM.setPersonaOverride(prompt)
+        currentPrompt = prompt
+        showChosenOnLens()
+        resetMomentTimer()
+        let fallback = strings.chosenLine(name: name(pick), reasons: rec.reasons)
+        Task { await speakAI(prompt: prompt, request: EmoDrinkPersona.chosenRequest(pick: pick, language: language), fallback: fallback) {
+            [weak self] in self?.step == .chosen && self?.currentPick == pick
+        } }
+    }
+
+    private func showChosenOnLens() {
+        guard let pick = currentPick, let rec = recommendation else { return }
+        hermesVM.showEmoDrinkOnLens(title: name(pick), subtitle: otherName(pick), reason: rec.reasonLine,
+                                    source: sourceLine, choices: EmoDrinkCommands.cardChoices(for: language))
+    }
+
+    /// "back" / 「戻る」: the three again, spoken from the rules (no wait).
+    func back() {
+        guard momentActive else { return }
+        offerChoices(speakWithAI: false)
+    }
+
+    /// "something else" / 「他には」: the next three in rank order.
+    func somethingElse() {
+        guard momentActive, let rec = recommendation else { return }
+        offerOffset = (offerOffset + Self.optionCount) % max(rec.ranked.count, 1)
+        offerChoices(speakWithAI: false)
+    }
+
+    /// Spoken only: the card stays on the lens. A one-shot call so the
+    /// answer cannot replace the card; any failure speaks the rule reasons.
+    func why() {
+        guard momentActive, let rec = recommendation else { return }
+        resetMomentTimer()
+        let fallback = strings.whyLine(reasons: rec.reasons)
+        guard hermesVM.hasDirectKey, let prompt = currentPrompt else {
+            say(fallback)
+            return
+        }
+        let stepAtAsk = step, pickAtAsk = currentPick
+        Task {
+            await speakAI(prompt: prompt, request: EmoDrinkPersona.whyQuestion, fallback: fallback, maxTokens: 120) {
+                [weak self] in self?.step == stepAtAsk && self?.currentPick == pickAtAsk
+            }
+        }
+    }
+
+    func thanks() {
+        guard momentActive else { return }
+        endMoment(saying: strings.enjoy)
+    }
+
+    /// One AI-phrased line within the first-line timeout, else the fallback.
+    /// `stillCurrent` drops the line when the wearer has moved on.
+    private func speakAI(prompt: String, request: String, fallback: String, maxTokens: Int = 80,
+                         stillCurrent: @escaping @MainActor () -> Bool) async {
         guard hermesVM.hasDirectKey else {
             aiNotice = "no API key, spoken from the rules"
             say(fallback)
             return
         }
         do {
-            let line = try await oneShot.askOneShotText(systemPrompt: prompt, userText: EmoDrinkPersona.firstLineRequest,
-                                                        maxTokens: 80, timeout: Self.firstLineTimeout)
-            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard momentActive, currentPick == pick else { return }
+            let line = try await oneShot.askOneShotText(systemPrompt: prompt, userText: request,
+                                                        maxTokens: maxTokens, timeout: Self.firstLineTimeout)
+            guard stillCurrent() else { return }
             aiNotice = nil
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
             say(trimmed.isEmpty ? fallback : trimmed)
         } catch {
-            guard momentActive, currentPick == pick else { return }
+            guard stillCurrent() else { return }
             aiNotice = "AI line skipped: \(Self.shortReason(error))"
             say(fallback)
         }
     }
 
-    /// Redraws the moment's card, e.g. when a reply's dwell ends.
+    /// Redraws the moment, e.g. when a reply's dwell ends.
     private func reshowMoment() {
-        guard momentActive, let card = currentCard else { return }
-        hermesVM.showEmoDrinkOnLens(title: card.title, subtitle: card.subtitle, reason: card.reason,
-                                    source: card.source, choices: EmoDrinkCommands.cardChoices(for: .en))  // Task 13 passes the resolved language
-    }
-
-    /// Spoken only: the card stays on the lens. A one-shot call so the
-    /// answer cannot replace the card; any failure speaks the rule-based reason.
-    func why() {
-        guard momentActive, let rec = recommendation else { return }
-        resetMomentTimer()
-        let fallback = EmoDrinkPersona.whyFallback(recommendation: rec)
-        guard hermesVM.hasDirectKey, let prompt = currentPrompt else {
-            say(fallback)
-            return
+        switch step {
+        case .choices: showChoicesOnLens()
+        case .chosen: showChosenOnLens()
+        case nil: break
         }
-        let pickAtAsk = currentPick
-        Task {
-            do {
-                let answer = try await oneShot.askOneShotText(systemPrompt: prompt, userText: EmoDrinkPersona.whyQuestion,
-                                                              maxTokens: 120, timeout: Self.firstLineTimeout)
-                guard momentActive, currentPick == pickAtAsk else { return }
-                let trimmed = answer.trimmingCharacters(in: .whitespacesAndNewlines)
-                say(trimmed.isEmpty ? fallback : trimmed)
-            } catch {
-                aiNotice = "why answer skipped: \(Self.shortReason(error))"
-                guard momentActive, currentPick == pickAtAsk else { return }
-                say(fallback)
-            }
-        }
-    }
-
-    func somethingElse() {
-        guard momentActive, let rec = recommendation, let snapshot = currentSnapshot, let pick = currentPick else { return }
-        let next = rec.next(after: pick)
-        currentPick = next
-        startMoment(snapshot: snapshot, recommendation: rec, pick: next, speak: .alternate)
-    }
-
-    func thanks() {
-        guard momentActive else { return }
-        endMoment(saying: "Enjoy.")
     }
 
     private func endMoment(saying line: String?) {
         momentTimer?.cancel()
         momentTimer = nil
         guard momentActive else { return }
-        momentActive = false
+        step = nil
+        options = []
         currentPrompt = nil
-        currentCard = nil
         hermesVM.setPersonaOverride(nil)
         if !drinkModeOn { hermesVM.onEmoDrinkSessionEnding = nil }
         gate.startCooldown(at: Date())
@@ -316,7 +400,7 @@ final class EmoDrinkViewModel {
         }
     }
 
-    // MARK: Utterances, intents, keys
+    // MARK: Utterances and intents
 
     /// Offered every finalized utterance while a moment is active. True =
     /// it was a reply and nothing reaches the brain.
@@ -327,9 +411,14 @@ final class EmoDrinkViewModel {
         case .why: why(); return true
         case .somethingElse: somethingElse(); return true
         case .thanks: thanks(); return true
-        case .back: return true // Task 13 implements back
+        case .back: back(); return true
         case .stop: endMoment(saying: nil); return true
         case nil: break
+        }
+        let offered = options.map { ChoiceOption(name: $0.name, nameJa: $0.nameJa) }
+        if let index = DrinkChoiceParser.index(for: text, options: offered, language: language) {
+            choose(index)
+            return true
         }
         switch IntentDetector.detect(text) {
         case .stopDrinkMode: if drinkModeOn { stopDrinkMode() } else { endMoment(saying: nil) }; return true
@@ -343,7 +432,7 @@ final class EmoDrinkViewModel {
         case .recommendDrink: Task { await pickNow() }
         case .startDrinkMode: Task { await startDrinkMode() }
         case .stopDrinkMode: stopDrinkMode()
-        default: break
+        case .none: break
         }
     }
 
@@ -361,9 +450,10 @@ final class EmoDrinkViewModel {
 
         if hermesVM.connectionState == .disconnected {
             await hermesVM.startSession()
-            guard hermesVM.connectionState != .disconnected else { fail("Couldn't start the microphone."); return }
+            guard hermesVM.connectionState != .disconnected else { sessionBlocked = strings.micBlocked; return }
             startedSession = true
         }
+        sessionBlocked = nil
         guard hermesVM.hasVisionSource, await hermesVM.ensureVisionPermission(interactive: true) else {
             fail("Drink mode needs a camera - connect the glasses or allow the iPhone camera.")
             if startedSession { startedSession = false; hermesVM.endSession() }
@@ -385,6 +475,7 @@ final class EmoDrinkViewModel {
         budgetUsed = 0
         restingUntil = nil
         cameraLostAnnounced = false
+        pausedForBackground = false
         drinkModeOn = true
         drinkModeStartedAt = Date()
         hermesVM.onEmoDrinkSessionEnding = { [weak self] in self?.stopDrinkMode(sessionEnding: true) }
@@ -422,6 +513,62 @@ final class EmoDrinkViewModel {
         }
     }
 
+    /// "Check now": the latest frame goes to the detector at once, past the
+    /// change gate and the cooldown but never past the hourly budget. A NO
+    /// shows "No vending machine in view" for 3 s.
+    func checkNow() async {
+        guard drinkModeOn, !momentActive, !checkInFlight else { return }
+        let now = Date()
+        guard gate.canCheckNow(now: now) else {
+            restingUntil = gate.restingUntil(now: now)
+            return
+        }
+        guard let image = latestImage else {
+            flashNoMachine()
+            return
+        }
+        gate.recordSent(at: now)
+        sentCount += 1
+        budgetUsed = gate.budgetUsed(now: now)
+        checkInFlight = true
+        checkingNow = true
+        defer { checkingNow = false }
+        if await check(image) == false { flashNoMachine() }
+    }
+
+    private func flashNoMachine() {
+        noMachineNotice = strings.noMachine
+        noMachineTask?.cancel()
+        noMachineTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(Self.noMachineSeconds))
+            guard !Task.isCancelled else { return }
+            self?.noMachineNotice = nil
+        }
+    }
+
+    // MARK: Background
+
+    /// The iPhone camera stops in the background; the glasses' DAT stream
+    /// does not. Phone route: pause sampling so silence is not "camera lost".
+    func appDidEnterBackground() {
+        guard drinkModeOn, hermesVM.visionRoute == .phone else { return }
+        pausedForBackground = true
+    }
+
+    /// Back in front: restart the phone camera if it was lost, give frames a
+    /// fresh grace period, resume sampling.
+    func appDidBecomeActive() async {
+        guard pausedForBackground else { return }
+        pausedForBackground = false
+        await hermesVM.resumePhoneVisionIfNeeded()
+        latestImage = nil
+        latestImageAt = nil
+        drinkModeStartedAt = Date()
+        cameraLostAnnounced = false
+    }
+
+    // MARK: Stream and frames
+
     private func startStream() async {
         let onImage: (UIImage) -> Void = { [weak self] image in
             guard let self else { return }
@@ -455,7 +602,7 @@ final class EmoDrinkViewModel {
             guard drinkModeOn else { return }
             cameraLostAnnounced = true
             errorMessage = "The camera stream didn't open (\(error.localizedDescription)). Say \"what should I drink\" to pick without the camera."
-            say("The camera didn't open. Say what should I drink to pick without it.")
+            say(strings.cameraDidNotOpen)
         }
     }
 
@@ -468,7 +615,7 @@ final class EmoDrinkViewModel {
         errorMessage = "The camera stream stopped (\(message))."
         guard !cameraLostAnnounced else { return }
         cameraLostAnnounced = true
-        say("The camera stream stopped.")
+        say(strings.cameraStopped)
     }
 
     /// Frames went stale or never arrived: stop trusting the last frame and
@@ -481,7 +628,7 @@ final class EmoDrinkViewModel {
         guard !cameraLostAnnounced else { return }
         cameraLostAnnounced = true
         errorMessage = "Camera lost. Drink mode is paused until the camera is back; say \"what should I drink\" to pick without it."
-        say("Camera lost. Drink mode is paused.")
+        say(strings.cameraLost)
     }
 
     private func stopStream() {
@@ -495,7 +642,7 @@ final class EmoDrinkViewModel {
     private var staleAfter: TimeInterval { max(2 * Double(intervalSeconds), 6) }
 
     private func sampleFrame() async {
-        guard drinkModeOn else { return }
+        guard drinkModeOn, !pausedForBackground else { return }
         let now = Date()
         guard let image = latestImage, let at = latestImageAt, now.timeIntervalSince(at) <= staleAfter else {
             let started = latestImageAt ?? drinkModeStartedAt ?? now
@@ -528,28 +675,35 @@ final class EmoDrinkViewModel {
         }
     }
 
-    private func check(_ image: UIImage) async {
+    /// One vision call. True when the reply is YES (and the moment started).
+    @discardableResult
+    private func check(_ image: UIImage) async -> Bool {
         defer { checkInFlight = false }
-        guard let jpeg = FrameTools.downscaledJPEG(image, maxSide: 768, quality: 0.6) else { return }
+        guard let jpeg = FrameTools.downscaledJPEG(image, maxSide: 768, quality: 0.6) else { return false }
         do {
             let reply = try await oneShot.askOneShot(systemPrompt: VendingMachineDetector.systemPrompt,
                                                      userText: VendingMachineDetector.userText,
                                                      photoJPEG: jpeg, timeout: Self.detectTimeout)
-            guard drinkModeOn, !momentActive else { return }
-            if VendingMachineDetector.isYes(reply) { await pickNow() }
+            guard drinkModeOn, !momentActive, VendingMachineDetector.isYes(reply) else { return false }
+            await pickNow()
+            return true
         } catch {
             // A failed check is a NO: stay quiet, keep watching.
             aiNotice = "vision check failed: \(Self.shortReason(error))"
+            return false
         }
     }
 
     // MARK: Helpers
 
+    private func name(_ drink: Drink) -> String { language == .ja ? drink.nameJa : drink.name }
+    private func otherName(_ drink: Drink) -> String { language == .ja ? drink.name : drink.nameJa }
+
     private func say(_ text: String) {
         hermesVM.speakCue(text, queued: true)
     }
 
-    /// Shown on the phone AND spoken, like Build Check's `fail`.
+    /// Shown on the phone AND spoken.
     private func fail(_ message: String) {
         errorMessage = message
         say(message)

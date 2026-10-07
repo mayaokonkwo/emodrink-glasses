@@ -809,6 +809,13 @@ final class HermesSessionViewModel {
         }
     }
 
+    /// Back from the background in phone mode: the iPhone camera stream
+    /// stopped while the app was hidden, so start it again.
+    func resumePhoneVisionIfNeeded() async {
+        guard phoneModeActive, !phoneCameraManager.isStreaming else { return }
+        await startPhoneVision()
+    }
+
     /// Display-HUD callbacks. Wired for BOTH routes: in phone
     /// mode nothing goes out over BLE, but `displayManager.content` still
     /// updates, which is what the simulated lens renders.
