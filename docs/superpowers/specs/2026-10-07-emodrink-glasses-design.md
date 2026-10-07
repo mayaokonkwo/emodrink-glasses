@@ -51,7 +51,7 @@ the pick is suggestive, never diagnostic, and the body data is the point.
 
 **Approach: the phone runs everything**, exactly as Build Check does.
 Physiology fetch, scoring, machine detection and the conversation all run in
-the app, through the existing vision routing (`VisionSource`: AiSee / Meta /
+the app, through the existing vision routing (`VisionSource`: Meta /
 iPhone) and the existing provider path (`DirectClient`). Rejected
 alternatives: a server-side recommender (adds infrastructure for a gift that
 should run from a bare phone) and letting the model choose the drink (not
@@ -343,6 +343,7 @@ glasses walk-up and the HUD are tested by hand.
   and Hermes Glasses as the base. Credits the published paper only. MIT licence
   kept, with the Hermes copyright line intact.
 - Branch `main` only; no feature branches needed for a single-author gift.
+- This build is for Meta Ray-Ban Display only; the AiSee vendor stays in the code but is hidden.
 
 ## 13. Deferred
 

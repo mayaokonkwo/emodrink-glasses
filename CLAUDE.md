@@ -12,6 +12,17 @@ photo via the DAT camera API.
 
 ## Key facts that are easy to get wrong
 
+- **EmoDrink gift build: one app, Meta only, no bridge, bundled key.**
+  `HermesAppRegistry.all` is `[emoDrink]` (the other apps keep their
+  definitions and screens, just unlisted), so the quick-action row has no
+  More tile or drawer. The bridge is hidden, not deleted: `backend` always
+  reads `.direct` and Settings has no Brain picker or Bridge section.
+  `glassesVendor` always reads `.meta`; the AiSee code compiles but has no
+  UI. `BundledAIKey.seedIfNeeded()` runs FIRST in `HermesGlassesApp.init()`
+  (before the session view model reads provider state), takes provider,
+  model and key from Info.plist `EmoDrinkBundledAI` (fed by the gitignored
+  `Config/Secrets.xcconfig`), and never overwrites a user key: the
+  Keychain is written only when that provider has none.
 - **STT is on-device.** The app does NOT stream mic audio to the bridge
   anymore. The bridge's audio/VAD/Google-STT path is legacy fallback only.
 - **Audio session uses mode `.default`, not `.voiceChat`** - voiceChat's DSP

@@ -1,8 +1,8 @@
 # EmoDrink Glasses
 
 One drink, picked from how you slept, offered the moment you reach the
-vending machine. On **Meta Ray-Ban Display** glasses (and AiSee or other
-Realtek-based glasses, or an iPhone alone in phone mode).
+vending machine. On **Meta Ray-Ban Display** glasses, or an iPhone alone in
+phone mode.
 
 EmoDrink Glasses continues the [EmoDrink](https://dl.acm.org/doi/full/10.1145/3795011.3797399)
 work (Augmented Humans 2026, AHLab with Asahi as the study's industry
@@ -13,8 +13,10 @@ seconds. Built as a thank-you for Taka, who ran the study and lent the
 glasses.
 
 It is a fork of [Hermes Glasses](https://github.com/prasanthsasikumar/hermes-glasses),
-MIT licensed; everything Hermes does (voice, vision, navigation, people,
-Build Check, phone mode) is still here and described in that repo's README.
+MIT licensed. This is a focused gift build: EmoDrink is the only app on
+screen. Everything else Hermes does (navigation, people, Lens, Build Check,
+the Mac bridge) is still in the code, hidden rather than deleted, and
+described in that repo's README.
 
 ## What it does
 
@@ -55,7 +57,7 @@ Build Check, phone mode) is still here and described in that repo's README.
 
 ## Your own data
 
-Point the feed URL (More › EmoDrink) at a JSON document of this shape,
+Point the feed URL (the EmoDrink tile on the home screen) at a JSON document of this shape,
 for example one a watch sync writes:
 
 ```json
@@ -80,13 +82,24 @@ three sample profiles under "Use sample data" work offline.
 
 ## Setup for EmoDrink
 
-Same as Hermes Glasses (below): a Meta Wearables app id in
-`Config/Secrets.xcconfig`, and an AI provider key in Settings for the
-conversation and drink mode. Open **More › EmoDrink** on the phone to see
-today's numbers, switch to sample data, change the feed URL, or toggle
-drink mode. The bundle id is `com.flowsxr.emodrinkglasses`; register it in
-the Meta Wearables Developer Center or build with the Hermes bundle id to
-reuse an existing registration.
+- **The assistant key is built in.** This copy talks to OpenRouter with
+  Gemini 2.5 Flash Lite, a cheap model that also handles the vending
+  machine check, so nobody has to type a key. Settings › Assistant shows it
+  as included; "Use my own key" replaces it, and a key you add always wins.
+- **The key never lives in the repo.** It is injected at build time from
+  the gitignored `Config/Secrets.xcconfig` (`BUNDLED_AI_PROVIDER`,
+  `BUNDLED_AI_MODEL`, `BUNDLED_AI_KEY`; see `Config/Secrets.example.xcconfig`).
+  Without it the app builds as before and asks for a key in Settings.
+- **No Mac bridge in this build.** Direct mode is the only mode: the phone
+  calls the provider itself.
+- **Glasses still need a Meta Wearables app id** in `Config/Secrets.xcconfig`.
+  Phone mode (the iPhone camera as the eye) works without it.
+
+Tap the **EmoDrink** tile on the home screen to see today's numbers, switch
+to sample data, change the feed URL, or toggle drink mode. The bundle id is
+`com.flowsxr.emodrinkglasses`; register it in the Meta Wearables Developer
+Center or build with the Hermes bundle id to reuse an existing
+registration.
 
 ## Design
 
