@@ -86,7 +86,7 @@ struct HermesGlassesApp: App {
                         _ = try? await Wearables.shared.handleUrl(url)
                     }
                 }
-                .alert("Hermes Error", isPresented: $hermesSessionViewModel.showError) {
+                .alert("EmoDrink Error", isPresented: $hermesSessionViewModel.showError) {
                     Button("OK") { hermesSessionViewModel.dismissError() }
                 } message: {
                     Text(hermesSessionViewModel.errorMessage)
@@ -94,7 +94,7 @@ struct HermesGlassesApp: App {
                 // Separate surface, deliberately not titled as a fault: a
                 // fallback that worked ("using the iPhone mic") is news, not
                 // an error, and the Error alert said otherwise.
-                .alert("Hermes", isPresented: $hermesSessionViewModel.showNotice) {
+                .alert("EmoDrink", isPresented: $hermesSessionViewModel.showNotice) {
                     Button("OK") { hermesSessionViewModel.dismissNotice() }
                 } message: {
                     Text(hermesSessionViewModel.noticeMessage)

@@ -146,25 +146,29 @@ struct PhoneModeSessionView: View {
                 tile(caption: "Camera", value: hermesVM.phoneCamera.lensDescription)
             }
 
-            HStack(spacing: 12) {
-                Text("Speak replies aloud")
-                    .font(.system(size: 14))
-                    .foregroundStyle(HermesTheme.cream.opacity(0.8))
-                Spacer(minLength: 8)
-                Toggle("", isOn: Binding(
-                    get: { hermesVM.useDeviceTTS },
-                    set: { hermesVM.useDeviceTTS = $0 }
-                ))
-                .labelsHidden()
-                .tint(HermesTheme.accent)
-                .accessibilityLabel("Speak replies aloud")
+            // useDeviceTTS only chooses between phone and bridge voices, and
+            // the EmoDrink gift build has no bridge, so the toggle is hidden.
+            if hermesVM.backend == .bridge {
+                HStack(spacing: 12) {
+                    Text("Speak replies aloud")
+                        .font(.system(size: 14))
+                        .foregroundStyle(HermesTheme.cream.opacity(0.8))
+                    Spacer(minLength: 8)
+                    Toggle("", isOn: Binding(
+                        get: { hermesVM.useDeviceTTS },
+                        set: { hermesVM.useDeviceTTS = $0 }
+                    ))
+                    .labelsHidden()
+                    .tint(HermesTheme.accent)
+                    .accessibilityLabel("Speak replies aloud")
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(
+                    HermesTheme.cream.opacity(0.07),
+                    in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                )
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(
-                HermesTheme.cream.opacity(0.07),
-                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-            )
         }
         .padding(.horizontal, 16)
         .padding(.top, 12)

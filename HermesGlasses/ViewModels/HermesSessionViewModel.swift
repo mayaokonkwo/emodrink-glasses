@@ -211,22 +211,20 @@ final class HermesSessionViewModel {
             UserDefaults.standard.set(displaySilentMode, forKey: "display_silent_mode")
         }
     }
-    /// "take me to X" -> map + directions on the lens. Default off in the
-    /// EmoDrink gift build.
-    var navigationEnabled: Bool =
-        (UserDefaults.standard.object(forKey: "navigation_enabled") as? Bool) ?? false {
+    /// "take me to X" -> map + directions on the lens. The EmoDrink gift
+    /// build hides this feature: it reads as false whatever an older install
+    /// stored, the same way `backend` and `glassesVendor` are forced.
+    var navigationEnabled: Bool = false {
         didSet { UserDefaults.standard.set(navigationEnabled, forKey: "navigation_enabled") }
     }
-    /// "what is X" -> answer + Wikipedia picture on the lens. Default off in
-    /// the EmoDrink gift build.
-    var definitionImagesEnabled: Bool =
-        (UserDefaults.standard.object(forKey: "definition_images_enabled") as? Bool) ?? false {
+    /// "what is X" -> answer + Wikipedia picture on the lens. Forced off in
+    /// the EmoDrink gift build (a stored true is ignored).
+    var definitionImagesEnabled: Bool = false {
         didSet { UserDefaults.standard.set(definitionImagesEnabled, forKey: "definition_images_enabled") }
     }
     /// "remember this person" -> photo + spoken note saved for follow-ups.
-    /// Default off in the EmoDrink gift build.
-    var socialNotesEnabled: Bool =
-        (UserDefaults.standard.object(forKey: "social_notes_enabled") as? Bool) ?? false {
+    /// Forced off in the EmoDrink gift build (a stored true is ignored).
+    var socialNotesEnabled: Bool = false {
         didSet { UserDefaults.standard.set(socialNotesEnabled, forKey: "social_notes_enabled") }
     }
     /// Read name tags off the people snapped during a conversation capture.
@@ -325,10 +323,7 @@ final class HermesSessionViewModel {
     /// reads as `.direct`, and Settings no longer offers the choice. The
     /// enum, the stored key and every bridge code path are kept so a full
     /// build can bring the picker back.
-    var backend: AssistantBackend = {
-        _ = UserDefaults.standard.string(forKey: "assistant_backend")
-        return .direct
-    }() {
+    var backend: AssistantBackend = .direct {
         didSet { UserDefaults.standard.set(backend.rawValue, forKey: "assistant_backend") }
     }
     /// Selected direct-mode provider id (drives Settings + status chip)
@@ -1276,7 +1271,7 @@ final class HermesSessionViewModel {
                 guard await self.ensureVisionPermission(interactive: false) else {
                     self.apiClient?.sendPhotoError(
                         self.visionRoute == .phone
-                            ? "Camera access is off for Hermes. Turn it on in iOS Settings."
+                            ? "Camera access is off for EmoDrink. Turn it on in iOS Settings."
                             : "Camera permission not granted. Tap the Photo test button to grant access via Meta AI."
                     )
                     return
@@ -2859,7 +2854,7 @@ final class HermesSessionViewModel {
     private func saveClipToPhotos(_ file: URL, interruption: String?) async {
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
         guard status == .authorized || status == .limited else {
-            show("Allow Hermes to add to Photos (Settings › Privacy › Photos) to save clips.")
+            show("Allow EmoDrink to add to Photos (Settings › Privacy › Photos) to save clips.")
             return
         }
         do {

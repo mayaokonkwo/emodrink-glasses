@@ -141,7 +141,8 @@ struct HermesMark: Shape {
     }
 }
 
-/// Mark + "HERMES" wordmark, the lockup that heads the session screens.
+/// Mark + "EMODRINK" wordmark, the lockup that heads the session screens.
+/// The EmoDrink gift build keeps the winged mark and changes only the word.
 ///
 /// The design specifies Montserrat 800; no font file ships with the app,
 /// so the wordmark uses the system face at `.heavy` with the same wide
@@ -160,7 +161,7 @@ struct HermesLockup: View {
                 .frame(width: height * 1.95, height: height)
 
             HStack(spacing: 0) {
-                Text("HERMES")
+                Text("EMODRINK")
                     .font(.system(size: height, weight: .heavy))
                 if showsSuffix {
                     Text("GLASSES")
@@ -171,7 +172,7 @@ struct HermesLockup: View {
             .foregroundStyle(tint)
         }
         .accessibilityElement()
-        .accessibilityLabel(showsSuffix ? "Hermes Glasses" : "Hermes")
+        .accessibilityLabel(showsSuffix ? "EmoDrink Glasses" : "EmoDrink")
     }
 }
 

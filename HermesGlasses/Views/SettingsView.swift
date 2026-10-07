@@ -127,7 +127,7 @@ struct SettingsView: View {
 
                 VStack(spacing: 4) {
                     HermesLockup(height: 13, showsSuffix: true)
-                    Text("Version \(Self.appVersion) · talk to your AI from your Meta Ray-Ban glasses.")
+                    Text("Version \(Self.appVersion) · EmoDrink picks a drink that fits how you slept and shows it on your Meta Ray-Ban Display glasses.")
                         .font(.system(size: 12))
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)
@@ -241,11 +241,12 @@ struct SettingsView: View {
 
     private var assistantValue: String {
         guard hermesVM.backend == .direct else { return "Bridge" }
+        if BundledAIKey.isActive { return "Included" }
         let model = hermesVM.directProvider.curatedModels
             .first { $0.id == hermesVM.directModel }?.label
         guard let model else { return hermesVM.directProvider.displayName }
-        // "Direct · Opus" - provider is implied by the model name.
-        return "Direct · \(model)"
+        // Provider is implied by the model name; drop the " - cheapest, …" note.
+        return model.components(separatedBy: " - ").first ?? model
     }
 
     /// Swipe-dismiss must not silently discard typed values.
@@ -403,7 +404,7 @@ private struct DevicesPage: View {
     private var upcomingSection: some View {
         HermesSection(
             header: "Add glasses",
-            footer: "Hermes adapts to whatever the device can do - features switch off, screens don't disappear."
+            footer: "EmoDrink adapts to whatever the device can do - features switch off, screens don't disappear."
         ) {
             ForEach(Array(Self.upcoming.enumerated()), id: \.element.name) { index, model in
                 if index > 0 { HermesDivider() }
@@ -768,7 +769,7 @@ private struct AssistantPage: View {
         // the Brain picker and the Bridge connection section are not shown.
         // `brainRow` and `bridgeSection` stay below, compiled but unused.
         HermesScrollPage {
-            if BundledAIKey.isActive {
+            if BundledAIKey.isActive && !useOwnKey {
                 managedKeySection
             } else {
                 directSection
@@ -840,9 +841,10 @@ private struct AssistantPage: View {
     // MARK: Managed (bundled) key
 
     /// This copy carries its own key: one read-only row instead of the
-    /// provider picker and key field. "Use my own key" reveals the field;
-    /// a key saved there replaces the bundled one for the same provider,
-    /// and from then on the full Direct section shows.
+    /// provider picker and key field. "Use my own key" reveals the full
+    /// Direct section (provider, model, key), so any provider can be
+    /// chosen. The bundled key is left untouched; `isActive` turns false by
+    /// itself once another provider is picked or a different key is saved.
     @ViewBuilder
     private var managedKeySection: some View {
         HermesSection(
@@ -854,33 +856,18 @@ private struct AssistantPage: View {
                 showsChevron: false
             )
             HermesDivider()
-            if useOwnKey {
-                fieldRow(title: "Your \(hermesVM.directProvider.displayName) API key") {
-                    SecureField("sk-…", text: $providerKey)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
-                        .font(.system(size: 15, design: .monospaced))
-                        .onSubmit {
-                            hermesVM.setProviderKey(providerKey)
-                            providerKey = ""
-                            // Re-evaluates isActive: the user's key now wins.
-                            useOwnKey = false
-                        }
-                }
-            } else {
-                Button {
-                    useOwnKey = true
-                } label: {
-                    Text("Use my own key")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(HermesTheme.accentOnCard)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 16)
-                        .frame(minHeight: 44)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+            Button {
+                useOwnKey = true
+            } label: {
+                Text("Use my own key")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(HermesTheme.accentOnCard)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
         }
     }
 
@@ -943,6 +930,14 @@ private struct AssistantPage: View {
                         .textInputAutocapitalization(.never)
                         .font(.system(size: 15, design: .monospaced))
                         .onSubmit {
+                            // An empty submit deletes the stored key. Over a
+                            // bundled key that would silently remove the
+                            // assistant, so it only folds the section back.
+                            if providerKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                               BundledAIKey.isActive {
+                                useOwnKey = false
+                                return
+                            }
                             hermesVM.setProviderKey(providerKey)
                             providerKey = ""
                         }
@@ -1326,7 +1321,7 @@ struct VoiceCommandsPage: View {
     var body: some View {
         List {
             Section {
-                Text("Say these while a session is running. Hermes acts on them on the phone, before the AI sees anything - so they work whichever AI answers.")
+                Text("Say these while a session is running. EmoDrink acts on them on the phone, before the AI sees anything - so they work whichever AI answers.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

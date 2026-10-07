@@ -8,9 +8,12 @@
 //
 // `seedIfNeeded()` runs first thing in `HermesGlassesApp.init()`, before the
 // session view model reads its provider state. It never overwrites a key the
-// user typed: the Keychain is written only when that provider has no key.
+// user typed: the Keychain is written when that provider has no key, or when
+// the stored key is still the one we seeded (its SHA-256 matches the hash we
+// kept) and a new build carries a different bundled key (key rotation).
 //
 
+import CryptoKit
 import Foundation
 
 enum BundledAIKey {
@@ -19,6 +22,9 @@ enum BundledAIKey {
     /// provider or model the user picks afterwards is not reset on the next
     /// launch.
     static let seededKey = "emodrink_bundled_ai_seeded"
+    /// SHA-256 hex of the key last written by `seedIfNeeded`, never the key
+    /// itself. Tells "still our seeded key" apart from "a key the user typed".
+    static let keyHashKey = "emodrink_bundled_ai_key_hash"
 
     struct Config: Equatable {
         let provider: String
@@ -42,8 +48,10 @@ enum BundledAIKey {
         return Config(provider: provider, model: value("Model"), key: key)
     }
 
-    /// Selects the bundled provider and model on first launch, and stores the
-    /// bundled key only when that provider has no key yet.
+    /// Selects the bundled provider and model on first launch. Stores the
+    /// bundled key when that provider has no key, or replaces our own
+    /// earlier seeded key when a new build bundles a different one. A key
+    /// the user typed is never touched (see `keychainAction`).
     static func seedIfNeeded(bundle: Bundle = .main, defaults: UserDefaults = .standard) {
         guard let config = config(bundle: bundle) else { return }
         if !defaults.bool(forKey: seededKey) {
@@ -53,9 +61,43 @@ enum BundledAIKey {
             }
             defaults.set(true, forKey: seededKey)
         }
-        if !DirectClient.hasKey(for: config.provider) {
-            DirectClient.storeKey(config.key, for: config.provider)
+        let stored = DirectClient.loadKey(for: config.provider)
+        switch keychainAction(stored: stored, bundled: config.key,
+                              seededHash: defaults.string(forKey: keyHashKey)) {
+        case .write:
+            if DirectClient.storeKey(config.key, for: config.provider) {
+                defaults.set(sha256Hex(config.key), forKey: keyHashKey)
+            }
+        case .recordHash:
+            defaults.set(sha256Hex(config.key), forKey: keyHashKey)
+        case .leave:
+            break
         }
+    }
+
+    enum KeychainAction: Equatable {
+        /// Store the bundled key and remember its hash.
+        case write
+        /// The Keychain already holds the bundled key; only remember its
+        /// hash (installs seeded before the hash existed).
+        case recordHash
+        /// A key the user typed: never touched.
+        case leave
+    }
+
+    /// Pure decision, kept apart from the Keychain so it can be tested.
+    static func keychainAction(stored: String?, bundled: String, seededHash: String?) -> KeychainAction {
+        guard let stored else { return .write }
+        if stored == bundled {
+            return seededHash == sha256Hex(bundled) ? .leave : .recordHash
+        }
+        // A different key: ours from an older build (rotate), or the user's.
+        if let seededHash, seededHash == sha256Hex(stored) { return .write }
+        return .leave
+    }
+
+    static func sha256Hex(_ text: String) -> String {
+        SHA256.hash(data: Data(text.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 
     /// True while the bundled key is the one in use for the bundled provider,
