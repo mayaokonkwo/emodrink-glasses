@@ -54,7 +54,7 @@ final class BuildCheckViewModel {
     var operatorName: String = UserDefaults.standard.string(forKey: operatorKey) ?? "" {
         didSet { UserDefaults.standard.set(operatorName, forKey: Self.operatorKey) }
     }
-    var buildCheckEnabled: Bool = UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true {
+    var buildCheckEnabled: Bool = UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? false {
         didSet { UserDefaults.standard.set(buildCheckEnabled, forKey: Self.enabledKey) }
     }
 

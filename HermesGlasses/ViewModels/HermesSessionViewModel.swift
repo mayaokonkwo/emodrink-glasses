@@ -211,20 +211,22 @@ final class HermesSessionViewModel {
             UserDefaults.standard.set(displaySilentMode, forKey: "display_silent_mode")
         }
     }
-    /// "take me to X" -> map + directions on the lens. Default on.
+    /// "take me to X" -> map + directions on the lens. Default off in the
+    /// EmoDrink gift build.
     var navigationEnabled: Bool =
-        (UserDefaults.standard.object(forKey: "navigation_enabled") as? Bool) ?? true {
+        (UserDefaults.standard.object(forKey: "navigation_enabled") as? Bool) ?? false {
         didSet { UserDefaults.standard.set(navigationEnabled, forKey: "navigation_enabled") }
     }
-    /// "what is X" -> answer + Wikipedia picture on the lens. Default on.
+    /// "what is X" -> answer + Wikipedia picture on the lens. Default off in
+    /// the EmoDrink gift build.
     var definitionImagesEnabled: Bool =
-        (UserDefaults.standard.object(forKey: "definition_images_enabled") as? Bool) ?? true {
+        (UserDefaults.standard.object(forKey: "definition_images_enabled") as? Bool) ?? false {
         didSet { UserDefaults.standard.set(definitionImagesEnabled, forKey: "definition_images_enabled") }
     }
     /// "remember this person" -> photo + spoken note saved for follow-ups.
-    /// Default on.
+    /// Default off in the EmoDrink gift build.
     var socialNotesEnabled: Bool =
-        (UserDefaults.standard.object(forKey: "social_notes_enabled") as? Bool) ?? true {
+        (UserDefaults.standard.object(forKey: "social_notes_enabled") as? Bool) ?? false {
         didSet { UserDefaults.standard.set(socialNotesEnabled, forKey: "social_notes_enabled") }
     }
     /// Read name tags off the people snapped during a conversation capture.
@@ -317,12 +319,15 @@ final class HermesSessionViewModel {
     }
     /// Mirror of the display manager's status for SwiftUI
     var displayStatus: DisplayHUDStatus = .off
-    /// Bridge server vs direct AI provider from the phone
+    /// Bridge server vs direct AI provider from the phone.
+    ///
+    /// The EmoDrink gift build has no bridge: whatever was stored, this
+    /// reads as `.direct`, and Settings no longer offers the choice. The
+    /// enum, the stored key and every bridge code path are kept so a full
+    /// build can bring the picker back.
     var backend: AssistantBackend = {
-        let raw = UserDefaults.standard.string(forKey: "assistant_backend") ?? ""
-        // Migrate the old "claudeDirect" raw value to "direct".
-        if raw == "claudeDirect" { return .direct }
-        return AssistantBackend(rawValue: raw) ?? .direct
+        _ = UserDefaults.standard.string(forKey: "assistant_backend")
+        return .direct
     }() {
         didSet { UserDefaults.standard.set(backend.rawValue, forKey: "assistant_backend") }
     }
@@ -685,7 +690,12 @@ final class HermesSessionViewModel {
 
     /// Which glasses the glasses route means. Switching tears down any live
     /// session - the two vendors have nothing in common below VisionSource.
-    var glassesVendor: GlassesVendor = GlassesVendor.load() {
+    ///
+    /// The EmoDrink gift build targets Meta Ray-Ban Display only: this reads
+    /// as `.meta` whatever was stored (`GlassesVendor.load()` is not
+    /// consulted) and Settings no longer offers the picker. The AiSee code
+    /// stays compiled, hidden rather than deleted.
+    var glassesVendor: GlassesVendor = .meta {
         didSet {
             guard oldValue != glassesVendor else { return }
             UserDefaults.standard.set(glassesVendor.rawValue, forKey: GlassesVendor.storageKey)

@@ -725,12 +725,15 @@ struct ContentView: View {
     private var quickActions: some View {
         VStack(spacing: 6) {
             // Grab handle: the row is the top of a drawer, not the whole
-            // set. Dragging up opens everything.
-            Capsule()
-                .fill(Color.secondary.opacity(0.25))
-                .frame(width: 36, height: 4)
-                .contentShape(Rectangle().inset(by: -12))
-                .onTapGesture { showAppDrawer = true }
+            // set. Dragging up opens everything. Only when there IS more:
+            // a one-app build (the EmoDrink gift) has no drawer at all.
+            if HermesAppRegistry.hasOverflow {
+                Capsule()
+                    .fill(Color.secondary.opacity(0.25))
+                    .frame(width: 36, height: 4)
+                    .contentShape(Rectangle().inset(by: -12))
+                    .onTapGesture { showAppDrawer = true }
+            }
 
             // The row scrolls horizontally: five apps plus Record outgrew
             // one screen width, and shrinking the tiles to fit would have
@@ -756,15 +759,19 @@ struct ContentView: View {
                 }
                 .padding(.leading, 16)
             }
-            moreQuickAction
-                .padding(.trailing, 16)
+            if HermesAppRegistry.hasOverflow {
+                moreQuickAction
+                    .padding(.trailing, 16)
+            }
             }
         }
         .padding(.bottom, 10)
         .gesture(
             DragGesture(minimumDistance: 12)
                 .onEnded { value in
-                    if value.translation.height < -20 { showAppDrawer = true }
+                    if HermesAppRegistry.hasOverflow, value.translation.height < -20 {
+                        showAppDrawer = true
+                    }
                 }
         )
     }

@@ -82,8 +82,14 @@ struct HermesApp: Identifiable, Equatable {
 }
 
 enum HermesAppRegistry {
-    /// Every app the app knows about. Order is the order they appear.
-    static let all: [HermesApp] = [lens, people, map, log, lookup, buildCheck, emoDrink]
+    /// Every app the app shows. Order is the order they appear.
+    ///
+    /// The EmoDrink gift build lists EmoDrink alone. The other Hermes apps
+    /// keep their definitions below (their screens still reference them),
+    /// they are just not listed, so no tile, drawer row or voice page
+    /// offers them. The full list was:
+    /// `[lens, people, map, log, lookup, buildCheck, emoDrink]`.
+    static let all: [HermesApp] = [emoDrink]
 
     /// Shown as the quick-action row under the conversation. The rest live
     /// in the drawer - the row scrolls horizontally, so it holds all five.
@@ -106,7 +112,9 @@ enum HermesAppRegistry {
     /// living in the drawer is otherwise invisible to anyone who never pulls
     /// the drawer up - this is how it gets found. Remove an id once the
     /// feature is no longer news.
-    static let newAppIDs: [String] = ["buildcheck", "emodrink"]
+    /// Empty in the one-app gift build: nothing is "new" when it is the
+    /// only thing there.
+    static let newAppIDs: [String] = []
 
     static func unseenNew(opened: Set<String>) -> [HermesApp] {
         newAppIDs.compactMap(app(id:)).filter { !opened.contains($0.id) }

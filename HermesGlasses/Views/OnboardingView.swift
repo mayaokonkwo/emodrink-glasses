@@ -65,7 +65,7 @@ struct OnboardingView: View {
                     .font(.system(size: 28, weight: .bold))
                     .kerning(-0.5)
                     .multilineTextAlignment(.center)
-                Text("Hermes talks to you through your Meta Ray-Ban glasses - mic, speaker, and camera.")
+                Text("EmoDrink picks a drink that fits how you slept and shows it on your glasses.")
                     .font(.system(size: 16))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -94,7 +94,7 @@ struct OnboardingView: View {
             Spacer(minLength: 12)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("What Hermes needs")
+                Text("What EmoDrink needs")
                     .font(.system(size: 28, weight: .bold))
                     .kerning(-0.5)
                 Text("Three permissions, asked once. Nothing is uploaded to set them up.")
@@ -118,7 +118,7 @@ struct OnboardingView: View {
 
             if permissions.hasDenial {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Something was declined. Hermes still opens, but the features that need it stay off until you change it in Settings.")
+                    Text("Something was declined. EmoDrink still opens, but the features that need it stay off until you change it in Settings.")
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -244,7 +244,7 @@ struct OnboardingView: View {
                                    denied: "Camera declined - no phone-mode eye")
             }
 
-            Text("The glasses camera is a separate grant from the Meta AI app - Hermes asks for it as soon as the glasses finish pairing, and you can re-request it any time from Settings → Devices.")
+            Text("The glasses camera is a separate grant from the Meta AI app - EmoDrink asks for it as soon as the glasses finish pairing, and you can re-request it any time from Settings → Devices.")
                 .font(.system(size: 13))
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
@@ -261,11 +261,11 @@ struct OnboardingView: View {
 
     private var readySubtitle: String {
         if !ready {
-            return "Hermes needs the microphone and speech recognition to hear you. You can allow them in Settings."
+            return "EmoDrink needs the microphone and speech recognition to hear you. You can allow them in Settings."
         }
         return wearablesVM.registrationState == .registered
-            ? "Your glasses are paired and Hermes can hear you."
-            : "No glasses yet - Hermes will use this iPhone as the eye until you pair some."
+            ? "Your glasses are paired and EmoDrink can hear you."
+            : "No glasses yet - EmoDrink will use this iPhone as the eye until you pair some."
     }
 
     private func checkRow(

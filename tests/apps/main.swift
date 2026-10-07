@@ -52,11 +52,11 @@ for app in all {
 
 // Anything that draws on the glasses must say so - the lens is a single
 // serialized resource and the arbitration policy reads this.
-expect(HermesAppRegistry.map.capabilities.contains(.lens), "map declares .lens")
-expect(HermesAppRegistry.lens.capabilities.contains(.lens), "lens declares .lens")
+expect(HermesAppRegistry.emoDrink.capabilities.contains(.lens), "emodrink declares .lens")
 
 // Anything holding a live camera goes full screen: a stray drag-dismiss
-// would tear the stream down mid-use.
+// would tear the stream down mid-use. (Lens and Lookup did; neither is
+// listed in the gift build, so this guards any that come back.)
 for app in all where app.capabilities.contains(.vision)
     && ["lens", "lookup"].contains(app.id) {
     expect(app.presentation == .fullScreen,
@@ -69,9 +69,7 @@ let voiceGroups = all.flatMap(\.voiceGroupIDs)
 expect(Set(voiceGroups).count == voiceGroups.count,
        "no two apps claim the same voice group (\(voiceGroups))")
 
-expect(HermesAppRegistry.people.isVoiceLaunchable, "People is voice-launchable")
-expect(HermesAppRegistry.map.isVoiceLaunchable, "Map is voice-launchable")
-expect(!HermesAppRegistry.log.isVoiceLaunchable, "Log is review-only, no trigger")
+expect(HermesAppRegistry.emoDrink.isVoiceLaunchable, "EmoDrink is voice-launchable")
 
 // MARK: - Phone mode
 
@@ -91,9 +89,16 @@ expect(HermesAppRegistry.pinned == Array(all.prefix(HermesAppRegistry.pinnedCoun
 expect(HermesAppRegistry.hasOverflow == (all.count > HermesAppRegistry.pinnedCount),
        "overflow flag matches the count")
 
+// The gift build lists one app: the row shows it alone, with no More tile
+// and no drawer.
+expect(all.map(\.id) == ["emodrink"], "the gift build lists EmoDrink alone")
+expect(HermesAppRegistry.pinned.map(\.id) == ["emodrink"], "the row holds EmoDrink alone")
+expect(!HermesAppRegistry.hasOverflow, "one app → no overflow, no More tile, no drawer")
+
 // MARK: - Lookup
 
-expect(HermesAppRegistry.app(id: "lens") == HermesAppRegistry.lens, "lookup by id")
+expect(HermesAppRegistry.app(id: "emodrink") == HermesAppRegistry.emoDrink, "lookup by id")
+expect(HermesAppRegistry.app(id: "lens") == nil, "hidden apps are not found by id")
 expect(HermesAppRegistry.app(id: "nope") == nil, "unknown id returns nil")
 
 // MARK: - Capability metadata is total
@@ -103,43 +108,16 @@ for capability in HermesAppCapability.allCases {
     expect(!capability.systemImage.isEmpty, "\(capability.rawValue) has an icon")
 }
 
-// MARK: - Lookup app
-
-expect(HermesAppRegistry.lookup.capabilities.contains(.vision),
-       "lookup needs a camera and says so")
-expect(HermesAppRegistry.lookup.capabilities.contains(.lens),
-       "lookup draws on the glasses and says so")
-expect(!HermesAppRegistry.lookup.isVoiceLaunchable,
-       "lookup is button-only, no voice trigger")
-expect(HermesAppRegistry.pinned.contains(HermesAppRegistry.lookup),
-       "lookup sits in the (scrollable) quick-action row, next to Log")
-// Lookup stopped searching the web when it started matching an imported
-// roster on-device. The summary is the one place a user is told which of
-// those it does, so it is pinned rather than left to drift back.
-expect(!HermesAppRegistry.lookup.summary.lowercased().contains("web"),
-       "lookup's summary no longer promises a web search")
-expect(HermesAppRegistry.lookup.summary.lowercased().contains("roster"),
-       "lookup's summary says where the answer comes from")
-
-expect(HermesAppRegistry.all.contains(HermesAppRegistry.buildCheck), "Build Check is registered")
-expect(HermesAppRegistry.buildCheck.isVoiceLaunchable, "Build Check is voice-launchable")
-expect(!HermesAppRegistry.buildCheck.requiresGlasses, "Build Check works in phone mode")
-
 // MARK: - What's new
 
 expect(HermesAppRegistry.newAppIDs.allSatisfy { HermesAppRegistry.app(id: $0) != nil },
        "every 'new' id names a registered app")
-expect(HermesAppRegistry.newAppIDs.contains("buildcheck"), "Build Check is announced as new")
-expect(HermesAppRegistry.unseenNew(opened: []).map(\.id) == HermesAppRegistry.newAppIDs,
-       "nothing opened yet → every new app is unseen, in declared order")
-expect(HermesAppRegistry.unseenNew(opened: ["buildcheck", "emodrink"]).isEmpty,
-       "opening an app clears its 'new' state")
-expect(HermesAppRegistry.whatsNew(opened: [], dismissed: [])?.id == "buildcheck",
-       "the card announces the first unseen new app")
-expect(HermesAppRegistry.whatsNew(opened: [], dismissed: ["buildcheck", "emodrink"]) == nil,
-       "a dismissed card stays dismissed")
-expect(HermesAppRegistry.whatsNew(opened: ["buildcheck", "emodrink"], dismissed: []) == nil,
-       "no card for an app already opened")
+expect(HermesAppRegistry.newAppIDs.isEmpty, "nothing is announced as new in a one-app build")
+expect(HermesAppRegistry.unseenNew(opened: []).isEmpty, "nothing opened yet → still nothing unseen")
+expect(HermesAppRegistry.whatsNew(opened: [], dismissed: []) == nil,
+       "the one-time What's new card never appears")
+expect(HermesAppRegistry.whatsNew(opened: ["emodrink"], dismissed: ["emodrink"]) == nil,
+       "no card whatever is stored")
 expect(HermesAppRegistry.idSet(from: "") == [], "empty storage → empty set")
 expect(HermesAppRegistry.idSet(from: "a,b,,a") == ["a", "b"], "storage parses, drops blanks and duplicates")
 expect(HermesAppRegistry.idSet(from: HermesAppRegistry.idString(["lens", "buildcheck"])) == ["lens", "buildcheck"],
@@ -149,8 +127,7 @@ expect(HermesAppRegistry.app(id: "emodrink") != nil, "emodrink is registered")
 expect(HermesAppRegistry.emoDrink.capabilities == [.vision, .microphone, .lens], "emodrink declares vision, microphone, lens")
 expect(HermesAppRegistry.emoDrink.voiceGroupIDs == ["emodrink", "emodrink-replies"], "emodrink owns its two voice groups")
 expect(!HermesAppRegistry.emoDrink.requiresGlasses, "emodrink works in phone mode")
-expect(HermesAppRegistry.newAppIDs.contains("emodrink"), "emodrink is announced as new")
-expect(HermesAppRegistry.all.last?.id == "emodrink", "emodrink is last, so the pinned five do not move")
+expect(HermesAppRegistry.pinned.contains(HermesAppRegistry.emoDrink), "emodrink sits in the quick-action row")
 
 print(failures == 0 ? "\nALL PASS" : "\n\(failures) FAILURE(S)")
 exit(failures == 0 ? 0 : 1)

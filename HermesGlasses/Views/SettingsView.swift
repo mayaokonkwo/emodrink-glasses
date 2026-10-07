@@ -102,35 +102,10 @@ struct SettingsView: View {
                     }
                 }
 
+                // The EmoDrink gift build hides the People, roster, Object Log
+                // and Navigation rows (their pages stay in code): only
+                // EmoDrink is offered, and its settings live on its own sheet.
                 HermesSection {
-                    navRow("People", icon: "person.crop.circle",
-                           value: hermesVM.socialNotesEnabled ? "On" : "Off") {
-                        PeoplePage(hermesVM: hermesVM)
-                    }
-                    HermesDivider()
-                    navRow("People roster", icon: "person.text.rectangle",
-                           value: "\(rosterStore.count)") {
-                        RosterView(store: rosterStore)
-                    }
-                    HermesDivider()
-                    // Object Log owns its own NavigationStack + Done button,
-                    // so it's presented, not pushed.
-                    Button {
-                        showObjectLog = true
-                    } label: {
-                        HermesRow(
-                            "Object Log",
-                            icon: "camera.viewfinder",
-                            value: "\(hermesVM.allLensSessions().count)"
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    HermesDivider()
-                    navRow("Navigation & Maps", icon: "mappin.and.ellipse",
-                           value: hermesVM.navigationEnabled ? "On" : "Off") {
-                        NavigationPage(hermesVM: hermesVM)
-                    }
-                    HermesDivider()
                     navRow("Context & Privacy", icon: "lock",
                            value: hermesVM.contextEnabled ? "Sharing" : "Off") {
                         ContextPage(hermesVM: hermesVM)
@@ -302,29 +277,20 @@ private struct DevicesPage: View {
     ]
 
     var body: some View {
+        // The EmoDrink gift build targets Meta Ray-Ban Display only: no
+        // vendor picker, no AiSee card, connection or button-mapping
+        // sections. `vendorSection`, `aiseeCard`, `aiseeConnectionSection`
+        // and `aiseeButtonsSection` stay below, compiled but not shown.
         HermesScrollPage {
-            vendorSection
-
-            if hermesVM.glassesVendor == .meta {
-                metaDeviceSection
-                cameraPermissionSection
-            } else {
-                aiseeCard
-            }
+            metaDeviceSection
+            cameraPermissionSection
 
             phoneModeSection
 
-            if hermesVM.glassesVendor == .aisee {
-                aiseeConnectionSection
-                aiseeButtonsSection
+            if !wearablesVM.glasses.isEmpty {
+                pairedSection
             }
-
-            if hermesVM.glassesVendor == .meta {
-                if !wearablesVM.glasses.isEmpty {
-                    pairedSection
-                }
-                upcomingSection
-            }
+            upcomingSection
         }
         .navigationTitle("Devices")
         .navigationBarTitleDisplayMode(.inline)
@@ -796,30 +762,11 @@ private struct AssistantPage: View {
     @State private var presetsVersion: Int = 0  // bump to refresh list
 
     var body: some View {
+        // The EmoDrink gift build has no bridge: Direct is the only mode, so
+        // the Brain picker and the Bridge connection section are not shown.
+        // `brainRow` and `bridgeSection` stay below, compiled but unused.
         HermesScrollPage {
-            HermesSection(header: "Brain") {
-                brainRow(
-                    .direct,
-                    title: "Direct API",
-                    badge: "Default",
-                    prominent: true,
-                    detail: "Straight to \(hermesVM.directProvider.displayName) · works anywhere"
-                )
-                HermesDivider()
-                brainRow(
-                    .bridge,
-                    title: "Mac bridge",
-                    badge: "Advanced",
-                    prominent: false,
-                    detail: "Tools + local files · needs your Mac awake"
-                )
-            }
-
-            if hermesVM.backend == .direct {
-                directSection
-            } else {
-                bridgeSection
-            }
+            directSection
         }
         .navigationTitle("Assistant")
         .navigationBarTitleDisplayMode(.inline)
@@ -1077,16 +1024,9 @@ private struct VoicePage: View {
                 Text("Glasses mode shows a CALL SCREEN on the lens and hides the HUD. Headset mode (AirPods etc.) is the pocket setup: talk and listen through the earbuds while the lens keeps the HUD. Audio never leaves your phone for speech-to-text.")
             }
 
-            Section {
-                Toggle("iPhone voice", isOn: Binding(
-                    get: { hermesVM.useDeviceTTS },
-                    set: { hermesVM.useDeviceTTS = $0 }
-                ))
-            } header: {
-                Text("Voice")
-            } footer: {
-                Text("On = faster but more robotic, generated on the phone. Off = natural voice generated on the bridge (adds 1–3 s per reply). Applies from the next question.")
-            }
+            // The "iPhone voice" toggle chose between phone TTS and the
+            // bridge's voice. With no bridge in the gift build it did
+            // nothing, so it is not shown.
         }
         .hermesFormStyle()
         .navigationTitle("Voice & Microphone")
@@ -1203,7 +1143,7 @@ private struct PeoplePage: View {
             }
 
             Section {
-                ForEach(VoiceCommandCatalog.groups.filter { $0.id.hasPrefix("people") }) { group in
+                ForEach(VoiceCommandCatalog.allGroups.filter { $0.id.hasPrefix("people") }) { group in
                     NavigationLink {
                         VoiceCommandsPage(highlighted: group.id)
                     } label: {
@@ -1328,7 +1268,7 @@ struct VoiceCommandsPage: View {
     var body: some View {
         List {
             Section {
-                Text("Say these while a session is running. Hermes acts on them on the phone, before the AI sees anything - so they work the same in Direct and Bridge mode.")
+                Text("Say these while a session is running. Hermes acts on them on the phone, before the AI sees anything - so they work whichever AI answers.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -1389,7 +1329,9 @@ private struct DeveloperPage: View {
 
     /// Display is a Ray-Ban Display feature; AiSee has no lens.
     private var tests: [String] {
-        var list = Self.tests.filter { $0 != "Display" || hermesVM.glassesSupportsDisplay }
+        // No bridge in the EmoDrink gift build, so no Bridge test.
+        var list = Self.tests.filter { $0 != "Bridge" }
+            .filter { $0 != "Display" || hermesVM.glassesSupportsDisplay }
         if hermesVM.glassesVendor == .aisee { list.insert("Mic", at: 1) }
         return list
     }
@@ -1454,8 +1396,6 @@ private struct DeveloperPage: View {
                             .frame(width: 90)
                     }
                 }
-                HermesDivider()
-                HermesRow("Bridge", value: bridgeText, showsChevron: false)
                 HermesDivider()
                 HermesRow("Vision route", value: visionRouteText, showsChevron: false)
                 HermesDivider()

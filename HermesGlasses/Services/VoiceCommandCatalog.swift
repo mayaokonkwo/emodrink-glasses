@@ -31,7 +31,17 @@ enum VoiceCommandCatalog {
     /// `…` marks where the tester supplies their own words.
     private static let placeholder = "…"
 
+    /// What the "What can I say?" page lists. The EmoDrink gift build shows
+    /// only the EmoDrink groups; every other group is kept in `allGroups`
+    /// so nothing is lost and a full build can switch back.
     static var groups: [VoiceCommandGroup] {
+        allGroups.filter { emoDrinkGroupIDs.contains($0.id) }
+    }
+
+    static let emoDrinkGroupIDs = ["emodrink", "emodrink-replies"]
+
+    /// Every group the detectors recognize, in display order.
+    static var allGroups: [VoiceCommandGroup] {
         [
             VoiceCommandGroup(
                 id: "people",
