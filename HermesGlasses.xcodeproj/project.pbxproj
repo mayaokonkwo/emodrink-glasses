@@ -149,6 +149,7 @@
 		AAAA00000000000000000A56 /* GlassesKeyMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A55 /* GlassesKeyMap.swift */; };
 		AAAA00000000000000000E01 /* PhysiologySnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E02 /* PhysiologySnapshot.swift */; };
 		AAAA00000000000000000E03 /* DrinkCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E04 /* DrinkCatalog.swift */; };
+		AAAA00000000000000000E07 /* DrinkRecommender.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E08 /* DrinkRecommender.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -307,6 +308,7 @@
 		AAAA00000000000000000A55 /* GlassesKeyMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesKeyMap.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E02 /* PhysiologySnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/PhysiologySnapshot.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E04 /* DrinkCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/DrinkCatalog.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E08 /* DrinkRecommender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/DrinkRecommender.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -490,6 +492,7 @@
 				AAAA00000000000000000A55 /* GlassesKeyMap.swift */,
 				AAAA00000000000000000E02 /* PhysiologySnapshot.swift */,
 				AAAA00000000000000000E04 /* DrinkCatalog.swift */,
+				AAAA00000000000000000E08 /* DrinkRecommender.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -725,6 +728,7 @@
 				AAAA00000000000000000A56 /* GlassesKeyMap.swift in Sources */,
 				AAAA00000000000000000E01 /* PhysiologySnapshot.swift in Sources */,
 				AAAA00000000000000000E03 /* DrinkCatalog.swift in Sources */,
+				AAAA00000000000000000E07 /* DrinkRecommender.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
