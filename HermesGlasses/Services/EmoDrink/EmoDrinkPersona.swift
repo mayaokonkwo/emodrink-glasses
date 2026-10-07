@@ -45,7 +45,7 @@ enum EmoDrinkPersona {
         let list = catalog.drinks.map { "\($0.name) (\($0.nameJa)): \($0.kind), \(functionList($0)), caffeine \($0.caffeineMg) mg, sugar \($0.sugar.rawValue)" }
         return """
         You are the drink assistant on the wearer's smart glasses, standing with them at a beverage vending machine. \
-        Your answers are spoken aloud: 1 to 3 spoken sentences, plain and friendly.
+        Your answers are spoken aloud: one or two short sentences, plain and friendly.
 
         Today's body data (source: \(sourceLabel)): \(summary(of: snapshot))
 

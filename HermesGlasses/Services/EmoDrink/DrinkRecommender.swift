@@ -20,8 +20,11 @@ struct Recommendation: Equatable {
     /// Short rule fragments, e.g. "slept 5.1 h". The AI phrases them; the
     /// lens shows `reasonLine` when the AI is unavailable.
     let reasons: [String]
+    /// The language the reasons are written in; only the join differs.
+    var language: Language = .en
 
-    var reasonLine: String { reasons.prefix(2).joined(separator: ", ") }
+    /// The first two reasons; Japanese joins with 「、」.
+    var reasonLine: String { reasons.prefix(2).joined(separator: language == .ja ? "、" : ", ") }
 
     /// The drink after `drink` in rank order, wrapping around. An unknown
     /// drink restarts at the top. Never returns `drink` itself unless the
@@ -83,7 +86,8 @@ enum DrinkRecommender {
             alternates: Array(ranked.dropFirst().prefix(2)),
             ranked: ranked,
             state: state,
-            reasons: reasons(snapshot: snapshot, hour: hour, language: language))
+            reasons: reasons(snapshot: snapshot, hour: hour, language: language),
+            language: language)
     }
 
     /// Plain-words fragments in priority order, at most five, in the wearer's

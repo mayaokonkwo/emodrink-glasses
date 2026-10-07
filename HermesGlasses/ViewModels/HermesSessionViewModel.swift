@@ -457,17 +457,24 @@ final class HermesSessionViewModel {
     /// ja-JP voice is installed. Runs only while the recognizer is stopped:
     /// at init, at session start (state `.connecting`, before
     /// `speechRecognizer.start()`), and from Settings with no session. A
-    /// change made mid-session applies from the next session.
+    /// change made mid-session applies from the next session. The
+    /// recognizer always ends up in the voice's language, so the session
+    /// never hears one language and speaks another. Only the session-start
+    /// call (`announceFallback`) shows the STT fallback notice.
     @discardableResult
-    func applyLanguage() -> Language {
+    func applyLanguage(announceFallback: Bool = false) -> Language {
         guard connectionState == .disconnected || connectionState == .connecting else { return activeLanguage }
         var language = EmoDrinkLanguage.resolved
         if !speechRecognizer.setLocale(language.sttLocale) {
-            if language == .ja { show(notice: EmoDrinkLanguage.sttFallbackNotice) }
+            if language == .ja && announceFallback { show(notice: EmoDrinkLanguage.sttFallbackNotice) }
             language = .en
             speechRecognizer.setLocale(Language.en.sttLocale)
         }
         let voice = speechSynthesizer.configure(for: language)
+        if voice.language != language {
+            // A ja recognizer but no ja voice: hear what we speak.
+            speechRecognizer.setLocale(voice.language.sttLocale)
+        }
         activeLanguage = voice.language
         voiceNeedsInstallHint = voice.needsHint
         voiceName = voice.voiceName
@@ -525,7 +532,7 @@ final class HermesSessionViewModel {
             }
         }
 
-        applyLanguage()
+        applyLanguage(announceFallback: true)
         let speechOK = await speechRecognizer.requestAuthorization()
         if !speechOK {
             show(HermesSpeechError.notAuthorized.localizedDescription)

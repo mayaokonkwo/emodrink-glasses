@@ -27,7 +27,7 @@ expect(prompt.contains("36 ms") && prompt.contains("52 ms"), "prompt carries HRV
 expect(prompt.contains("Asahi Rokujo Mugicha"), "prompt names the pick")
 expect(rec.alternates.allSatisfy { prompt.contains($0.name) }, "prompt names the alternates")
 expect(catalog.drinks.allSatisfy { prompt.contains($0.name) }, "prompt lists every catalogue drink")
-expect(prompt.contains("1 to 3 spoken sentences"), "guardrail: short spoken answers")
+expect(prompt.contains("Your answers are spoken aloud: one or two short sentences") && !prompt.contains("1 to 3"), "guardrail: short spoken answers, same count as the closing rule")
 expect(prompt.contains("suggests") && prompt.contains("never a diagnosis"), "guardrail: suggestive, not diagnostic")
 expect(prompt.contains("soft drinks"), "guardrail: alcohol answer")
 expect(prompt.contains("sample: stressed"), "prompt says where the data came from")

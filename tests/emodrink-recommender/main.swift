@@ -91,7 +91,7 @@ expect(DrinkRecommender.reasons(snapshot: snap(hours: 7, steps: 8400), hour: 16,
 expect(DrinkRecommender.reasons(snapshot: snap(hours: 7.5), hour: 9, language: .ja) == ["睡眠7.5時間"], "ja reasons without baselines mention only sleep")
 let recJa = DrinkRecommender.recommend(snapshot: stressed, catalog: catalog, hour: 9, lowSugar: false, language: .ja)!
 expect(recJa.pick == rec.pick && recJa.ranked == rec.ranked, "language never changes the pick or the ranking")
-expect(recJa.reasons.first == "睡眠6.4時間" && recJa.reasonLine == "睡眠6.4時間, 睡眠スコア63", "ja reasons ride on the recommendation")
+expect(recJa.reasons.first == "睡眠6.4時間" && recJa.reasonLine == "睡眠6.4時間、睡眠スコア63", "ja reasons ride on the recommendation")
 expect(DrinkRecommender.reasons(snapshot: shortNight, hour: 19) == DrinkRecommender.reasons(snapshot: shortNight, hour: 19, language: .en), "English is the default")
 
 print(failures == 0 ? "ALL PASS" : "\(failures) FAILED")
