@@ -754,8 +754,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.flowsxr.hermesglasses;
-				PRODUCT_NAME = "Hermes Glasses";
+				PRODUCT_BUNDLE_IDENTIFIER = com.flowsxr.emodrinkglasses;
+				PRODUCT_NAME = "EmoDrink Glasses";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				"SWIFT_INCLUDE_PATHS[sdk=iphoneos*]" = (
 					"$(inherited)",
@@ -801,8 +801,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.flowsxr.hermesglasses;
-				PRODUCT_NAME = "Hermes Glasses";
+				PRODUCT_BUNDLE_IDENTIFIER = com.flowsxr.emodrinkglasses;
+				PRODUCT_NAME = "EmoDrink Glasses";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
