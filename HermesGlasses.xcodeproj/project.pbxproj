@@ -66,6 +66,7 @@
 		AAAA0000000000000000891 /* RosterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000892 /* RosterView.swift */; };
 		AAAA00000000000000000873 /* LookupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000874 /* LookupViewModel.swift */; };
 		AAAA00000000000000000A77 /* BuildCheckViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A78 /* BuildCheckViewModel.swift */; };
+		AAAA00000000000000000E15 /* EmoDrinkViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */; };
 		AAAA00000000000000000875 /* LookupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000876 /* LookupView.swift */; };
 		AAAA00000000000000000A7F /* BuildRunReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A80 /* BuildRunReviewView.swift */; };
 		AAAA00000000000000000A7D /* BuildRunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A7E /* BuildRunView.swift */; };
@@ -244,6 +245,7 @@
 		AAAA0000000000000000892 /* RosterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RosterView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000874 /* LookupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LookupViewModel.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A78 /* BuildCheckViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheckViewModel.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrinkViewModel.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000876 /* LookupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LookupView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A80 /* BuildRunReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildRunReviewView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A7E /* BuildRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildRunView.swift; sourceTree = "<group>"; };
@@ -406,6 +408,7 @@
 				AAAA00000000000000000139 /* LensViewModel.swift */,
 				AAAA00000000000000000874 /* LookupViewModel.swift */,
 				AAAA00000000000000000A78 /* BuildCheckViewModel.swift */,
+				AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -686,6 +689,7 @@
 				AAAA0000000000000000891 /* RosterView.swift in Sources */,
 				AAAA00000000000000000873 /* LookupViewModel.swift in Sources */,
 				AAAA00000000000000000A77 /* BuildCheckViewModel.swift in Sources */,
+				AAAA00000000000000000E15 /* EmoDrinkViewModel.swift in Sources */,
 				AAAA00000000000000000875 /* LookupView.swift in Sources */,
 				AAAA00000000000000000A7F /* BuildRunReviewView.swift in Sources */,
 				AAAA00000000000000000A7D /* BuildRunView.swift in Sources */,
