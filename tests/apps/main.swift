@@ -132,18 +132,25 @@ expect(HermesAppRegistry.newAppIDs.allSatisfy { HermesAppRegistry.app(id: $0) !=
 expect(HermesAppRegistry.newAppIDs.contains("buildcheck"), "Build Check is announced as new")
 expect(HermesAppRegistry.unseenNew(opened: []).map(\.id) == HermesAppRegistry.newAppIDs,
        "nothing opened yet → every new app is unseen, in declared order")
-expect(HermesAppRegistry.unseenNew(opened: ["buildcheck"]).isEmpty,
+expect(HermesAppRegistry.unseenNew(opened: ["buildcheck", "emodrink"]).isEmpty,
        "opening an app clears its 'new' state")
 expect(HermesAppRegistry.whatsNew(opened: [], dismissed: [])?.id == "buildcheck",
        "the card announces the first unseen new app")
-expect(HermesAppRegistry.whatsNew(opened: [], dismissed: ["buildcheck"]) == nil,
+expect(HermesAppRegistry.whatsNew(opened: [], dismissed: ["buildcheck", "emodrink"]) == nil,
        "a dismissed card stays dismissed")
-expect(HermesAppRegistry.whatsNew(opened: ["buildcheck"], dismissed: []) == nil,
+expect(HermesAppRegistry.whatsNew(opened: ["buildcheck", "emodrink"], dismissed: []) == nil,
        "no card for an app already opened")
 expect(HermesAppRegistry.idSet(from: "") == [], "empty storage → empty set")
 expect(HermesAppRegistry.idSet(from: "a,b,,a") == ["a", "b"], "storage parses, drops blanks and duplicates")
 expect(HermesAppRegistry.idSet(from: HermesAppRegistry.idString(["lens", "buildcheck"])) == ["lens", "buildcheck"],
        "storage round-trips")
+
+expect(HermesAppRegistry.app(id: "emodrink") != nil, "emodrink is registered")
+expect(HermesAppRegistry.emoDrink.capabilities == [.vision, .microphone, .lens], "emodrink declares vision, microphone, lens")
+expect(HermesAppRegistry.emoDrink.voiceGroupIDs == ["emodrink", "emodrink-replies"], "emodrink owns its two voice groups")
+expect(!HermesAppRegistry.emoDrink.requiresGlasses, "emodrink works in phone mode")
+expect(HermesAppRegistry.newAppIDs.contains("emodrink"), "emodrink is announced as new")
+expect(HermesAppRegistry.all.last?.id == "emodrink", "emodrink is last, so the pinned five do not move")
 
 print(failures == 0 ? "\nALL PASS" : "\n\(failures) FAILURE(S)")
 exit(failures == 0 ? 0 : 1)

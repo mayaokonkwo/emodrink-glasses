@@ -21,6 +21,8 @@ enum GlassesKeyAction: String, CaseIterable, Identifiable {
     case recordClip
     case buildStepDone
     case buildRepeatWarning
+    case recommendDrink
+    case toggleDrinkMode
 
     var id: String { rawValue }
 
@@ -34,6 +36,8 @@ enum GlassesKeyAction: String, CaseIterable, Identifiable {
         case .recordClip: return "Start / stop video clip"
         case .buildStepDone: return "Build check: step done"
         case .buildRepeatWarning: return "Build check: repeat last warning"
+        case .recommendDrink: return "EmoDrink: what should I drink?"
+        case .toggleDrinkMode: return "EmoDrink: start / stop drink mode"
         }
     }
 }

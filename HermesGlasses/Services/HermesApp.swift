@@ -83,7 +83,7 @@ struct HermesApp: Identifiable, Equatable {
 
 enum HermesAppRegistry {
     /// Every app the app knows about. Order is the order they appear.
-    static let all: [HermesApp] = [lens, people, map, log, lookup, buildCheck]
+    static let all: [HermesApp] = [lens, people, map, log, lookup, buildCheck, emoDrink]
 
     /// Shown as the quick-action row under the conversation. The rest live
     /// in the drawer - the row scrolls horizontally, so it holds all five.
@@ -106,7 +106,7 @@ enum HermesAppRegistry {
     /// living in the drawer is otherwise invisible to anyone who never pulls
     /// the drawer up - this is how it gets found. Remove an id once the
     /// feature is no longer news.
-    static let newAppIDs: [String] = ["buildcheck"]
+    static let newAppIDs: [String] = ["buildcheck", "emodrink"]
 
     static func unseenNew(opened: Set<String>) -> [HermesApp] {
         newAppIDs.compactMap(app(id:)).filter { !opened.contains($0.id) }
@@ -196,6 +196,17 @@ enum HermesAppRegistry {
         capabilities: [.vision, .microphone, .storage, .export],
         presentation: .sheet,
         voiceGroupIDs: ["buildcheck", "buildcheck-replies"],
+        requiresGlasses: false
+    )
+
+    static let emoDrink = HermesApp(
+        id: "emodrink",
+        title: "EmoDrink",
+        systemImage: "cup.and.saucer",
+        summary: "A drink that fits how you slept, when you reach the machine.",
+        capabilities: [.vision, .microphone, .lens],
+        presentation: .sheet,
+        voiceGroupIDs: ["emodrink", "emodrink-replies"],
         requiresGlasses: false
     )
 }

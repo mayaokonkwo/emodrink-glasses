@@ -86,6 +86,28 @@ enum VoiceCommandCatalog {
                 setting: nil
             ),
             VoiceCommandGroup(
+                id: "emodrink",
+                title: "Pick a drink",
+                summary: "Shows one drink that fits last night's sleep and this morning's body data. Drink mode watches the camera and offers it when a vending machine comes into view.",
+                examples: ["What should I drink", "Start drink mode"],
+                followUp: "Say \"why\", \"something else\" or \"thanks\" while the drink is on the lens. \"Stop drink mode\" ends the watching.",
+                phrases: IntentDetector.recommendDrinkCommands.sorted()
+                    + IntentDetector.startDrinkModeCommands.sorted()
+                    + IntentDetector.stopDrinkModeCommands.sorted(),
+                setting: nil
+            ),
+            VoiceCommandGroup(
+                id: "emodrink-replies",
+                title: "Talk about the drink",
+                summary: "Heard while a drink is on the lens. Anything else you say is a question for the drink assistant.",
+                examples: ["Why", "Something else", "Thanks"],
+                followUp: nil,
+                phrases: EmoDrinkCommands.whyPhrases.sorted()
+                    + EmoDrinkCommands.somethingElsePhrases.sorted()
+                    + EmoDrinkCommands.thanksPhrases.sorted(),
+                setting: nil
+            ),
+            VoiceCommandGroup(
                 id: "navigate",
                 title: "Navigate somewhere",
                 summary: "Puts a map and turn-by-turn directions on the lens. Add \"driving\" or \"by car\" for driving directions; walking is the default.",

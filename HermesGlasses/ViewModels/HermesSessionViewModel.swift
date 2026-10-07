@@ -2748,6 +2748,8 @@ final class HermesSessionViewModel {
             await toggleClipRecording()
         case .buildStepDone, .buildRepeatWarning:
             onBuildKey?(action)
+        case .recommendDrink, .toggleDrinkMode:
+            break // Task 10 wires these.
         }
     }
 

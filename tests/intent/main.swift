@@ -112,5 +112,15 @@ expectEqual(IntentDetector.buildRunCommand("the next step is the cover"), nil, "
 expectEqual(IntentDetector.buildRunCommand("I fixed the bracket earlier"), nil, "narration containing 'fixed'")
 expectEqual(IntentDetector.buildRunCommand("confirmed torque on bolt three"), nil, "narration starting with confirmed")
 
+// EmoDrink intents (whole-utterance).
+expectEqual(IntentDetector.detect("what should I drink"), .recommendDrink, "what should I drink")
+expectEqual(IntentDetector.detect("Hey, what should I get?"), .recommendDrink, "filler + punctuation")
+expectEqual(IntentDetector.detect("pick me a drink"), .recommendDrink, "pick me a drink")
+expectEqual(IntentDetector.detect("recommend a drink"), .recommendDrink, "recommend a drink")
+expectEqual(IntentDetector.detect("start drink mode"), .startDrinkMode, "start drink mode")
+expectEqual(IntentDetector.detect("stop drink mode"), .stopDrinkMode, "stop drink mode")
+expectEqual(IntentDetector.detect("what should I drink tonight with dinner"), .none, "a longer sentence is not the command")
+expectEqual(IntentDetector.detect("what is a drink"), .define(subject: "drink"), "define still works")
+
 print(failures == 0 ? "\nALL PASS" : "\n\(failures) FAILURES")
 exit(failures == 0 ? 0 : 1)

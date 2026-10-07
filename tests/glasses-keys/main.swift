@@ -47,5 +47,10 @@ expect(GlassesKeyAction.allCases.contains(.buildStepDone), "build step done acti
 expect(GlassesKeyAction.buildStepDone.label == "Build check: step done", "step done label")
 expect(GlassesKeyAction.buildRepeatWarning.label == "Build check: repeat last warning", "repeat label")
 
+expect(GlassesKeyAction(rawValue: "recommendDrink") == .recommendDrink, "recommendDrink action exists")
+expect(GlassesKeyAction(rawValue: "toggleDrinkMode") == .toggleDrinkMode, "toggleDrinkMode action exists")
+expect(GlassesKeyAction.recommendDrink.label == "EmoDrink: what should I drink?", "recommendDrink label")
+expect(GlassesKeyAction.toggleDrinkMode.label == "EmoDrink: start / stop drink mode", "toggleDrinkMode label")
+
 print(failures == 0 ? "ALL PASS" : "\(failures) FAILED")
 exit(failures == 0 ? 0 : 1)

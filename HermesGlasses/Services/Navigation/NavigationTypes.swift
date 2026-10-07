@@ -32,6 +32,11 @@ enum HermesIntent: Equatable {
     case startConversationCapture
     /// "start build check" - begin a Build Check run on the last procedure.
     case startBuildCheck
+    /// "what should I drink" - run the EmoDrink pick now, camera or not.
+    case recommendDrink
+    /// "start drink mode" - watch the camera for a vending machine.
+    case startDrinkMode
+    case stopDrinkMode
     case none
 }
 

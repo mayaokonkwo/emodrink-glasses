@@ -53,6 +53,18 @@ enum IntentDetector {
     /// Whole-utterance, like the capture commands. Start is matched by
     /// `detect`; everything else is only consulted during a run
     /// (`buildRunCommand`), when every utterance is claimed by the run.
+    /// EmoDrink. Whole-utterance, like the other app launchers.
+    static let recommendDrinkCommands: Set<String> = [
+        "what should i drink", "what should i get", "pick a drink", "pick me a drink",
+        "recommend a drink", "recommend me a drink", "which drink", "what do i drink",
+    ]
+    static let startDrinkModeCommands: Set<String> = [
+        "start drink mode", "drink mode on", "begin drink mode", "start emodrink",
+    ]
+    static let stopDrinkModeCommands: Set<String> = [
+        "stop drink mode", "drink mode off", "end drink mode", "stop emodrink",
+    ]
+
     static let buildCheckStartCommands: Set<String> = [
         "start build check", "start a build check", "start the build check",
         "begin build check", "start assembly check",
@@ -111,9 +123,11 @@ enum IntentDetector {
     /// Lowercase, strip punctuation and leading address filler, collapse
     /// whitespace - so "Hey, remember this person!" reduces to the bare
     /// command.
-    private static func normalizeCommand(_ text: String) -> String {
+    static func normalizeCommand(_ text: String) -> String {
         var s = text.lowercased()
+            .replacingOccurrences(of: ",", with: " ")
             .trimmingCharacters(in: CharacterSet(charactersIn: " ?.!,'\""))
+        s = s.split(separator: " ").joined(separator: " ")
         for filler in ["hey ", "ok ", "okay ", "hermes ", "please "] {
             while s.hasPrefix(filler) {
                 s = String(s.dropFirst(filler.count))
@@ -170,6 +184,11 @@ enum IntentDetector {
         if buildCheckStartCommands.contains(normalizeCommand(text)) {
             return .startBuildCheck
         }
+
+        let command = normalizeCommand(text)
+        if recommendDrinkCommands.contains(command) { return .recommendDrink }
+        if startDrinkModeCommands.contains(command) { return .startDrinkMode }
+        if stopDrinkModeCommands.contains(command) { return .stopDrinkMode }
 
         if let nav = detectNavigate(lowered, original: text) {
             return nav
