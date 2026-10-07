@@ -13,10 +13,9 @@ seconds. Built as a thank-you for Taka, who ran the study and lent the
 glasses.
 
 It is a fork of [Hermes Glasses](https://github.com/prasanthsasikumar/hermes-glasses),
-MIT licensed. This is a focused gift build: EmoDrink is the only app on
-screen. Everything else Hermes does (navigation, people, Lens, Build Check,
-the Mac bridge) is still in the code, hidden rather than deleted, and
-described in that repo's README.
+MIT licensed, cut down to EmoDrink alone: navigation, people, Lens, Build
+Check, AiSee and the Mac bridge are deleted from this repo. They live on in
+the Hermes Glasses repo.
 
 ## What it does
 
@@ -113,232 +112,72 @@ Tests: the EmoDrink units are pure Swift with standalone suites under
 
 ---
 
-# What it is built on: Hermes Glasses
+# What it is built on
 
-## Architecture
-
-There are two runtime paths. **Direct (your API)** needs no server - the phone
-calls your provider itself:
+The phone does everything; there is no server:
 
 ```
 ┌─────────────┐   Bluetooth    ┌──────────────┐     HTTPS      ┌─────────────────────┐
 │  Ray-Ban    │ ─────────────▶ │  iPhone app  │ ─────────────▶ │  Your AI provider   │
-│  glasses    │  (DAT SDK:     │  (SwiftUI)   │  query +       │  Claude · OpenAI ·  │
-│             │   camera)      │  on-device   │  base64 photo  │  Gemini · Ollama    │
+│  Display    │  (DAT SDK:     │  (SwiftUI)   │  pick phrasing │  OpenRouter, Claude,│
+│  glasses    │   camera, lens)│  on-device   │  + one photo   │  OpenAI, Gemini     │
 └─────────────┘                │  STT + TTS   │ ◀───────────── │                     │
                                └──────────────┘   reply text   └─────────────────────┘
 ```
 
-**Hermes agent (bridge)** routes through a Mac running the agent (tools +
-memory), over a WebSocket:
-
-```
-┌─────────────┐   Bluetooth    ┌──────────────┐    WebSocket     ┌──────────────────┐
-│  Ray-Ban    │ ─────────────▶ │  iPhone app  │ ───────────────▶ │  Mac bridge      │
-│  glasses    │  (DAT SDK:     │  (SwiftUI)   │  text queries +  │  (Python)        │
-│             │   camera)      │              │  base64 photos   │                  │
-└─────────────┘                │  on-device   │ ◀─────────────── │  hermes chat CLI │
-                               │  live STT    │  responses + TTS │  + edge-tts      │
-                               └──────────────┘    (PCM 24 kHz)  └──────────────────┘
-```
-
-- **iOS app** (`HermesGlasses/`) - SwiftUI app using the
+- **iOS app** (`HermesGlasses/`): SwiftUI, the
   [Meta Wearables Device Access Toolkit](https://github.com/facebook/meta-wearables-dat-ios)
-  0.8.0 for glasses registration, sessions, and camera capture, plus
-  `SFSpeechRecognizer` for live on-device transcription. In Direct mode,
-  `HermesGlasses/Services/Providers/` calls the provider API directly; in
-  bridge mode, `HermesAPIClient` talks to the Mac bridge over WebSocket.
-- **Bridge** (`bridge/hermes_bridge.py`) - a small Python WebSocket server on
-  the Mac. Receives text queries, detects visual questions by keyword, requests
-  a photo from the app when needed, invokes `hermes chat -q ... [--image ...]`
-  (or calls a provider API directly), and streams back the reply text plus TTS
-  audio (Edge TTS with macOS `say` fallback).
-
-### WebSocket protocol (app ⇄ bridge, port 8765)
-
-Only used in **Hermes agent (bridge)** mode - Direct mode never opens this
-connection.
-
-| Direction | Message | Meaning |
-|---|---|---|
-| app → bridge | `{"type":"query","text":...}` | Transcribed utterance (STT is on-device) |
-| bridge → app | `{"type":"capture_photo"}` | Take a photo with the glasses now |
-| app → bridge | `{"type":"photo","data":"<base64 jpeg>"}` | Captured photo |
-| app → bridge | `{"type":"photo_error","message":...}` | Capture failed - answer text-only |
-| bridge → app | `{"type":"response","text":...}` | Hermes's answer |
-| bridge → app | `audio_start` / binary PCM16 24 kHz / `audio_end` | Spoken reply |
-
-Binary frames from the app are reserved for mic audio (legacy server-side STT
-path, still supported by the bridge). The bridge's `HERMES_BRIDGE_BRAIN` env
-var now supports `anthropic` / `openai` / `gemini` (direct provider call) in
-addition to the default `hermes` (agentic CLI with tools + memory).
-
-## Setup
-
-### Requirements
-
-- iPhone with iOS 17+, Xcode 16+
-- Meta Ray-Ban glasses paired with the Meta AI app
-- A **Meta App ID + Client Token** for the glasses SDK, from the
-  [Meta Wearables Developer Center](https://wearables.developer.meta.com/)
-  (create a project → Configuration → the *Application ID* section
-  auto-generates them). Copy `Config/Secrets.example.xcconfig` to
-  `Config/Secrets.xcconfig` (gitignored) and fill in `META_APP_ID` /
-  `CLIENT_TOKEN` - they're injected into `Info.plist`'s `MWDAT` dict at build
-  time, so nothing sensitive is committed. In the Developer Center also
-  register your app's **Bundle ID** (Meta rejects hyphens) and **Team ID**.
-  See the [iOS DAT integration docs](https://wearables.developer.meta.com/docs/develop/dat/build-integration-ios/).
-- **Path A (Direct):** an API key from your chosen provider - nothing else.
-- **Path B (Hermes bridge):** additionally, macOS with Python 3.11+ and a
-  working Hermes Agent install (`hermes chat` on PATH).
-
-Pick one of the two paths below - you don't need both.
-
-### Path A - Direct (your API), zero infrastructure
-
-Build the app to your iPhone, then in the app go to
-**Settings → Assistant → Backend: Direct (your API)**, pick a **Provider**
-(Claude / OpenAI / Gemini / Local (Ollama)), paste your API key (or set a
-**Base URL** instead, for Ollama or an OpenAI-compatible proxy), pick a
-**Model**, and start talking. No Mac, no bridge - everything runs from the
-phone, and keys are stored in the iPhone Keychain, one per provider.
-
-1. Open `HermesGlasses.xcodeproj`, set your signing team, build to your iPhone.
-2. In the app: **Connect Glasses** → complete registration in the Meta AI app.
-3. **Settings → Assistant → Backend: Direct (your API)** → choose a Provider,
-   Model, and paste your key.
-4. Start a session. First run prompts for microphone + speech recognition
-   permissions. The **glasses camera permission is granted via the Meta AI
-   app** - Hermes asks for it right after pairing, and it can also be granted
-   later from Settings → Devices or the test panel's Photo button.
-
-### Path B - Hermes agent (bridge), full agentic assistant
-
-For tool use and cross-turn memory, run a [Hermes Agent](https://hermes-agent.nousresearch.com)
-on your Mac and point the app at it over WebSocket.
-
-1. Install Hermes:
-   ```bash
-   curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
-   ```
-   (or use the desktop installer - see the
-   [installation docs](https://hermes-agent.nousresearch.com/docs/getting-started/installation)).
-   This puts the `hermes` CLI on your PATH.
-2. Run the bridge:
-   ```bash
-   cd bridge
-   pip install websockets edge-tts
-   python hermes_bridge.py
-   # → listens on ws://0.0.0.0:8765/voice
-   ```
-   Copy `bridge/.env.example` to `bridge/.env` to configure it - in
-   particular, `HERMES_BRIDGE_TOKEN` is **required** if the bridge is
-   reachable from the internet (clients then connect with
-   `ws://host:8765/voice?token=<value>`).
-3. In the app: build to your iPhone, **Connect Glasses**, then
-   **Settings → Assistant → Backend: Bridge (server)** and set the endpoint
-   to `ws://<your-mac-ip>:8765/voice`. The "Bridge" chip in the banner turns
-   green when the bridge is reachable.
-
-The bridge's `HERMES_BRIDGE_BRAIN` env var can also be set to `anthropic`,
-`openai`, or `gemini` to skip the Hermes CLI and call that provider's API
-directly from the bridge - but **those direct-provider brains are
-single-turn only (no conversation memory)**; use the default `hermes` brain
-for cross-turn history and tool access. If you do use a direct-provider
-brain, make sure `HERMES_BRIDGE_MODEL` matches the chosen brain's provider
-(e.g. a Claude model id only works with `anthropic`, an OpenAI model id only
-works with `openai`).
-
-### Comparison
-
-| | Direct (your API) | Hermes agent (bridge) |
-|---|---|---|
-| Infra needed | none - just the app | a Mac running the bridge + Hermes |
-| Providers | Claude, OpenAI, Gemini, local (Ollama) | Hermes agent (or bridge-side provider) |
-| Tools / agentic | no | yes |
-| Vision | yes | yes |
-| Keys live in | iPhone Keychain | bridge environment |
+  for registration, sessions, camera and the lens, `SFSpeechRecognizer` for
+  on-device speech, `AVSpeechSynthesizer` for the voice.
 
 ## Testing
 
-Use the built-in test panel (**Settings → Developer**). It works from a cold
-start - no session needs to be running, except for the bridge tests, which
-need the socket:
+Settings › Glasses › Developer has the test panel (works from a cold start):
 
 | Button | Verifies |
 |---|---|
-| Bridge | WebSocket connectivity + welcome handshake |
-| Photo | Glasses camera capture alone (also runs the permission grant) |
-| Query | Bridge → Hermes → response → TTS round trip |
-| Visual | Full photo + vision pipeline |
-| Display | Renders a test card on the lens HUD |
+| Display | Attaches the lens if needed and shows a test card, or says why it cannot |
+| Sound | Plays a tone on the current output |
+| Photo | Glasses (or iPhone) camera capture alone |
+| Query | A text round trip to the provider |
+| Visual | Photo plus vision round trip |
 
-Bridge-side unit tests:
-
-```bash
-cd bridge && python -m unittest test_hermes_bridge -v
-```
-
-### Build for device and simulator
+Standalone suites: one folder per unit under `tests/`, each with its
+`xcrun swiftc` line in the header of `main.swift`.
 
 ```bash
-# iOS device
 xcodebuild -project HermesGlasses.xcodeproj -scheme HermesGlasses \
   -destination 'generic/platform=iOS' build
-
-# iOS simulator
-xcodebuild -project HermesGlasses.xcodeproj -scheme HermesGlasses \
-  -destination 'generic/platform=iOS Simulator' build
 ```
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the standalone Swift provider
-test suite and the full build/test workflow.
 
 ## Project layout
 
 ```
 HermesGlasses/
-├── Models/yolo11n.mlpackage           # bundled on-device object detector
 ├── Services/
 │   ├── HermesSpeechRecognizer.swift   # on-device live STT
-│   ├── HermesAudioManager.swift       # mic capture + TTS playback + mic switching
-│   ├── HermesCameraManager.swift      # glasses camera (DAT): photos + live stream
+│   ├── HermesSpeechSynthesizer.swift  # the voice
+│   ├── HermesAudioManager.swift       # mic capture + playback + mic switching
+│   ├── HermesCameraManager.swift      # glasses camera (DAT)
 │   ├── PhoneCameraManager.swift       # iPhone camera (phone mode)
-│   ├── HermesDisplayManager.swift     # lens HUD on Ray-Ban Display
-│   ├── HermesAPIClient.swift          # WebSocket client (bridge mode)
-│   ├── DirectClient.swift             # Direct-mode conversation loop
-│   ├── Providers/                     # AIProvider seam (Claude/OpenAI/Gemini/Ollama)
-│   ├── Navigation/                    # voice intents, routing, bearing, lens maps, Wikipedia
-│   ├── Social/                        # encounters, conversation capture, badge OCR
-│   ├── Lens/                          # object detection, dwell tracking, object log
-│   └── EmoDrink/                      # physiology feed, drink picker, persona, vending machine gate
+│   ├── HermesDisplayManager.swift     # the lens on Ray-Ban Display
+│   ├── DirectClient.swift             # provider calls and conversation memory
+│   ├── Providers/                     # AIProvider seam
+│   └── EmoDrink/                      # physiology feed, picker, persona, gate, intents
 ├── Resources/EmoDrink/asahi-drinks.json   # the drink catalogue
-├── ViewModels/                        # session orchestration, registration
-│   └── EmoDrinkViewModel.swift        # the EmoDrink moment and drink mode
-└── Views/                             # SwiftUI screens (design system: HermesDesign.swift)
-    └── EmoDrinkView.swift             # More › EmoDrink sheet
-mock/physiology.json                   # default EmoDrink feed (a fixed sample document)
-bridge/
-├── hermes_bridge.py                   # WebSocket bridge on the Mac
-├── .env.example                       # bridge configuration template
-└── test_hermes_bridge.py              # unit tests
-tests/                                 # standalone swiftc test suites, one dir per unit
-docs/superpowers/                      # design specs and implementation plans
+├── ViewModels/                        # session (+Glasses, +Developer), EmoDrink
+└── Views/                             # the home screen, Settings, onboarding
+mock/physiology.json                   # default feed (a fixed sample document)
+tests/                                 # standalone swiftc suites, one dir per unit
+tools/                                 # pbx-register.py, pbx-unregister.py, make-app-icon.swift
 ```
 
 ## Status / known limitations
 
-- Voice loop and vision loop are working end-to-end on device, in both
-  Direct and bridge modes.
-- The microphone is switchable (iPhone / glasses / headset), but the glasses
-  mic is Bluetooth HFP, and an active HFP link makes the glasses firmware
-  show its call screen over the lens - so it's **mic or HUD, not both**.
-  Headset mode is the workaround: mic + TTS in the earbuds, HUD on the lens.
-- Someone speaking quietly across the table may be missed by conversation
-  capture - the phone mic is tuned for the wearer. The recording is kept so
-  a better transcription can recover it later.
+- The glasses mic is Bluetooth HFP, and an active HFP link makes the glasses
+  show their call screen over the lens: mic or lens, not both. Headset mode
+  (AirPods) keeps both.
 - Glasses photos may arrive rotated (EXIF orientation not yet normalized).
-- Visual-query detection is keyword-based ("look", "what is this", …).
 
 ## Discussion
 

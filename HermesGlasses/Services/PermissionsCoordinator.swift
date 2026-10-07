@@ -11,7 +11,7 @@
 //
 // Location and motion stay just-in-time: they are optional context
 // features, already requested lazily by DeviceContextProvider and
-// NavigationController, and asking for location before the user has a
+// the drink-mode context, and asking for location before the user has a
 // reason to say yes is how you get a no.
 //
 

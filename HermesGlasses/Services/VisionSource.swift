@@ -8,7 +8,7 @@
 // without a single `if phoneMode` branch at a call site.
 //
 // Frames arrive already reduced to what the app actually consumes: a
-// UIImage to draw and a CVPixelBuffer to run YOLO on. That conversion used
+// UIImage to draw and a CVPixelBuffer to run vision on. That conversion used
 // to live in LensViewModel; doing it here means the DAT SDK's VideoFrame
 // type stops at this boundary.
 //

@@ -2,7 +2,7 @@
 // HermesSpeechSynthesizer.swift
 //
 // On-device text-to-speech for Hermes's replies via AVSpeechSynthesizer.
-// Replaces bridge-side TTS: speech starts the instant the response text
+// Speech starts the instant the response text
 // arrives, no cloud synthesis or PCM streaming. Plays through the current
 // audio route (glasses in HFP mode). Interruption is stopSpeaking().
 //

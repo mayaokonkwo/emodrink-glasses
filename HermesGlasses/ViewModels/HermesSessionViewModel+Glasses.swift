@@ -15,7 +15,7 @@ extension HermesSessionViewModel {
     // MARK: - Camera-only session
 
     /// Connect the glasses camera WITHOUT starting the voice loop - no mic,
-    /// no speech, no bridge. The Lens view opens straight from the home
+    /// no speech. The Lens view opens straight from the home
     /// screen: it reuses the live voice session when one exists, otherwise
     /// it creates its own DeviceSession, torn down by
     /// `releaseCameraSession()` when the view closes.

@@ -4,7 +4,7 @@
 // First launch, three steps (design 1d, retargeted for turn 5): pair the
 // glasses or choose the iPhone, grant what Hermes needs, then start.
 //
-// Bridge setup is deliberately absent - Direct API is the default brain now,
+// Direct API is the default brain now,
 // so a first-time user should never have to hear the word "WebSocket".
 // It's all still there under Settings → Assistant for whoever wants it.
 //

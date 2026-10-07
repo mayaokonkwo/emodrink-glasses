@@ -47,15 +47,14 @@ enum HermesCameraError: LocalizedError {
 
 final class HermesCameraManager: @unchecked Sendable {
     /// One quality for every still the app produces - glasses camera, phone
-    /// camera and the person crops a conversation capture keeps. They all
-    /// end up in the same places (a provider's vision endpoint, the
-    /// encounter store), so they must not drift apart.
+    /// camera and the phone camera. They both end up in a provider's vision
+    /// endpoint, so they must not drift apart.
     static let jpegQuality: CGFloat = 0.85
 
     private let logger = Logger(subsystem: "com.flowsxr.hermesglasses", category: "camera")
 
     /// Diagnostic breadcrumbs (stream states, timings) - surfaced in the
-    /// bridge log via the debug channel
+    /// debug log via the debug channel
     var onDebug: ((String) -> Void)?
 
     /// All mutable state lives behind one lock so `configure()`/`reset()`
@@ -167,7 +166,7 @@ final class HermesCameraManager: @unchecked Sendable {
         if stream.state != .streaming {
             stream.start()
             // First start can take several seconds (camera sensor + LED
-            // wake). The bridge waits 25 s, so 10+10 fits comfortably.
+            // wake). Two tries of 10 s each cover it.
             try await waitForStreaming(stream, timeout: 10.0)
         }
         debug(String(format: "camera: streaming after %.1fs - capturing",

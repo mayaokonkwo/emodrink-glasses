@@ -8,8 +8,8 @@
 // glasses PAIRED" (`registrationState == .registered && !devices.isEmpty`)
 // when the question is "can a glasses session be CREATED". Glasses that are
 // paired but out of range answer yes to the first and no to the second, so
-// Auto never fell back and Lens, Start listening, and the encounter photo
-// all took the glasses path and failed with `noEligibleDevice`.
+// Auto never fell back and Start listening
+// took the glasses path and failed with `noEligibleDevice`.
 //
 // The caller now passes eligibility straight from the SDK's own selector
 // (`AutoDeviceSelector.activeDevice != nil`) - the very thing

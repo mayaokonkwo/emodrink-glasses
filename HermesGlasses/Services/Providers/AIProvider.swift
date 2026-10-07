@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// One conversation turn (text-only; mirrors the bridge's same-day memory).
+/// One conversation turn (text-only; same-day memory).
 struct Turn: Codable, Equatable {
     let role: String   // "user" | "assistant"
     let text: String

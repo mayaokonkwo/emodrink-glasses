@@ -123,7 +123,7 @@ final class HermesAudioManager: NSObject, @unchecked Sendable {
     private var configChangeObserver: NSObjectProtocol?
 
     /// External-capture mode: no AVAudioEngine, no tap - buffers are pushed
-    /// in through `ingest` by whoever owns the microphone (the AiSee kit).
+    /// in through `ingest` by whoever owns the microphone (an external audio source).
     ///
     /// Written from the session actor and read on the SDK's audio thread at
     /// ~50 buffers a second, so it lives behind the same lock as the rest of
@@ -162,7 +162,7 @@ final class HermesAudioManager: NSObject, @unchecked Sendable {
     private var clipPlayer: AVAudioPlayer?
 
     override init() {
-        // 16 kHz mono PCM16 - the format the bridge expects. This
+        // 16 kHz mono PCM16 - the format the speech recogniser takes. This
         // initializer cannot fail for a standard PCM format.
         captureFormat = AVAudioFormat(
             commonFormat: .pcmFormatInt16,
@@ -181,7 +181,7 @@ final class HermesAudioManager: NSObject, @unchecked Sendable {
         return session.currentRoute.inputs.first?.portName ?? "Unknown"
     }
 
-    /// Where playback is going right now ("Speaker", "AiSee-G1", AirPods…).
+    /// Where playback is going right now ("Speaker", AirPods…).
     var currentOutputName: String {
         let outs = AVAudioSession.sharedInstance().currentRoute.outputs
         return outs.map(\.portName).joined(separator: ", ").isEmpty ? "Unknown" : outs.map(\.portName).joined(separator: ", ")
@@ -337,8 +337,8 @@ final class HermesAudioManager: NSObject, @unchecked Sendable {
         return isUsingBluetoothInput
     }
 
-    /// Start a capture that is fed from OUTSIDE - the AiSee kit delivers its
-    /// own 16 kHz PCM over Bluetooth, so there is no iOS input route to open.
+    /// Start a capture that is fed from OUTSIDE - an external source delivers its
+    /// own 16 kHz PCM, so there is no iOS input route to open.
     ///
     /// The audio session is configured like the phone route (`.playAndRecord`,
     /// so TTS still plays), plus `.allowBluetoothA2DP` so TTS can reach A2DP
@@ -505,7 +505,7 @@ final class HermesAudioManager: NSObject, @unchecked Sendable {
         try session.setActive(true)
     }
 
-    /// 1.5 s 440 Hz sine as PCM16 mono 24 kHz - same format as bridge TTS,
+    /// 1.5 s 440 Hz sine as PCM16 mono 24 kHz - same format as the TTS output,
     /// so playing it exercises the exact TTS playback path
     static func makeTestTone(duration: Double = 1.5) -> Data {
         let sampleRate = 24000.0
@@ -691,7 +691,7 @@ final class HermesAudioManager: NSObject, @unchecked Sendable {
 
         // Send audio whenever VAD is disabled or speech is in progress (the
         // gate reads the state as it was BEFORE this buffer advanced it).
-        // The bridge's legacy audio path has no app-side consumer today, so
+        // The legacy audio path has no app-side consumer today, so
         // skip the hop to main entirely when nobody is listening - at ~47
         // buffers a second an empty dispatch is pure overhead.
         if let onAudioChunk = callbacks.onAudioChunk,
@@ -725,7 +725,7 @@ final class HermesAudioManager: NSObject, @unchecked Sendable {
     /// `frameLength`, and for a MONO Int16 buffer that is the same memory
     /// whether the format calls itself interleaved or not - so an exact
     /// format match is not required, only Int16 / same rate / one channel.
-    /// That matters for the AiSee kit, whose sink emits 16 kHz Int16 mono
+    /// That matters for external sources, whose sink emits 16 kHz Int16 mono
     /// marked `interleaved: true` while `captureFormat` is the same thing
     /// marked non-interleaved: without this the hot path (~50 buffers/s)
     /// would run an AVAudioConverter that does nothing.
@@ -780,9 +780,9 @@ final class HermesAudioManager: NSObject, @unchecked Sendable {
 
     /// RMS of the untouched buffer straight off the input, before conversion.
     ///
-    /// An engine tap hands over float buffers; the AiSee kit hands over Int16
+    /// An engine tap hands over float buffers; an external source hands over Int16
     /// ones, and an Int16 buffer's `floatChannelData` is nil. Without the
-    /// second branch this returned -1 for every AiSee buffer, so the UI level
+    /// second branch this returned -1 for every external buffer, so the UI level
     /// meter (which clamps at 0) sat dead flat for the whole session and the
     /// periodic "levels raw=..." diagnostic was meaningless.
     private func rawFloatRMS(_ buffer: AVAudioPCMBuffer) -> Float {

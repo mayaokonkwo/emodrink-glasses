@@ -11,7 +11,7 @@
 //   * capturePhoto() serves the freshest live frame rather than opening a
 //     competing capture, so a visual query never stutters the feed
 //   * 4:3 output, matching the glasses' aspect, so the Lens reticle and
-//     YOLO boxes behave identically on either eye
+//     frames behave identically on either eye
 //
 
 import AVFoundation
@@ -193,7 +193,7 @@ final class PhoneCameraManager: NSObject, @unchecked Sendable, VisionSource {
         session.beginConfiguration()
         defer { session.commitConfiguration() }
 
-        // 640x480 is 4:3 like the glasses, and plenty for YOLO's 640 input -
+        // 640x480 is 4:3 like the glasses, and plenty for vision -
         // a bigger preset would only cost battery and heat.
         session.sessionPreset = .vga640x480
 

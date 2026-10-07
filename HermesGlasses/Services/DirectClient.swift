@@ -2,7 +2,7 @@
 // DirectClient.swift
 //
 // "Direct (your API)" mode: the phone calls the selected AI provider
-// directly - no bridge. Provider, model, base URL and key come from
+// directly. Provider, model, base URL and key come from
 // UserDefaults/Keychain; same-day history and vision detection live here.
 //
 
@@ -87,7 +87,7 @@ final class DirectClient: @unchecked Sendable {
 
     static func hasKey(for providerID: String) -> Bool { loadKey(for: providerID) != nil }
 
-    // MARK: - Same-day history (text-only, mirrors the bridge's semantics)
+    // MARK: - Same-day history (text-only)
 
     private static let maxHistoryMessages = 40
     private static let historyKey = "claude_direct_history"
@@ -174,7 +174,7 @@ final class DirectClient: @unchecked Sendable {
     }
 
     /// One question that must NOT touch conversation memory. `ask` splices
-    /// its query and reply into the stored same-day history; a badge photo
+    /// its query and reply into the stored same-day history; a photo
     /// has no business in the user's chat. Reads nothing, writes nothing.
     /// `webSearch` asks the provider to consult the web (Anthropic's
     /// server-side tool; other providers ignore it and answer from model
@@ -215,7 +215,7 @@ final class DirectClient: @unchecked Sendable {
 
     /// Text-only sibling of `askOneShot`, for questions that carry no photo
     /// and must not touch conversation memory - the Lookup app sends a
-    /// badge NAME here, never the person's picture. `webSearch` asks the
+    /// a name here, never a picture. `webSearch` asks the
     /// provider to consult the web (Anthropic's server-side tool; other
     /// providers ignore it and answer from model knowledge).
     func askOneShotText(
@@ -247,7 +247,7 @@ final class DirectClient: @unchecked Sendable {
     }
 }
 
-// MARK: - Visual query detection (ported from the bridge)
+// MARK: - Visual query detection
 
 enum VisualQueryDetector {
     /// Explicit phrases that always need a fresh photo
@@ -284,7 +284,7 @@ enum VisualQueryDetector {
 
     static let photoMemoryWindow: TimeInterval = 120
 
-    /// Mirrors the bridge's should_capture_photo()
+    /// Decides whether a query needs a photo
     static func shouldCapturePhoto(
         _ text: String,
         lastPhotoAt: Date?,

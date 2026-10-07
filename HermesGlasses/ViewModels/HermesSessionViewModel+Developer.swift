@@ -59,7 +59,7 @@ extension HermesSessionViewModel {
     }
 
     /// Pure output test: play a locally generated tone through the current
-    /// audio route (glasses in glasses mode). No bridge or Hermes involved.
+    /// audio route (glasses in glasses mode). No agent involved.
     func testSound() async {
         await runTest("Sound") { [self] in
             if connectionState == .disconnected {
@@ -144,7 +144,7 @@ extension HermesSessionViewModel {
     }
 
     /// Longest a test waits for a brain before calling it a failure. Generous
-    /// on purpose: a bridge shelling out to `hermes chat` with an image
+    /// on purpose: an agent shelling out to `hermes chat` with an image
     /// attached is slow, and a false failure is as useless as a false pass.
     private static let testReplyTimeout: Double = 90
 
@@ -153,7 +153,7 @@ extension HermesSessionViewModel {
     /// The Query and Visual tests used to report a pass the moment
     /// `submitQuery` returned - which only says the text was dispatched, not
     /// that any brain answered. A panel that exists to diagnose a broken
-    /// setup must not go green on a dead bridge.
+    /// setup must not go green on a dead agent.
     func awaitTestReply(_ submit: () -> Void) async throws {
         let timeout = Self.testReplyTimeout
         let timer = Task { @MainActor [weak self] in
