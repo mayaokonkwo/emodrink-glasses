@@ -5,7 +5,7 @@ Date: 2026-10-07 · Status: approved design, awaiting spec review
 ## 1. Intent
 
 **Who:** Taka (Takahiro, AHLab), who ran the EmoDrink study with Asahi and
-lent the Ray-Ban Display glasses and material this app was built with. The
+lent the Ray-Ban Display glasses this app was built with. The
 app is a thank-you gift, and a continuation of EmoDrink on glasses instead
 of a Quest 3.
 
@@ -27,7 +27,7 @@ the pick is suggestive, never diagnostic, and the body data is the point.
 |---|---|
 | How the glasses know a machine is near | The camera sees it: a frame every few seconds goes to the vision provider with a yes or no question, only while "drink mode" is on. Voice and the glasses button also work anywhere. |
 | Where sleep and physiology come from | A hosted JSON document at a URL the user controls, plus three mock profiles (rested, short night, stressed) so the demo works offline. |
-| Which drinks | Public Asahi Group soft drinks sold in Japanese vending machines, tagged by function. No contract material. |
+| Which drinks | Public Asahi Group soft drinks sold in Japanese vending machines, tagged by function. Public product names only. |
 | Who picks | An on-device deterministic scorer picks; the AI only phrases the rationale and holds the conversation. |
 | Name | EmoDrink Glasses, repo `mayaokonkwo/emodrink-glasses`, a fork of Hermes Glasses. |
 
@@ -340,7 +340,7 @@ glasses walk-up and the HUD are tested by hand.
   the EmoDrink moment does not introduce a second name.
 - README: rewritten around EmoDrink Glasses, crediting the EmoDrink paper
   (Augmented Humans 2026), AHLab and Asahi as the study's industry partner,
-  and Hermes Glasses as the base. Nothing about any contract. MIT licence
+  and Hermes Glasses as the base. Credits the published paper only. MIT licence
   kept, with the Hermes copyright line intact.
 - Branch `main` only; no feature branches needed for a single-author gift.
 
