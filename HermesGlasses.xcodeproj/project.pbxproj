@@ -15,6 +15,7 @@
 		AAAA00000000000000000006 /* HermesAudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000106 /* HermesAudioManager.swift */; };
 		AAAA00000000000000000007 /* HermesAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000107 /* HermesAPIClient.swift */; };
 		AAAA00000000000000000008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000108 /* Assets.xcassets */; };
+		AAAA00000000000000000E05 /* asahi-drinks.json in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E06 /* asahi-drinks.json */; };
 		AAAA00000000000000000009 /* HermesCameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000112 /* HermesCameraManager.swift */; };
 		AAAA00000000000000000010 /* HermesSpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000113 /* HermesSpeechRecognizer.swift */; };
 		AAAA00000000000000000011 /* HermesSpeechSynthesizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000114 /* HermesSpeechSynthesizer.swift */; };
@@ -147,6 +148,7 @@
 		AAAA00000000000000000A52 /* GlassesVendor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A51 /* GlassesVendor.swift */; };
 		AAAA00000000000000000A56 /* GlassesKeyMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A55 /* GlassesKeyMap.swift */; };
 		AAAA00000000000000000E01 /* PhysiologySnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E02 /* PhysiologySnapshot.swift */; };
+		AAAA00000000000000000E03 /* DrinkCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E04 /* DrinkCatalog.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -180,6 +182,7 @@
 		AAAA00000000000000000106 /* HermesAudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesAudioManager.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000107 /* HermesAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesAPIClient.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000108 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AAAA00000000000000000E06 /* asahi-drinks.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Resources/EmoDrink/asahi-drinks.json; sourceTree = "<group>"; };
 		AAAA00000000000000000109 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AAAA0000000000000000012A /* Hermes.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Hermes.xcconfig; sourceTree = SOURCE_ROOT; };
 		AAAA00000000000000000110 /* HermesGlasses.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HermesGlasses.entitlements; sourceTree = "<group>"; };
@@ -303,6 +306,7 @@
 		AAAA00000000000000000A51 /* GlassesVendor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesVendor.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A55 /* GlassesKeyMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesKeyMap.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E02 /* PhysiologySnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/PhysiologySnapshot.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E04 /* DrinkCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/DrinkCatalog.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -347,6 +351,7 @@
 				AAAA0000000000000000004 /* Services */,
 				AAAA0000000000000000006 /* Models */,
 				AAAA00000000000000000108 /* Assets.xcassets */,
+				AAAA00000000000000000E06 /* asahi-drinks.json */,
 				AAAA00000000000000000109 /* Info.plist */,
 				AAAA00000000000000000110 /* HermesGlasses.entitlements */,
 			);
@@ -484,6 +489,7 @@
 				AAAA00000000000000000A51 /* GlassesVendor.swift */,
 				AAAA00000000000000000A55 /* GlassesKeyMap.swift */,
 				AAAA00000000000000000E02 /* PhysiologySnapshot.swift */,
+				AAAA00000000000000000E04 /* DrinkCatalog.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -590,6 +596,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AAAA00000000000000000008 /* Assets.xcassets in Resources */,
+				AAAA00000000000000000E05 /* asahi-drinks.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -717,6 +724,7 @@
 				AAAA00000000000000000A52 /* GlassesVendor.swift in Sources */,
 				AAAA00000000000000000A56 /* GlassesKeyMap.swift in Sources */,
 				AAAA00000000000000000E01 /* PhysiologySnapshot.swift in Sources */,
+				AAAA00000000000000000E03 /* DrinkCatalog.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

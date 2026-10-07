@@ -1,0 +1,16 @@
+{
+  "drinks": [
+    {"id": "oishii-mizu", "name": "Asahi Oishii Mizu Tennensui", "name_ja": "アサヒ おいしい水 天然水", "kind": "water", "functions": ["hydrate"], "caffeine_mg": 0, "sugar": "none", "served": "cold"},
+    {"id": "wilkinson-tansan", "name": "Wilkinson Tansan", "name_ja": "ウィルキンソン タンサン", "kind": "sparkling water", "functions": ["refresh", "hydrate"], "caffeine_mg": 0, "sugar": "none", "served": "cold"},
+    {"id": "mitsuya-cider", "name": "Mitsuya Cider", "name_ja": "三ツ矢サイダー", "kind": "sparkling soft drink", "functions": ["refresh"], "caffeine_mg": 0, "sugar": "regular", "served": "cold"},
+    {"id": "mitsuya-cider-zero", "name": "Mitsuya Cider Zero", "name_ja": "三ツ矢サイダー ゼロ", "kind": "sparkling soft drink", "functions": ["refresh"], "caffeine_mg": 0, "sugar": "none", "served": "cold"},
+    {"id": "calpis-water", "name": "Calpis Water", "name_ja": "カルピスウォーター", "kind": "cultured milk drink", "functions": ["calm", "recover"], "caffeine_mg": 0, "sugar": "regular", "served": "cold"},
+    {"id": "calpis-soda", "name": "Calpis Soda", "name_ja": "カルピスソーダ", "kind": "sparkling cultured milk drink", "functions": ["refresh", "calm"], "caffeine_mg": 0, "sugar": "regular", "served": "cold"},
+    {"id": "juroku-cha", "name": "Asahi Juroku-cha", "name_ja": "アサヒ 十六茶", "kind": "blended tea", "functions": ["hydrate", "refresh"], "caffeine_mg": 0, "sugar": "none", "served": "either"},
+    {"id": "rokujo-mugicha", "name": "Asahi Rokujo Mugicha", "name_ja": "アサヒ 六条麦茶", "kind": "barley tea", "functions": ["calm", "hydrate"], "caffeine_mg": 0, "sugar": "none", "served": "cold"},
+    {"id": "wonda-morning-shot", "name": "Wonda Morning Shot", "name_ja": "ワンダ モーニングショット", "kind": "canned coffee", "functions": ["energise"], "caffeine_mg": 80, "sugar": "regular", "served": "either"},
+    {"id": "wonda-kin-no-bito-black", "name": "Wonda Kin no Bito Black", "name_ja": "ワンダ 金の微糖 ブラック", "kind": "black canned coffee", "functions": ["energise"], "caffeine_mg": 90, "sugar": "none", "served": "either"},
+    {"id": "super-h2o", "name": "Asahi Super H2O", "name_ja": "アサヒ スーパーH2O", "kind": "isotonic drink", "functions": ["recover", "hydrate"], "caffeine_mg": 0, "sugar": "low", "served": "cold"},
+    {"id": "dodekamin", "name": "Dodekamin", "name_ja": "ドデカミン", "kind": "energy drink", "functions": ["energise"], "caffeine_mg": 50, "sugar": "regular", "served": "cold"}
+  ]
+}
