@@ -66,7 +66,8 @@ struct SimulatedLensView: View {
                 }
             }
 
-            if case .reply(_, _, let choices) = content, !choices.isEmpty {
+            if !content.choices.isEmpty {
+                let choices = content.choices
                 HStack(spacing: 6) {
                     ForEach(choices.prefix(3)) { choice in
                         Text(choice.shortLabel)

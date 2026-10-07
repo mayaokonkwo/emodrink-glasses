@@ -308,6 +308,28 @@ final class HermesDisplayManager {
         send(HermesDisplayScreens.buildCheck(step: step, total: total, text: text, flag: flag))
     }
 
+    /// EmoDrink pick. Buttons route through onChooseReplyOption like reply
+    /// options do, so a tap submits the choice's words to the session.
+    func showEmoDrink(title: String, subtitle: String, reason: String, source: String, choices: [ReplyChoice]) {
+        content = .emoDrink(title: title, subtitle: subtitle, reason: reason, source: source, choices: choices)
+        cancelDwell()
+        lastReplyText = ""
+        lastDefinitionImageURL = nil
+        send(HermesDisplayScreens.emoDrink(
+            title: title, subtitle: subtitle, reason: reason, source: source, choices: choices,
+            onChoose: { [weak self] choice in
+                Task { @MainActor in self?.onChooseReplyOption?(choice) }
+            }))
+    }
+
+    func showEmoDrinkWatching() {
+        content = .emoDrinkWatching
+        cancelDwell()
+        lastReplyText = ""
+        lastDefinitionImageURL = nil
+        send(HermesDisplayScreens.emoDrinkWatching())
+    }
+
     func showEncounterSaved(note: String) {
         content = .encounterSaved(note: note)
         cancelDwell()

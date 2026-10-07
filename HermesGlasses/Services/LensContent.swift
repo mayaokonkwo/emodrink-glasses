@@ -33,9 +33,23 @@ enum LensContent: Equatable {
     case newConversation
     /// Build Check: the current step, or an open flag in place of it.
     case buildCheck(step: Int, total: Int, text: String, flag: String?)
+    /// EmoDrink: the pick, with tappable replies.
+    case emoDrink(title: String, subtitle: String, reason: String, source: String, choices: [ReplyChoice])
+    /// EmoDrink drink mode, nothing in view yet.
+    case emoDrinkWatching
 
     /// Nothing to draw - the simulated lens shows its empty frame.
     var isBlank: Bool { self == .blank }
+
+    /// Tappable replies the current screen offers (reply options, EmoDrink
+    /// buttons). Empty for every other screen.
+    var choices: [ReplyChoice] {
+        switch self {
+        case .reply(_, _, let choices): return choices
+        case .emoDrink(_, _, _, _, let choices): return choices
+        default: return []
+        }
+    }
 
     /// Small all-caps line above the body, or nil when the body speaks for
     /// itself (a reply has no label on the real lens either).
@@ -56,6 +70,8 @@ enum LensContent: Equatable {
         case .encounterSaved: return "SAVED"
         case .newConversation: return "NEW CHAT"
         case .buildCheck(let step, let total, _, _): return "STEP \(step)/\(total)"
+        case .emoDrink: return "DRINK"
+        case .emoDrinkWatching: return "DRINK MODE"
         }
     }
 
@@ -90,6 +106,10 @@ enum LensContent: Equatable {
             return "New conversation"
         case .buildCheck(_, _, let text, let flag):
             return flag ?? text
+        case .emoDrink(let title, _, _, _, _):
+            return title
+        case .emoDrinkWatching:
+            return "Watching for a vending machine"
         }
     }
 
@@ -120,6 +140,10 @@ enum LensContent: Equatable {
             return "say \"stop recording\" to finish"
         case .buildCheck(_, _, _, let flag):
             return flag == nil ? "say \"step done\" when finished" : "confirmed · ignore · fixed"
+        case .emoDrink(_, _, let reason, let source, _):
+            return "\(reason) · \(source)"
+        case .emoDrinkWatching:
+            return "say \"what should I drink\" any time"
         }
     }
 
@@ -141,7 +165,7 @@ enum LensContent: Equatable {
              .personSighted, .personLookup:
             return false
         case .listening, .thinking, .reply, .definition, .navigation,
-             .encounterPrompt, .recording, .buildCheck:
+             .encounterPrompt, .recording, .buildCheck, .emoDrink, .emoDrinkWatching:
             return true
         }
     }

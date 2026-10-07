@@ -189,5 +189,19 @@ expectEqual(flagged.body, "3 bolts, expected 4", "flag replaces the body")
 expectEqual(flagged.statusLine, "confirmed · ignore · fixed", "flag hint")
 expect(bc.isLive, "build check is live")
 
+let choices = [ReplyChoice(key: "1", label: "Why"), ReplyChoice(key: "2", label: "Something else"), ReplyChoice(key: "3", label: "Thanks")]
+let card = LensContent.emoDrink(title: "Asahi Rokujo Mugicha", subtitle: "アサヒ 六条麦茶", reason: "slept 6.4 h, HRV 16 ms under your usual", source: "sample: stressed", choices: choices)
+expect(card.label == "DRINK", "emoDrink label")
+expect(card.body == "Asahi Rokujo Mugicha", "emoDrink body is the drink name")
+expect(card.statusLine == "slept 6.4 h, HRV 16 ms under your usual · sample: stressed", "emoDrink status is reason and source")
+expect(card.choices == choices, "emoDrink exposes its choices")
+expect(card.isLive, "emoDrink keeps the live dot")
+expect(LensContent.reply(text: "A) x, B) y", speaking: false, choices: choices).choices == choices, "reply exposes its choices too")
+expect(LensContent.blank.choices.isEmpty, "blank has no choices")
+let watching = LensContent.emoDrinkWatching
+expect(watching.label == "DRINK MODE" && watching.body == "Watching for a vending machine", "watching card copy")
+expect(watching.statusLine == "say \"what should I drink\" any time", "watching status")
+expect(watching.isLive && !watching.isBlank, "watching is live")
+
 print(failures == 0 ? "\nALL PASS" : "\n\(failures) FAILURE(S)")
 exit(failures == 0 ? 0 : 1)

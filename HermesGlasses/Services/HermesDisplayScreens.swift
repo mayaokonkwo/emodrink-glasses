@@ -250,6 +250,47 @@ enum HermesDisplayScreens {
         .padding(24)
     }
 
+    /// EmoDrink pick: name large, Japanese name small, the reason, and the
+    /// three replies as buttons. No dwell: the wearer is deciding.
+    static func emoDrink(
+        title: String, subtitle: String, reason: String, source: String,
+        choices: [ReplyChoice], onChoose: @escaping @Sendable (ReplyChoice) -> Void
+    ) -> FlexBox {
+        var buttons: [Button] = []
+        for choice in choices {
+            buttons.append(Button(label: choice.shortLabel, style: .primary, onClick: { onChoose(choice) }))
+        }
+        return FlexBox(direction: .column, spacing: 12) {
+            FlexBox(direction: .column, spacing: 6) {
+                Text(title, style: .heading)
+                Text(subtitle, style: .meta, color: .secondary)
+                Text(reason, style: .body)
+                Text(source, style: .meta, color: .secondary)
+            }
+            .padding(24)
+            .background(.card)
+
+            FlexBox(direction: .row, spacing: 8, alignment: .center, crossAlignment: .center, wrap: true) {
+                for button in buttons {
+                    button
+                }
+            }
+        }
+    }
+
+    /// Drink mode is on and nothing has been offered yet.
+    static func emoDrinkWatching() -> FlexBox {
+        FlexBox(direction: .column, spacing: 8) {
+            FlexBox(direction: .row, spacing: 12, crossAlignment: .center) {
+                Icon(name: .fourCornerFrame)
+                Text("Drink mode", style: .heading)
+            }
+            Text("Watching for a vending machine", style: .body)
+            Text("Say \"what should I drink\" any time", style: .meta, color: .secondary)
+        }
+        .padding(24)
+    }
+
     /// Encounter saved confirmation. Shows the start of the note so the
     /// user can see the transcription landed sanely.
     static func encounterSaved(note: String) -> FlexBox {
