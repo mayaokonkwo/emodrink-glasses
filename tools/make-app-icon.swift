@@ -1,8 +1,9 @@
-// Renders the Hermes Glasses app icon: the Ray-Ban glasses glyph from the
-// design system, cream on a warm terracotta gradient. No alpha channel -
-// iOS app icons must be fully opaque.
+// Renders the EmoDrink Glasses app icon: a white morning sun rising over a
+// deep-blue horizon, with three small bubbles drifting up past its right
+// shoulder, on a deep-to-sky blue gradient. No alpha channel - iOS app
+// icons must be fully opaque.
 //
-//   swift make_icon.swift <output.png>
+//   swift tools/make-app-icon.swift <output.png>
 
 import AppKit
 import CoreGraphics
@@ -24,73 +25,59 @@ func rgb(_ r: Int, _ g: Int, _ b: Int) -> CGColor {
             blue: CGFloat(b) / 255, alpha: 1)
 }
 
-// Warm gradient: the design's #E08340 highlight down into a deeper burnt
-// tone, so the glyph keeps contrast across the whole face.
+let s = CGFloat(size)
+let deep = rgb(0x0D, 0x2F, 0x75)
+let white = rgb(0xFF, 0xFF, 0xFF)
+
+// Sky: deep blue #0D2F75 at the bottom-left, through the accent #1446A0,
+// up to sky #3E7BD6 at the top-right. CoreGraphics' origin is bottom-left.
 let gradient = CGGradient(
     colorsSpace: space,
-    colors: [rgb(0xE8, 0x8F, 0x4A), rgb(0xC4, 0x62, 0x2D), rgb(0x96, 0x42, 0x1B)] as CFArray,
-    locations: [0.0, 0.55, 1.0])!
+    colors: [deep, rgb(0x14, 0x46, 0xA0), rgb(0x3E, 0x7B, 0xD6)] as CFArray,
+    locations: [0.0, 0.5, 1.0])!
 ctx.drawLinearGradient(
     gradient,
-    start: CGPoint(x: 0, y: size),
-    end: CGPoint(x: size, y: 0),
-    options: [])
+    start: CGPoint(x: 0, y: 0),
+    end: CGPoint(x: s, y: s),
+    options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
 
-let cream = rgb(0xF7, 0xF0, 0xE4)
-ctx.setStrokeColor(cream)
-ctx.setFillColor(cream)
-ctx.setLineCap(.round)
-ctx.setLineJoin(.round)
+// Morning sun: about 44 percent of the width, centred horizontally, its
+// centre at about 58 percent of the height measured from the top.
+let sunD = s * 0.44
+let sunCenter = CGPoint(x: s / 2, y: s * (1 - 0.58))
+ctx.setFillColor(white)
+ctx.fillEllipse(in: CGRect(x: sunCenter.x - sunD / 2, y: sunCenter.y - sunD / 2,
+                           width: sunD, height: sunD))
 
-// Geometry: two rounded lenses either side of a short bridge, plus stubby
-// temple arms so it still reads as glasses at 40pt.
-let stroke: CGFloat = 40
-let lensW: CGFloat = 262
-let lensH: CGFloat = 210
-let bridgeW: CGFloat = 58
-let centerY: CGFloat = 512
-let totalW = lensW * 2 + bridgeW
-let leftX = (CGFloat(size) - totalW) / 2
+// Horizon: a filled deep-blue hill over the bottom 38 percent, its top edge
+// a gentle convex arc (higher in the middle than at the sides), hiding the
+// lower part of the sun.
+let horizonEdge = s * 0.38
+let rise = s * 0.05
+let horizon = CGMutablePath()
+horizon.move(to: CGPoint(x: 0, y: 0))
+horizon.addLine(to: CGPoint(x: 0, y: horizonEdge - rise))
+horizon.addQuadCurve(to: CGPoint(x: s, y: horizonEdge - rise),
+                     control: CGPoint(x: s / 2, y: horizonEdge + rise))
+horizon.addLine(to: CGPoint(x: s, y: 0))
+horizon.closeSubpath()
+ctx.setFillColor(deep)
+ctx.addPath(horizon)
+ctx.fillPath()
 
-func lens(at x: CGFloat) -> CGPath {
-    // Slightly larger radius at the bottom: the Wayfarer-ish taper from the
-    // design system's glyph (border-radius: 4px 4px 6px 6px).
-    let rect = CGRect(x: x, y: centerY - lensH / 2, width: lensW, height: lensH)
-    let path = CGMutablePath()
-    let rTop: CGFloat = 56
-    let rBot: CGFloat = 82
-    path.move(to: CGPoint(x: rect.minX, y: rect.maxY - rTop))
-    path.addArc(tangent1End: CGPoint(x: rect.minX, y: rect.maxY),
-                tangent2End: CGPoint(x: rect.maxX, y: rect.maxY), radius: rTop)
-    path.addArc(tangent1End: CGPoint(x: rect.maxX, y: rect.maxY),
-                tangent2End: CGPoint(x: rect.maxX, y: rect.minY), radius: rTop)
-    path.addArc(tangent1End: CGPoint(x: rect.maxX, y: rect.minY),
-                tangent2End: CGPoint(x: rect.minX, y: rect.minY), radius: rBot)
-    path.addArc(tangent1End: CGPoint(x: rect.minX, y: rect.minY),
-                tangent2End: CGPoint(x: rect.minX, y: rect.maxY), radius: rBot)
-    path.closeSubpath()
-    return path
-}
-
-ctx.setLineWidth(stroke)
-ctx.addPath(lens(at: leftX))
-ctx.strokePath()
-ctx.addPath(lens(at: leftX + lensW + bridgeW))
-ctx.strokePath()
-
-// Bridge, sitting in the upper third like a real frame
-let bridgeY = centerY + lensH / 2 - 48
-ctx.setLineWidth(34)
-ctx.move(to: CGPoint(x: leftX + lensW - 4, y: bridgeY))
-ctx.addLine(to: CGPoint(x: leftX + lensW + bridgeW + 4, y: bridgeY))
-ctx.strokePath()
-
-// Temple arms: short stubs angling back from the outer hinges
-ctx.setLineWidth(34)
-for (hinge, dir) in [(leftX, CGFloat(-1)), (leftX + totalW, CGFloat(1))] {
-    ctx.move(to: CGPoint(x: hinge, y: bridgeY))
-    ctx.addLine(to: CGPoint(x: hinge + dir * 66, y: bridgeY + 26))
-    ctx.strokePath()
+// Bubbles: three small white circles (3, 4 and 5 percent of the width)
+// rising diagonally above the sun's right shoulder, smallest highest.
+ctx.setFillColor(white)
+let bubbles: [(x: CGFloat, y: CGFloat, d: CGFloat)] = [
+    (0.72, 0.33, 0.05),
+    (0.78, 0.25, 0.04),
+    (0.83, 0.18, 0.03),
+]
+for b in bubbles {
+    let d = s * b.d
+    let cx = s * b.x
+    let cy = s * (1 - b.y)
+    ctx.fillEllipse(in: CGRect(x: cx - d / 2, y: cy - d / 2, width: d, height: d))
 }
 
 guard let image = ctx.makeImage() else { fatalError("image") }

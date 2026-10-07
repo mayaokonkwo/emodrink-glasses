@@ -7,11 +7,11 @@
 // pill button).
 //
 // Rules the design doc is strict about, so the primitives enforce them:
-//   * ONE accent. Terracotta #C4622D and its shades - never a rainbow of
-//     per-row iOS system colours.
-//   * Warm neutrals. Cream canvas (#F7F5F2) and warm black (#1C1B1A),
-//     not pure white/black greys.
-//   * Grouped cards: white (warm black in dark), 22pt corners, 16pt
+//   * ONE accent. Deep morning blue #1446A0 and its shades - never a
+//     rainbow of per-row iOS system colours.
+//   * Cool neutrals. Pale blue-white canvas (#F4F7FB) and navy ink
+//     (#0F1B33), not pure white/black greys.
+//   * Grouped cards: white (deep navy in dark), 22pt corners, 16pt
 //     side margin, hairline dividers inside.
 //
 // Everything here is presentation only - no view models, no state.
@@ -49,39 +49,39 @@ extension Color {
 
 enum HermesTheme {
     // Accent family
-    /// Terracotta accent from the design (#C4622D)
-    static let accent = Color(hex: 0xC4622D)
-    /// Darker terracotta for text on light fills (#96471A)
-    static let accentDeep = Color(hex: 0x96471A)
-    /// Link / tappable-label terracotta (#C05C21)
-    static let accentLink = Color(hex: 0xC05C21)
-    /// Light terracotta for glyphs on warm black (#E8996A)
-    static let accentLight = Color(hex: 0xE8996A)
+    /// Deep morning-blue accent (#1446A0)
+    static let accent = Color(hex: 0x1446A0)
+    /// Darker blue for text on light fills (#0D2F75)
+    static let accentDeep = Color(hex: 0x0D2F75)
+    /// Link / tappable-label blue (#1446A0)
+    static let accentLink = Color(hex: 0x1446A0)
+    /// Light sky blue for glyphs on navy (#7FA6E8)
+    static let accentLight = Color(hex: 0x7FA6E8)
     /// Accent that stays legible in both schemes on a card
-    static let accentOnCard = Color.hermesAdaptive(light: 0xC05C21, dark: 0xE8996A)
+    static let accentOnCard = Color.hermesAdaptive(light: 0x0D2F75, dark: 0x7FA6E8)
 
     // Neutrals
-    /// Warm black used for hero cards and dark chrome (#1C1B1A)
-    static let ink = Color(hex: 0x1C1B1A)
-    /// Warm mid grey for supporting copy (#6E6A64)
-    static let inkSoft = Color(hex: 0x6E6A64)
-    /// Cream used for text on warm black (#F5F2EE)
-    static let cream = Color(hex: 0xF5F2EE)
+    /// Navy ink used for hero cards and dark chrome (#0F1B33)
+    static let ink = Color(hex: 0x0F1B33)
+    /// Cool slate grey for supporting copy (#5C6B85)
+    static let inkSoft = Color(hex: 0x5C6B85)
+    /// Blue-white used for text on navy (#F5F8FC)
+    static let cream = Color(hex: 0xF5F8FC)
 
     // Surfaces
-    /// Screen background - cream in light, warm black in dark
-    static let canvas = Color.hermesAdaptive(light: 0xF7F5F2, dark: 0x141312)
+    /// Screen background - blue-white in light, deep navy in dark
+    static let canvas = Color.hermesAdaptive(light: 0xF4F7FB, dark: 0x0B1529)
     /// Grouped-list background, a touch deeper than `canvas`
-    static let groupedCanvas = Color.hermesAdaptive(light: 0xEFEDEA, dark: 0x141312)
+    static let groupedCanvas = Color.hermesAdaptive(light: 0xEAF0F8, dark: 0x0B1529)
     /// Card / list-row fill
-    static let card = Color.hermesAdaptive(light: 0xFFFFFF, dark: 0x1F1D1B)
-    /// Placeholder fill behind thumbnails and empty media (#E5E1DB)
-    static let mediaPlaceholder = Color.hermesAdaptive(light: 0xE5E1DB, dark: 0x2A2724)
+    static let card = Color.hermesAdaptive(light: 0xFFFFFF, dark: 0x131F3A)
+    /// Placeholder fill behind thumbnails and empty media (#DCE4F0)
+    static let mediaPlaceholder = Color.hermesAdaptive(light: 0xDCE4F0, dark: 0x1B2A4A)
 
     // Dark-chrome surfaces (Lens, phone-mode, HUD banners) - fixed, not adaptive:
     // these screens are always dark so the camera feed carries the frame.
-    static let lensChrome = Color(hex: 0x141312)
-    static let lensStage = Color(hex: 0x1B1A19)
+    static let lensChrome = Color(hex: 0x0B1529)
+    static let lensStage = Color(hex: 0x111D38)
 
     // Status
     static let online = Color(hex: 0x34C759)
@@ -91,10 +91,10 @@ enum HermesTheme {
     /// Neutral chip/bubble fill that adapts to light/dark
     static let chipFill = Color(uiColor: .tertiarySystemFill)
     /// Assistant bubble fill
-    static let assistantBubble = Color.hermesAdaptive(light: 0xFFFFFF, dark: 0x26241F)
+    static let assistantBubble = Color.hermesAdaptive(light: 0xFFFFFF, dark: 0x162343)
 
     /// Hairline between rows inside a grouped card
-    static let hairline = Color.hermesAdaptive(light: 0x3C3C43, dark: 0xF5F2EE)
+    static let hairline = Color.hermesAdaptive(light: 0x1B2A4A, dark: 0xF5F8FC)
         .opacity(0.12)
 }
 
@@ -269,7 +269,7 @@ struct HermesSection<Content: View>: View {
 
 // MARK: - Row furniture
 
-/// The one-accent settings icon: a terracotta-tinted tile, never a
+/// The one-accent settings icon: an accent-tinted tile, never a
 /// per-row system colour.
 struct HermesIconTile: View {
     let systemName: String
@@ -373,7 +373,7 @@ struct HermesRowValue: View {
 
 // MARK: - Chips & pills
 
-/// Capability / status chip: small, terracotta-tinted, or grey when the
+/// Capability / status chip: small, accent-tinted, or grey when the
 /// capability is absent ("No display", "Simulated display").
 struct HermesChip: View {
     let text: String
@@ -423,7 +423,7 @@ struct HermesStatusPill: View {
     /// Trailing SF Symbol - e.g. a snap count while a recording runs.
     /// Keeps counters in the app's own iconography instead of an emoji.
     var icon: String? = nil
-    /// Terracotta-tinted (connected) vs neutral (everything else).
+    /// Accent-tinted (connected) vs neutral (everything else).
     var tinted: Bool = true
 
     var body: some View {
@@ -593,7 +593,7 @@ struct HermesChromePill: View {
 
 // MARK: - Hero cards
 
-/// Warm-black hero card, used for the connected-device summary at the
+/// Navy hero card, used for the connected-device summary at the
 /// top of Settings and Devices.
 struct HermesDeviceCard<Accessory: View>: View {
     let title: String
@@ -674,7 +674,7 @@ extension HermesDeviceCard where Accessory == EmptyView {
     }
 }
 
-/// Terracotta-tinted informational strip ("Stored on this iPhone only").
+/// Accent-tinted informational strip ("Stored on this iPhone only").
 struct HermesNotice: View {
     let text: String
     var systemImage: String = "lock"
@@ -749,7 +749,7 @@ struct HermesAttentionBar: View {
 
 // MARK: - Screen scaffolding
 
-/// A settings-style page: warm canvas, stacked `HermesSection`s.
+/// A settings-style page: blue-white canvas, stacked `HermesSection`s.
 struct HermesScrollPage<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
@@ -764,7 +764,7 @@ struct HermesScrollPage<Content: View>: View {
 }
 
 extension View {
-    /// Stock `Form`/`List` pages keep their controls but pick up the warm
+    /// Stock `Form`/`List` pages keep their controls but pick up the themed
     /// canvas, so a sub-page never flashes iOS grey against the hub. The one
     /// real definition - `SettingsView` and `PeopleView` each used to carry
     /// their own copy of these three modifiers.
