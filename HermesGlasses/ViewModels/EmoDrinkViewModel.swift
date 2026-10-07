@@ -217,7 +217,7 @@ final class EmoDrinkViewModel {
         let sourceLine = snapshotNotice ?? currentSourceLabel
         currentCard = (title: pick.name, subtitle: pick.nameJa, reason: rec.reasonLine, source: sourceLine)
         hermesVM.showEmoDrinkOnLens(title: pick.name, subtitle: pick.nameJa, reason: rec.reasonLine,
-                                    source: sourceLine, choices: EmoDrinkCommands.choices)
+                                    source: sourceLine, choices: EmoDrinkCommands.cardChoices(for: .en))  // Task 13 passes the resolved language
         resetMomentTimer()
         switch speak {
         case .alternate:
@@ -252,7 +252,7 @@ final class EmoDrinkViewModel {
     private func reshowMoment() {
         guard momentActive, let card = currentCard else { return }
         hermesVM.showEmoDrinkOnLens(title: card.title, subtitle: card.subtitle, reason: card.reason,
-                                    source: card.source, choices: EmoDrinkCommands.choices)
+                                    source: card.source, choices: EmoDrinkCommands.cardChoices(for: .en))  // Task 13 passes the resolved language
     }
 
     /// Spoken only: the card stays on the lens. A one-shot call so the
@@ -327,6 +327,8 @@ final class EmoDrinkViewModel {
         case .why: why(); return true
         case .somethingElse: somethingElse(); return true
         case .thanks: thanks(); return true
+        case .back: return true // Task 13 implements back
+        case .stop: endMoment(saying: nil); return true
         case nil: break
         }
         switch IntentDetector.detect(text) {

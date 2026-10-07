@@ -27,5 +27,17 @@ expectEqual(IntentDetector.detect("remember this person"), .none, "no people any
 expectEqual(IntentDetector.detect(""), .none, "empty")
 expectEqual(IntentDetector.normalizeCommand("  Hey,  okay please   Start Drink Mode! "), "start drink mode", "normalize strips filler and collapses spaces")
 
+// Japanese (spec section 6), punctuation stripped, whole utterance only.
+expectEqual(IntentDetector.detect("何を飲めばいい"), .recommendDrink, "何を飲めばいい")
+expectEqual(IntentDetector.detect("何を飲めばいい？"), .recommendDrink, "何を飲めばいい？")
+expectEqual(IntentDetector.detect("何飲もう"), .recommendDrink, "何飲もう")
+expectEqual(IntentDetector.detect("おすすめの飲み物は？"), .recommendDrink, "おすすめの飲み物は？")
+expectEqual(IntentDetector.detect("見守りを開始"), .startDrinkMode, "見守りを開始")
+expectEqual(IntentDetector.detect("ドリンクモード開始。"), .startDrinkMode, "ドリンクモード開始。")
+expectEqual(IntentDetector.detect("見守りを停止"), .stopDrinkMode, "見守りを停止")
+expectEqual(IntentDetector.detect("ドリンク モード 停止"), .stopDrinkMode, "spaces a recogniser inserted between Japanese words")
+expectEqual(IntentDetector.detect("何を飲めばいいか迷う"), .none, "a longer Japanese sentence is not the command")
+expectEqual(IntentDetector.normalizeCommand("「なぜ」？"), "なぜ", "Japanese quotes and question mark go")
+
 print(failures == 0 ? "\nALL PASS" : "\n\(failures) FAILURES")
 exit(failures == 0 ? 0 : 1)

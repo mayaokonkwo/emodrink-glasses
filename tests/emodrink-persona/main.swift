@@ -1,6 +1,7 @@
 //
 // Standalone tests for EmoDrinkPersona. Run from the repo root:
 //   xcrun swiftc \
+//     HermesGlasses/Services/EmoDrink/EmoDrinkLanguage.swift \
 //     HermesGlasses/Services/EmoDrink/PhysiologySnapshot.swift \
 //     HermesGlasses/Services/EmoDrink/DrinkCatalog.swift \
 //     HermesGlasses/Services/EmoDrink/DrinkRecommender.swift \
@@ -50,6 +51,23 @@ expect(EmoDrinkPersona.whyFallback(recommendation: rec) == "Because you slept 6.
 let lateRec = DrinkRecommender.recommend(snapshot: stressed, catalog: catalog, hour: 19, lowSugar: false)!
 expect(EmoDrinkPersona.whyFallback(recommendation: lateRec).hasPrefix("Because you slept 6.4 h, with sleep score 63"), "late why fallback keeps the list form: \(EmoDrinkPersona.whyFallback(recommendation: lateRec))")
 expect(EmoDrinkPersona.firstLineRequest.contains("one sentence"), "first line request asks for one sentence")
+
+// Language (spec section 6): the prompt ENDS with the language rule.
+let promptJa = EmoDrinkPersona.systemPrompt(snapshot: stressed, pick: rec.pick, recommendation: rec, catalog: catalog,
+                                            sourceLabel: "sample: stressed", language: .ja)
+expect(promptJa.hasSuffix("Reply only in Japanese, in plain spoken form (です・ます), one or two short sentences, warm, like a friend at the machine. No lists, no bullet points."), "ja prompt ends with the Japanese rule")
+expect(prompt.hasSuffix("Sound like a friend standing at the machine, one or two short sentences, no lists."), "en prompt ends with the English rule")
+expect(promptJa.contains("Asahi Rokujo Mugicha (アサヒ 六条麦茶)"), "drink names in both scripts")
+expect(promptJa.contains("slept 6.4 h"), "the snapshot summary stays English inside the prompt")
+for word in EmoDrinkPersona.emotionDenylist {
+    expect(!promptJa.lowercased().contains(word), "ja prompt avoids emotion word '\(word)'")
+}
+expect(EmoDrinkPersona.chosenRequest(pick: rec.pick, language: .ja) == "The wearer chose Asahi Rokujo Mugicha (アサヒ 六条麦茶). Say one warm sentence about why it fits, in Japanese.", "chosen request, ja")
+expect(EmoDrinkPersona.chosenRequest(pick: rec.pick, language: .en).hasSuffix("in English."), "chosen request, en")
+let three = Array(rec.ranked.prefix(3))
+let choicesRequest = EmoDrinkPersona.choicesRequest(options: three)
+expect(three.allSatisfy { choicesRequest.contains($0.name) && choicesRequest.contains($0.nameJa) }, "choices request names all three in both scripts")
+expect(choicesRequest.range(of: three[0].name)!.lowerBound < choicesRequest.range(of: three[2].name)!.lowerBound, "choices request keeps the rank order")
 
 print(failures == 0 ? "ALL PASS" : "\(failures) FAILED")
 exit(failures == 0 ? 0 : 1)

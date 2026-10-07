@@ -1,6 +1,7 @@
 //
 // Standalone tests for DrinkRecommender. Run from the repo root:
 //   xcrun swiftc \
+//     HermesGlasses/Services/EmoDrink/EmoDrinkLanguage.swift \
 //     HermesGlasses/Services/EmoDrink/PhysiologySnapshot.swift \
 //     HermesGlasses/Services/EmoDrink/DrinkCatalog.swift \
 //     HermesGlasses/Services/EmoDrink/DrinkRecommender.swift \
@@ -82,6 +83,16 @@ let r3 = DrinkRecommender.reasons(snapshot: stressed, hour: 9)
 expect(r3.contains("resting heart rate 7 over your usual") && r3.contains("stress 71"), "reasons mention heart rate and stress")
 expect(DrinkRecommender.reasons(snapshot: snap(hours: 7, steps: 8400), hour: 9).contains("8,400 steps already"), "reasons mention steps over 8000")
 expect(rec.reasonLine == rec.reasons.prefix(2).joined(separator: ", "), "reasonLine is the first two reasons")
+
+// Japanese reasons (spec section 6). The language never changes the pick.
+let jaReasons = DrinkRecommender.reasons(snapshot: snap(hours: 5.1, score: 48, hrv: 38, base: 52, hr: 61, hrBase: 54, stress: 71), hour: 15, language: .ja)
+expect(jaReasons == ["睡眠5.1時間", "睡眠スコア48", "HRVがいつもより14ms低い", "安静時心拍がいつもより7高い", "ストレス71"], "ja reasons in priority order, at most five: \(jaReasons)")
+expect(DrinkRecommender.reasons(snapshot: snap(hours: 7, steps: 8400), hour: 16, language: .ja) == ["睡眠7.0時間", "すでに8,400歩", "もう15時過ぎ"], "ja steps and the cutoff")
+expect(DrinkRecommender.reasons(snapshot: snap(hours: 7.5), hour: 9, language: .ja) == ["睡眠7.5時間"], "ja reasons without baselines mention only sleep")
+let recJa = DrinkRecommender.recommend(snapshot: stressed, catalog: catalog, hour: 9, lowSugar: false, language: .ja)!
+expect(recJa.pick == rec.pick && recJa.ranked == rec.ranked, "language never changes the pick or the ranking")
+expect(recJa.reasons.first == "睡眠6.4時間" && recJa.reasonLine == "睡眠6.4時間, 睡眠スコア63", "ja reasons ride on the recommendation")
+expect(DrinkRecommender.reasons(snapshot: shortNight, hour: 19) == DrinkRecommender.reasons(snapshot: shortNight, hour: 19, language: .en), "English is the default")
 
 print(failures == 0 ? "ALL PASS" : "\(failures) FAILED")
 exit(failures == 0 ? 0 : 1)

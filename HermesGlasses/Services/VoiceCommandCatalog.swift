@@ -23,7 +23,7 @@ enum VoiceCommandCatalog {
                 id: "emodrink",
                 title: "Pick a drink",
                 summary: "Shows drinks that fit last night's sleep and this morning's body data. Drink mode watches the camera and offers them when a vending machine comes into view.",
-                examples: ["What should I drink", "Start drink mode"],
+                examples: ["What should I drink", "Start drink mode", "何を飲めばいい", "見守りを開始"],
                 phrases: IntentDetector.recommendDrinkCommands.sorted()
                     + IntentDetector.startDrinkModeCommands.sorted()
                     + IntentDetector.stopDrinkModeCommands.sorted()),
@@ -31,10 +31,12 @@ enum VoiceCommandCatalog {
                 id: "emodrink-replies",
                 title: "Talk about the drink",
                 summary: "Heard while a drink is on the lens. Anything else you say is a question for the drink assistant.",
-                examples: ["Why", "Thanks"],
+                examples: ["Why", "Back", "Thanks", "なぜ？", "戻る", "ありがとう"],
                 phrases: EmoDrinkCommands.whyPhrases.sorted()
                     + EmoDrinkCommands.somethingElsePhrases.sorted()
-                    + EmoDrinkCommands.thanksPhrases.sorted()),
+                    + EmoDrinkCommands.thanksPhrases.sorted()
+                    + EmoDrinkCommands.backPhrases.sorted()
+                    + EmoDrinkCommands.stopPhrases.sorted()),
             VoiceCommandGroup(
                 id: "visual",
                 title: "Ask about what you see",

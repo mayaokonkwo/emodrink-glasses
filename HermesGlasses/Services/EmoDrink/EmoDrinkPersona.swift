@@ -21,8 +21,26 @@ enum EmoDrinkPersona {
         body facts it follows from, in plain words. No greeting, no emoji, no second sentence.
         """
 
+    /// The last line of the prompt: how to sound, and in which language.
+    static func languageRule(_ language: Language) -> String {
+        language == .ja
+            ? "Reply only in Japanese, in plain spoken form (です・ます), one or two short sentences, warm, like a friend at the machine. No lists, no bullet points."
+            : "Sound like a friend standing at the machine, one or two short sentences, no lists."
+    }
+
+    /// Step A: offer the three options in one spoken sentence.
+    static func choicesRequest(options: [Drink]) -> String {
+        "Offer these drinks in one short spoken sentence, in this order, naming each once and nothing else: "
+            + options.map { "\($0.name) (\($0.nameJa))" }.joined(separator: ", ") + "."
+    }
+
+    /// Step B: the wearer chose one; one warm sentence about why it fits.
+    static func chosenRequest(pick: Drink, language: Language) -> String {
+        "The wearer chose \(pick.name) (\(pick.nameJa)). Say one warm sentence about why it fits, in \(language == .ja ? "Japanese" : "English")."
+    }
+
     static func systemPrompt(snapshot: PhysiologySnapshot, pick: Drink, recommendation: Recommendation,
-                             catalog: DrinkCatalog, sourceLabel: String) -> String {
+                             catalog: DrinkCatalog, sourceLabel: String, language: Language = .en) -> String {
         let alternates = recommendation.ranked.filter { $0 != pick }.prefix(2)
         let list = catalog.drinks.map { "\($0.name) (\($0.nameJa)): \($0.kind), \(functionList($0)), caffeine \($0.caffeineMg) mg, sugar \($0.sugar.rawValue)" }
         return """
@@ -45,6 +63,8 @@ enum EmoDrinkPersona {
 
         Catalogue:
         \(list.joined(separator: "\n"))
+
+        \(languageRule(language))
         """
     }
 

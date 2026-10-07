@@ -69,7 +69,8 @@ enum DrinkRecommender {
         return total
     }
 
-    static func recommend(snapshot: PhysiologySnapshot, catalog: DrinkCatalog, hour: Int, lowSugar: Bool) -> Recommendation? {
+    static func recommend(snapshot: PhysiologySnapshot, catalog: DrinkCatalog, hour: Int, lowSugar: Bool,
+                          language: Language = .en) -> Recommendation? {
         guard !catalog.drinks.isEmpty else { return nil }
         let state = snapshot.bodyState
         let wants = wantedFunctions(state: state, hour: hour, steps: snapshot.steps)
@@ -82,36 +83,24 @@ enum DrinkRecommender {
             alternates: Array(ranked.dropFirst().prefix(2)),
             ranked: ranked,
             state: state,
-            reasons: reasons(snapshot: snapshot, hour: hour))
+            reasons: reasons(snapshot: snapshot, hour: hour, language: language))
     }
 
-    /// Plain-words fragments in priority order, at most five. Only facts the
-    /// snapshot actually carries: no baselines, no HRV or heart rate line.
-    static func reasons(snapshot s: PhysiologySnapshot, hour: Int) -> [String] {
-        var out: [String] = []
-        out.append("slept \(formatHours(s.sleep.hours)) h")
-        if let score = s.sleep.score { out.append("sleep score \(score)") }
+    /// Plain-words fragments in priority order, at most five, in the wearer's
+    /// language (EmoDrinkStrings renders them). Only facts the snapshot
+    /// actually carries: no baselines, no HRV or heart rate line.
+    static func reasons(snapshot s: PhysiologySnapshot, hour: Int, language: Language = .en) -> [String] {
+        let t = EmoDrinkStrings(language: language)
+        var out = [t.slept(hours: s.sleep.hours)]
+        if let score = s.sleep.score { out.append(t.sleepScore(score)) }
         if let d = s.hrvDelta {
-            if d <= -5 { out.append("HRV \(Int((-d).rounded())) ms under your usual") }
-            else if d >= 5 { out.append("HRV \(Int(d.rounded())) ms above your usual") }
+            if d <= -5 { out.append(t.hrvUnder(ms: Int((-d).rounded()))) }
+            else if d >= 5 { out.append(t.hrvAbove(ms: Int(d.rounded()))) }
         }
-        if let d = s.restingHRDelta, d >= 5 {
-            out.append("resting heart rate \(Int(d.rounded())) over your usual")
-        }
-        if let stress = s.stress, stress >= 65 { out.append("stress \(stress)") }
-        if let steps = s.steps, steps > hydrateStepsThreshold { out.append("\(formatThousands(steps)) steps already") }
-        if hour >= caffeineCutoffHour { out.append("it is after 3 pm") }
+        if let d = s.restingHRDelta, d >= 5 { out.append(t.restingHROver(Int(d.rounded()))) }
+        if let stress = s.stress, stress >= 65 { out.append(t.stress(stress)) }
+        if let steps = s.steps, steps > hydrateStepsThreshold { out.append(t.stepsAlready(steps)) }
+        if hour >= caffeineCutoffHour { out.append(t.afterCutoff) }
         return Array(out.prefix(5))
-    }
-
-    private static func formatHours(_ hours: Double) -> String {
-        String(format: "%.1f", hours)
-    }
-
-    private static func formatThousands(_ n: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.locale = Locale(identifier: "en_US")
-        return formatter.string(from: NSNumber(value: n)) ?? String(n)
     }
 }
