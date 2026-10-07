@@ -1,0 +1,11 @@
+{
+  "date": "2026-10-07",
+  "source": "Garmin Venu 3S",
+  "sleep": { "hours": 6.2, "score": 61 },
+  "hrv_ms": 38,
+  "hrv_baseline_ms": 52,
+  "resting_hr": 58,
+  "resting_hr_baseline": 54,
+  "steps": 4200,
+  "stress": 46
+}
