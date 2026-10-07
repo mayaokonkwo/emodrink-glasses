@@ -968,7 +968,12 @@ final class HermesSessionViewModel {
     }
 
     func showEmoDrinkWatchingOnLens() {
-        displayManager.showEmoDrinkWatching()
+        let t = EmoDrinkStrings(language: activeLanguage)
+        displayManager.showEmoDrinkWatching(heading: t.watchingHeading, text: t.watchingText, hint: t.watchingHint)
+    }
+
+    func showEmoDrinkChoicesOnLens(heading: String, options: [LensDrinkOption], source: String) {
+        displayManager.showEmoDrinkChoices(heading: heading, options: options, source: source)
     }
 
     func clearLens() {

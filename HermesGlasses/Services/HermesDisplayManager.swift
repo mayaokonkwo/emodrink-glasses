@@ -212,11 +212,26 @@ final class HermesDisplayManager {
             }))
     }
 
-    func showEmoDrinkWatching() {
-        content = .emoDrinkWatching
+    func showEmoDrinkWatching(heading: String, text: String, hint: String) {
+        content = .emoDrinkWatching(heading: heading, text: text, hint: hint)
         cancelDwell()
         lastReplyText = ""
-        send(HermesDisplayScreens.emoDrinkWatching())
+        send(HermesDisplayScreens.emoDrinkWatching(heading: heading, text: text, hint: hint))
+    }
+
+    /// Step A. Buttons route through onChooseReplyOption like reply options,
+    /// so a tap submits "2 Calpis Water" to the session, where the EmoDrink
+    /// claimer hands it to DrinkChoiceParser. No dwell: the wearer is deciding.
+    func showEmoDrinkChoices(heading: String, options: [LensDrinkOption], source: String) {
+        let next = LensContent.emoDrinkChoices(heading: heading, options: options, source: source)
+        content = next
+        cancelDwell()
+        lastReplyText = ""
+        send(HermesDisplayScreens.emoDrinkChoices(
+            heading: heading, status: next.statusLine ?? source, choices: next.choices,
+            onChoose: { [weak self] choice in
+                Task { @MainActor in self?.onChooseReplyOption?(choice) }
+            }))
     }
 
     func showNewConversationFlash() {

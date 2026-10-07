@@ -143,17 +143,44 @@ enum HermesDisplayScreens {
         }
     }
 
-    /// Drink mode is on and nothing has been offered yet.
-    static func emoDrinkWatching() -> FlexBox {
+    /// Drink mode is on and nothing has been offered yet. Text arrives in
+    /// the wearer's language.
+    static func emoDrinkWatching(heading: String, text: String, hint: String) -> FlexBox {
         FlexBox(direction: .column, spacing: 8) {
             FlexBox(direction: .row, spacing: 12, crossAlignment: .center) {
                 Icon(name: .fourCornerFrame)
-                Text("Drink mode", style: .heading)
+                Text(heading, style: .heading)
             }
-            Text("Watching for a vending machine", style: .body)
-            Text("Say \"what should I drink\" any time", style: .meta, color: .secondary)
+            Text(text, style: .body)
+            Text(hint, style: .meta, color: .secondary)
         }
         .padding(24)
+    }
+
+    /// Step A: the heading, the first option's reason, and one button per
+    /// drink ("1 Rokujo Mugicha"), stacked so long names stay readable.
+    static func emoDrinkChoices(
+        heading: String, status: String, choices: [ReplyChoice],
+        onChoose: @escaping @Sendable (ReplyChoice) -> Void
+    ) -> FlexBox {
+        var buttons: [Button] = []
+        for choice in choices {
+            buttons.append(Button(label: choice.shortLabel, style: .primary, onClick: { onChoose(choice) }))
+        }
+        return FlexBox(direction: .column, spacing: 12) {
+            FlexBox(direction: .column, spacing: 6) {
+                Text(heading, style: .heading)
+                Text(status, style: .meta, color: .secondary)
+            }
+            .padding(24)
+            .background(.card)
+
+            FlexBox(direction: .column, spacing: 8) {
+                for button in buttons {
+                    button
+                }
+            }
+        }
     }
 
     /// Blank the lens (idle state).

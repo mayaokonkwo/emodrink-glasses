@@ -53,22 +53,11 @@ struct SimulatedLensView: View {
             }
 
             if !content.choices.isEmpty {
-                let choices = content.choices
-                HStack(spacing: 6) {
-                    ForEach(choices.prefix(3)) { choice in
-                        Text(choice.shortLabel)
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .lineLimit(1)
-                            .padding(.horizontal, 9)
-                            .padding(.vertical, 4)
-                            .background(HermesTheme.accent, in: Capsule())
-                    }
-                    if choices.count > 3 {
-                        Text("+\(choices.count - 3)")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(HermesTheme.cream.opacity(0.6))
-                    }
+                let choices = Array(content.choices.prefix(3))
+                // Three drink names rarely fit on one row: fall back to a column.
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 6) { ForEach(choices) { choiceChip($0) } }
+                    VStack(alignment: .leading, spacing: 6) { ForEach(choices) { choiceChip($0) } }
                 }
             }
 
@@ -104,5 +93,16 @@ struct SimulatedLensView: View {
                 .offset(x: 12, y: -9)
         }
         .animation(.easeOut(duration: 0.2), value: content)
+    }
+
+    /// Mirrors a button the wearer sees on the real lens.
+    private func choiceChip(_ choice: ReplyChoice) -> some View {
+        Text(choice.shortLabel)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(.white)
+            .lineLimit(1)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 4)
+            .background(HermesTheme.accent, in: Capsule())
     }
 }
