@@ -96,10 +96,12 @@ three sample profiles under "Use sample data" work offline.
   Phone mode (the iPhone camera as the eye) works without it.
 
 Tap the **EmoDrink** tile on the home screen to see today's numbers, switch
-to sample data, change the feed URL, or toggle drink mode. The bundle id is
-`com.flowsxr.emodrinkglasses`; register it in the Meta Wearables Developer
-Center or build with the Hermes bundle id to reuse an existing
-registration.
+to sample data, change the feed URL, or toggle drink mode. The build uses the bundle id
+`com.flowsxr.hermesglasses`, because the Meta Wearables Developer Center
+ties the app id to that bundle id; the glasses only link to a bundle id
+that is registered there. To ship under another id, register it in the
+Developer Center first and change `PRODUCT_BUNDLE_IDENTIFIER` in the
+project. EmoDrink therefore replaces Hermes Glasses on a phone that has it.
 
 ## Design
 

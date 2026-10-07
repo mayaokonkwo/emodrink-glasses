@@ -330,7 +330,7 @@ glasses walk-up and the HUD are tested by hand.
   hermes-glasses` at `95c1c97` (main, which includes Build Check). Local
   clone at `Documents/GitHub/emodrink-glasses`, commits authored as Maya
   Okonkwo, remote on the mayaokonkwo account only.
-- Product name "EmoDrink Glasses", bundle id `com.flowsxr.emodrinkglasses`,
+- Product name "EmoDrink Glasses", bundle id `com.flowsxr.hermesglasses` (the id registered with the Meta app id; a separate id needs its own Developer Center registration),
   display name on the phone "EmoDrink". The Meta Wearables Developer Center
   ties an app id to a bundle id, so the new bundle id must be registered
   there (or the Hermes bundle id reused in `Config/Hermes.xcconfig` for a

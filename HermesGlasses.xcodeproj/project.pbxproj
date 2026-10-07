@@ -826,7 +826,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.flowsxr.emodrinkglasses;
+				PRODUCT_BUNDLE_IDENTIFIER = com.flowsxr.hermesglasses;
 				PRODUCT_NAME = "EmoDrink Glasses";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				"SWIFT_INCLUDE_PATHS[sdk=iphoneos*]" = "$(inherited) $(SRCROOT)/Vendor/RTK";
@@ -881,7 +881,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.flowsxr.emodrinkglasses;
+				PRODUCT_BUNDLE_IDENTIFIER = com.flowsxr.hermesglasses;
 				PRODUCT_NAME = "EmoDrink Glasses";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
