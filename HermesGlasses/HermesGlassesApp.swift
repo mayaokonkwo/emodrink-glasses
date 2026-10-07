@@ -127,7 +127,10 @@ struct HermesGlassesApp: App {
                     permissions: permissions
                 ) { startSession in
                     onboardingComplete = true
-                    if startSession {
+                    // With "Watch for vending machines" on, ContentView's
+                    // onChange(of: onboardingComplete) starts session and
+                    // drink mode; starting here too would race it.
+                    if startSession && !emoDrinkViewModel.autoWatch {
                         Task { await hermesSessionViewModel.startSession() }
                     }
                 }
