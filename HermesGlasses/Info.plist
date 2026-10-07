@@ -2,22 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleDisplayName</key>
-	<string>EmoDrink</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
-	<key>CFBundlePackageType</key>
-	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
-	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -31,14 +15,10 @@
 			</array>
 		</dict>
 	</array>
-	<key>CFBundleVersion</key>
-	<string>1</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>fb-viewapp</string>
 	</array>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
 	<key>MWDAT</key>
 	<dict>
 		<key>Analytics</key>
@@ -60,24 +40,6 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Hermes connects to your smart glasses (Meta Ray-Ban or AiSee) over Bluetooth.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Hermes Glasses uses this iPhone's camera as the eye in phone mode, when you have no glasses on: the live view stays on your phone and a frame is sent to the assistant only when you ask about what you're looking at.</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Hermes Glasses connects to the Hermes bridge running on your Mac over the local network and receives AiSee glasses video over a local Wi-Fi hotspot.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Hermes Glasses shares your approximate location with the assistant so it can answer questions about where you are, nearby places, and the weather.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Hermes listens through your iPhone or your glasses&apos; microphone so you can talk to your assistant.</string>
-	<key>NSMotionUsageDescription</key>
-	<string>Hermes Glasses tells the assistant whether you're walking, driving, or still, so answers fit what you're doing.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Hermes Glasses saves video clips you record through your AiSee glasses to your photo library.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Hermes Glasses transcribes your speech on this device so your words appear instantly as you talk.</string>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
@@ -87,22 +49,9 @@
 	</array>
 	<key>UIBackgroundTaskIdentifier</key>
 	<string></string>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
 	<key>UISupportedExternalAccessoryProtocols</key>
 	<array>
 		<string>com.meta.ar.wearable</string>
-	</array>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 </dict>
 </plist>

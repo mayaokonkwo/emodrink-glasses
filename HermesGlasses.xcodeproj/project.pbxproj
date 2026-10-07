@@ -15,7 +15,6 @@
 		AAAA00000000000000000006 /* HermesAudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000106 /* HermesAudioManager.swift */; };
 		AAAA00000000000000000007 /* HermesAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000107 /* HermesAPIClient.swift */; };
 		AAAA00000000000000000008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000108 /* Assets.xcassets */; };
-		AAAA00000000000000000E05 /* asahi-drinks.json in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E06 /* asahi-drinks.json */; };
 		AAAA00000000000000000009 /* HermesCameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000112 /* HermesCameraManager.swift */; };
 		AAAA00000000000000000010 /* HermesSpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000113 /* HermesSpeechRecognizer.swift */; };
 		AAAA00000000000000000011 /* HermesSpeechSynthesizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000114 /* HermesSpeechSynthesizer.swift */; };
@@ -25,110 +24,81 @@
 		AAAA00000000000000000015 /* HermesDisplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000118 /* HermesDisplayManager.swift */; };
 		AAAA00000000000000000016 /* DeviceContextFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000119 /* DeviceContextFormatter.swift */; };
 		AAAA00000000000000000017 /* DeviceContextProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000120 /* DeviceContextProvider.swift */; };
-		AAAA00000000000000000018 /* AIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000121 /* AIProvider.swift */; };
-		AAAA00000000000000000019 /* AnthropicProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000122 /* AnthropicProvider.swift */; };
-		AAAA00000000000000000020 /* OpenAICompatibleProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000123 /* OpenAICompatibleProvider.swift */; };
-		AAAA00000000000000000021 /* GeminiProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000124 /* GeminiProvider.swift */; };
-		AAAA00000000000000000022 /* NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000125 /* NavigationTypes.swift */; };
-		AAAA00000000000000000023 /* IntentDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000126 /* IntentDetector.swift */; };
-		AAAA00000000000000000024 /* PolylineEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000127 /* PolylineEncoder.swift */; };
-		AAAA00000000000000000025 /* MapboxStaticMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000128 /* MapboxStaticMap.swift */; };
-		AAAA00000000000000000026 /* WikipediaImageClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000129 /* WikipediaImageClient.swift */; };
-		AAAA00000000000000000027 /* MapCredentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000130 /* MapCredentials.swift */; };
-		AAAA00000000000000000028 /* NavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000131 /* NavigationController.swift */; };
-		AAAA00000000000000000029 /* Encounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000132 /* Encounter.swift */; };
-		AAAA00000000000000000848 /* EncounterEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000847 /* EncounterEvent.swift */; };
-		AAAA00000000000000000850 /* BadgeParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000849 /* BadgeParser.swift */; };
-		AAAA00000000000000000852 /* EncounterTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000851 /* EncounterTimeline.swift */; };
-		AAAA00000000000000000854 /* BadgeReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000853 /* BadgeReader.swift */; };
-		AAAA00000000000000000860 /* TranscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000859 /* TranscriptionService.swift */; };
-		AAAA00000000000000000858 /* ConversationRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000857 /* ConversationRecorder.swift */; };
-		AAAA00000000000000000856 /* BadgeRegion.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000855 /* BadgeRegion.swift */; };
-		AAAA00000000000000000862 /* BadgeCrop.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000861 /* BadgeCrop.swift */; };
-		AAAA00000000000000000864 /* BarcodeReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000863 /* BarcodeReader.swift */; };
-		AAAA00000000000000000868 /* BadgePortrait.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000867 /* BadgePortrait.swift */; };
-		AAAA00000000000000000866 /* BadgeDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000865 /* BadgeDetector.swift */; };
-		AAAA00000000000000000030 /* EncounterStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000133 /* EncounterStore.swift */; };
-		AAAA00000000000000000039 /* ConversationCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000142 /* ConversationCapture.swift */; };
+		AAAA00000000000000000018 /* Providers/AIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000121 /* Providers/AIProvider.swift */; };
+		AAAA00000000000000000019 /* Providers/AnthropicProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000122 /* Providers/AnthropicProvider.swift */; };
+		AAAA00000000000000000020 /* Providers/OpenAICompatibleProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000123 /* Providers/OpenAICompatibleProvider.swift */; };
+		AAAA00000000000000000021 /* Providers/GeminiProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000124 /* Providers/GeminiProvider.swift */; };
+		AAAA00000000000000000022 /* Navigation/NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000125 /* Navigation/NavigationTypes.swift */; };
+		AAAA00000000000000000023 /* Navigation/IntentDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000126 /* Navigation/IntentDetector.swift */; };
+		AAAA00000000000000000024 /* Navigation/PolylineEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000127 /* Navigation/PolylineEncoder.swift */; };
+		AAAA00000000000000000025 /* Navigation/MapboxStaticMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000128 /* Navigation/MapboxStaticMap.swift */; };
+		AAAA00000000000000000026 /* Navigation/WikipediaImageClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000129 /* Navigation/WikipediaImageClient.swift */; };
+		AAAA00000000000000000027 /* Navigation/MapCredentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000130 /* Navigation/MapCredentials.swift */; };
+		AAAA00000000000000000028 /* Navigation/NavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000131 /* Navigation/NavigationController.swift */; };
+		AAAA00000000000000000029 /* Social/Encounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000132 /* Social/Encounter.swift */; };
+		AAAA00000000000000000030 /* Social/EncounterStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000133 /* Social/EncounterStore.swift */; };
 		AAAA00000000000000000031 /* PeopleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000134 /* PeopleView.swift */; };
 		AAAA00000000000000000032 /* VoiceCommandCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000135 /* VoiceCommandCatalog.swift */; };
+		AAAA00000000000000000033 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000136 /* SettingsView.swift */; };
+		AAAA00000000000000000034 /* Lens/DwellTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000137 /* Lens/DwellTracker.swift */; };
+		AAAA00000000000000000035 /* Lens/ObjectDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000138 /* Lens/ObjectDetector.swift */; };
+		AAAA00000000000000000036 /* LensViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000139 /* LensViewModel.swift */; };
+		AAAA00000000000000000037 /* LensView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000140 /* LensView.swift */; };
+		AAAA00000000000000000038 /* yolo11n.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000141 /* yolo11n.mlpackage */; };
+		AAAA00000000000000000039 /* Social/ConversationCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000142 /* Social/ConversationCapture.swift */; };
+		AAAA00000000000000000801 /* MWDATCore in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA00000000000000000701 /* MWDATCore */; };
+		AAAA00000000000000000802 /* MWDATCamera in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA00000000000000000702 /* MWDATCamera */; };
+		AAAA00000000000000000803 /* MWDATMockDevice in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA00000000000000000703 /* MWDATMockDevice */; };
+		AAAA00000000000000000804 /* MWDATDisplay in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA00000000000000000704 /* MWDATDisplay */; };
+		AAAA00000000000000000805 /* Lens/LensLogAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000806 /* Lens/LensLogAggregator.swift */; };
+		AAAA00000000000000000807 /* Lens/LensSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000808 /* Lens/LensSession.swift */; };
+		AAAA00000000000000000809 /* Lens/LensSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000810 /* Lens/LensSessionStore.swift */; };
+		AAAA00000000000000000811 /* Lens/LensPDFRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000812 /* Lens/LensPDFRenderer.swift */; };
+		AAAA00000000000000000813 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000814 /* ShareSheet.swift */; };
+		AAAA00000000000000000815 /* ObjectLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000816 /* ObjectLogView.swift */; };
+		AAAA00000000000000000817 /* HermesDesign.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000818 /* HermesDesign.swift */; };
+		AAAA00000000000000000819 /* NavigationMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000820 /* NavigationMapView.swift */; };
 		AAAA00000000000000000821 /* LensContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000822 /* LensContent.swift */; };
-		AAAA00000000000000000841 /* ChoiceDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000842 /* ChoiceDetector.swift */; };
-		AAAA00000000000000000869 /* PersonLookupGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000870 /* PersonLookupGate.swift */; };
-		AAAA00000000000000000877 /* RosterPerson.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000878 /* RosterPerson.swift */; };
-		AAAA00000000000000000879 /* RosterImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000880 /* RosterImporter.swift */; };
-		AAAA00000000000000000881 /* RosterStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000882 /* RosterStore.swift */; };
-		AAAA00000000000000000883 /* FaceMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000884 /* FaceMatcher.swift */; };
-		AAAA00000000000000000885 /* FaceAlignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000886 /* FaceAlignment.swift */; };
-		AAAA0000000000000000887 /* FaceEmbedder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000888 /* FaceEmbedder.swift */; };
-		AAAA0000000000000000893 /* FaceEmbedding.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000894 /* FaceEmbedding.swift */; };
-		AAAA0000000000000000889 /* RosterImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000890 /* RosterImport.swift */; };
-		AAAA0000000000000000891 /* RosterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000892 /* RosterView.swift */; };
-		AAAA00000000000000000873 /* LookupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000874 /* LookupViewModel.swift */; };
-		AAAA00000000000000000A77 /* BuildCheckViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A78 /* BuildCheckViewModel.swift */; };
-		AAAA00000000000000000E15 /* EmoDrinkViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */; };
-		AAAA00000000000000000875 /* LookupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000876 /* LookupView.swift */; };
-		AAAA00000000000000000A7F /* BuildRunReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A80 /* BuildRunReviewView.swift */; };
-		AAAA00000000000000000A7D /* BuildRunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A7E /* BuildRunView.swift */; };
-		AAAA00000000000000000A7B /* ProcedureEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A7C /* ProcedureEditorView.swift */; };
-		AAAA00000000000000000A79 /* BuildCheckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A7A /* BuildCheckView.swift */; };
-		AAAA00000000000000000E17 /* EmoDrinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E18 /* EmoDrinkView.swift */; };
-		AAAA00000000000000000843 /* HermesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000844 /* HermesApp.swift */; };
-		AAAA00000000000000000845 /* AppDrawerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000846 /* AppDrawerView.swift */; };
 		AAAA00000000000000000823 /* VisionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000824 /* VisionSource.swift */; };
-		AAAA00000000000000000835 /* VisionRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000836 /* VisionRouting.swift */; };
-		AAAA00000000000000000837 /* Bearing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000838 /* Bearing.swift */; };
-		AAAA00000000000000000839 /* PlaceSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000840 /* PlaceSearch.swift */; };
 		AAAA00000000000000000825 /* PhoneCameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000826 /* PhoneCameraManager.swift */; };
 		AAAA00000000000000000827 /* PermissionsCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000828 /* PermissionsCoordinator.swift */; };
 		AAAA00000000000000000829 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000830 /* OnboardingView.swift */; };
 		AAAA00000000000000000831 /* SimulatedLensView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000832 /* SimulatedLensView.swift */; };
 		AAAA00000000000000000833 /* PhoneModeSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000834 /* PhoneModeSessionView.swift */; };
-		AAAA00000000000000000033 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000136 /* SettingsView.swift */; };
-		AAAA00000000000000000034 /* DwellTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000137 /* DwellTracker.swift */; };
-		AAAA00000000000000000038 /* yolo11n.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000141 /* yolo11n.mlpackage */; };
-		AAAA0000000000000000895 /* faceid.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000896 /* faceid.mlpackage */; };
-		AAAA00000000000000000035 /* ObjectDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000138 /* ObjectDetector.swift */; };
-		AAAA00000000000000000036 /* LensViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000139 /* LensViewModel.swift */; };
-		AAAA00000000000000000037 /* LensView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000140 /* LensView.swift */; };
-		AAAA00000000000000000815 /* ObjectLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000816 /* ObjectLogView.swift */; };
-		AAAA00000000000000000805 /* LensLogAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000806 /* LensLogAggregator.swift */; };
-		AAAA00000000000000000807 /* LensSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000808 /* LensSession.swift */; };
-		AAAA00000000000000000809 /* LensSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000810 /* LensSessionStore.swift */; };
-		AAAA00000000000000000811 /* LensPDFRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000812 /* LensPDFRenderer.swift */; };
-		AAAA00000000000000000813 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000814 /* ShareSheet.swift */; };
-		AAAA00000000000000000817 /* HermesDesign.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000818 /* HermesDesign.swift */; };
-		AAAA00000000000000000819 /* NavigationMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000820 /* NavigationMapView.swift */; };
-		AAAA00000000000000000801 /* MWDATCore in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA00000000000000000701 /* MWDATCore */; };
-		AAAA00000000000000000802 /* MWDATCamera in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA00000000000000000702 /* MWDATCamera */; };
-		AAAA00000000000000000803 /* MWDATMockDevice in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA00000000000000000703 /* MWDATMockDevice */; };
-		AAAA00000000000000000804 /* MWDATDisplay in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA00000000000000000704 /* MWDATDisplay */; };
-		AAAA00000000000000000A01 /* AiSeeConnectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A0A /* AiSeeConnectionService.swift */; };
-		AAAA00000000000000000A02 /* AiSeeDeviceCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A0B /* AiSeeDeviceCoordinator.swift */; };
-		AAAA00000000000000000A54 /* AiSeeCameraSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A53 /* AiSeeCameraSource.swift */; };
-		AAAA00000000000000000A03 /* AiSeeH264Decoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A0C /* AiSeeH264Decoder.swift */; };
-		AAAA00000000000000000A04 /* AiSeeLiveStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A0D /* AiSeeLiveStream.swift */; };
-		AAAA00000000000000000A05 /* AiSeeMicrophone.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A0E /* AiSeeMicrophone.swift */; };
-		AAAA00000000000000000A06 /* AiSeePCMAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A0F /* AiSeePCMAdapter.swift */; };
-		AAAA00000000000000000A07 /* AiSeePhotoCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A10 /* AiSeePhotoCapture.swift */; };
-		AAAA00000000000000000A08 /* AiSeeSequencing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A11 /* AiSeeSequencing.swift */; };
-		AAAA00000000000000000A09 /* AiSeeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A12 /* AiSeeTypes.swift */; };
-		AAAA00000000000000000A57 /* AiSeeClipRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */; };
-		AAAA00000000000000000A75 /* BuildRunPDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A76 /* BuildRunPDF.swift */; };
-		AAAA00000000000000000A73 /* ProcedureImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A74 /* ProcedureImporter.swift */; };
-		AAAA00000000000000000A71 /* BuildChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A72 /* BuildChecker.swift */; };
-		AAAA00000000000000000A6F /* BuildCheckVision.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A70 /* BuildCheckVision.swift */; };
-		AAAA00000000000000000A6D /* ChimeTone.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A6E /* ChimeTone.swift */; };
-		AAAA00000000000000000A6B /* BuildRunStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A6C /* BuildRunStore.swift */; };
-		AAAA00000000000000000A69 /* ProcedureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A6A /* ProcedureStore.swift */; };
-		AAAA00000000000000000A67 /* BuildRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A68 /* BuildRun.swift */; };
-		AAAA00000000000000000A65 /* BuildRunTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A66 /* BuildRunTracker.swift */; };
-		AAAA00000000000000000A63 /* ChangeGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A64 /* ChangeGate.swift */; };
-		AAAA00000000000000000A61 /* AlertPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A62 /* AlertPolicy.swift */; };
-		AAAA00000000000000000A5F /* BuildCheckPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A60 /* BuildCheckPrompt.swift */; };
-		AAAA00000000000000000A5D /* ProcedureParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A5E /* ProcedureParser.swift */; };
-		AAAA00000000000000000A5B /* Procedure.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A5C /* Procedure.swift */; };
-		AAAA00000000000000000A59 /* BuildCheckJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A5A /* BuildCheckJSON.swift */; };
+		AAAA00000000000000000835 /* VisionRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000836 /* VisionRouting.swift */; };
+		AAAA00000000000000000837 /* Navigation/Bearing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000838 /* Navigation/Bearing.swift */; };
+		AAAA00000000000000000839 /* Navigation/PlaceSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000840 /* Navigation/PlaceSearch.swift */; };
+		AAAA00000000000000000841 /* ChoiceDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000842 /* ChoiceDetector.swift */; };
+		AAAA00000000000000000843 /* HermesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000844 /* HermesApp.swift */; };
+		AAAA00000000000000000845 /* AppDrawerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000846 /* AppDrawerView.swift */; };
+		AAAA00000000000000000848 /* Social/EncounterEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000847 /* Social/EncounterEvent.swift */; };
+		AAAA00000000000000000850 /* Social/BadgeParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000849 /* Social/BadgeParser.swift */; };
+		AAAA00000000000000000852 /* Social/EncounterTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000851 /* Social/EncounterTimeline.swift */; };
+		AAAA00000000000000000854 /* Social/BadgeReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000853 /* Social/BadgeReader.swift */; };
+		AAAA00000000000000000856 /* Social/BadgeRegion.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000855 /* Social/BadgeRegion.swift */; };
+		AAAA00000000000000000858 /* Social/ConversationRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000857 /* Social/ConversationRecorder.swift */; };
+		AAAA00000000000000000860 /* Social/TranscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000859 /* Social/TranscriptionService.swift */; };
+		AAAA00000000000000000862 /* Social/BadgeCrop.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000861 /* Social/BadgeCrop.swift */; };
+		AAAA00000000000000000864 /* Social/BarcodeReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000863 /* Social/BarcodeReader.swift */; };
+		AAAA00000000000000000866 /* Social/BadgeDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000865 /* Social/BadgeDetector.swift */; };
+		AAAA00000000000000000868 /* Social/BadgePortrait.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000867 /* Social/BadgePortrait.swift */; };
+		AAAA00000000000000000869 /* PersonLookupGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000870 /* PersonLookupGate.swift */; };
+		AAAA00000000000000000873 /* LookupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000874 /* LookupViewModel.swift */; };
+		AAAA00000000000000000875 /* LookupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000876 /* LookupView.swift */; };
+		AAAA00000000000000000877 /* People/RosterPerson.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000878 /* People/RosterPerson.swift */; };
+		AAAA00000000000000000879 /* People/RosterImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000880 /* People/RosterImporter.swift */; };
+		AAAA00000000000000000881 /* People/RosterStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000882 /* People/RosterStore.swift */; };
+		AAAA00000000000000000883 /* People/FaceMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000884 /* People/FaceMatcher.swift */; };
+		AAAA00000000000000000885 /* People/FaceAlignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000886 /* People/FaceAlignment.swift */; };
+		AAAA00000000000000000A01 /* AiSee/AiSeeConnectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A0A /* AiSee/AiSeeConnectionService.swift */; };
+		AAAA00000000000000000A02 /* AiSee/AiSeeDeviceCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A0B /* AiSee/AiSeeDeviceCoordinator.swift */; };
+		AAAA00000000000000000A03 /* AiSee/AiSeeH264Decoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A0C /* AiSee/AiSeeH264Decoder.swift */; };
+		AAAA00000000000000000A04 /* AiSee/AiSeeLiveStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A0D /* AiSee/AiSeeLiveStream.swift */; };
+		AAAA00000000000000000A05 /* AiSee/AiSeeMicrophone.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A0E /* AiSee/AiSeeMicrophone.swift */; };
+		AAAA00000000000000000A06 /* AiSee/AiSeePCMAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A0F /* AiSee/AiSeePCMAdapter.swift */; };
+		AAAA00000000000000000A07 /* AiSee/AiSeePhotoCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A10 /* AiSee/AiSeePhotoCapture.swift */; };
+		AAAA00000000000000000A08 /* AiSee/AiSeeSequencing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A11 /* AiSee/AiSeeSequencing.swift */; };
+		AAAA00000000000000000A09 /* AiSee/AiSeeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A12 /* AiSee/AiSeeTypes.swift */; };
 		AAAA00000000000000000A30 /* RTKAIDeviceConnection.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A20 /* RTKAIDeviceConnection.framework */; };
 		AAAA00000000000000000A31 /* RTKAudioConnectSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A21 /* RTKAudioConnectSDK.framework */; };
 		AAAA00000000000000000A32 /* RTKAudioStreaming.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A22 /* RTKAudioStreaming.framework */; };
@@ -148,16 +118,46 @@
 		AAAA00000000000000000A47 /* libavutil.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A27 /* libavutil.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AAAA00000000000000000A48 /* libswresample.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A28 /* libswresample.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AAAA00000000000000000A52 /* GlassesVendor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A51 /* GlassesVendor.swift */; };
+		AAAA00000000000000000A54 /* AiSee/AiSeeCameraSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A53 /* AiSee/AiSeeCameraSource.swift */; };
 		AAAA00000000000000000A56 /* GlassesKeyMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A55 /* GlassesKeyMap.swift */; };
-		AAAA00000000000000000E01 /* PhysiologySnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E02 /* PhysiologySnapshot.swift */; };
-		AAAA00000000000000000E03 /* DrinkCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E04 /* DrinkCatalog.swift */; };
-		AAAA00000000000000000E07 /* DrinkRecommender.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E08 /* DrinkRecommender.swift */; };
-		AAAA00000000000000000E09 /* PhysiologySource.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E0A /* PhysiologySource.swift */; };
-		AAAA00000000000000000E0B /* PhysiologyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E0C /* PhysiologyStore.swift */; };
-		AAAA00000000000000000E0D /* VendingMachineGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E0E /* VendingMachineGate.swift */; };
-		AAAA00000000000000000E0F /* VendingMachineDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E10 /* VendingMachineDetector.swift */; };
-		AAAA00000000000000000E11 /* EmoDrinkPersona.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E12 /* EmoDrinkPersona.swift */; };
-		AAAA00000000000000000E13 /* EmoDrinkCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E14 /* EmoDrinkCommands.swift */; };
+		AAAA00000000000000000A57 /* AiSee/AiSeeClipRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A58 /* AiSee/AiSeeClipRecorder.swift */; };
+		AAAA00000000000000000A59 /* BuildCheck/BuildCheckJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A5A /* BuildCheck/BuildCheckJSON.swift */; };
+		AAAA00000000000000000A5B /* BuildCheck/Procedure.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A5C /* BuildCheck/Procedure.swift */; };
+		AAAA00000000000000000A5D /* BuildCheck/ProcedureParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A5E /* BuildCheck/ProcedureParser.swift */; };
+		AAAA00000000000000000A5F /* BuildCheck/BuildCheckPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A60 /* BuildCheck/BuildCheckPrompt.swift */; };
+		AAAA00000000000000000A61 /* BuildCheck/AlertPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A62 /* BuildCheck/AlertPolicy.swift */; };
+		AAAA00000000000000000A63 /* BuildCheck/ChangeGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A64 /* BuildCheck/ChangeGate.swift */; };
+		AAAA00000000000000000A65 /* BuildCheck/BuildRunTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A66 /* BuildCheck/BuildRunTracker.swift */; };
+		AAAA00000000000000000A67 /* BuildCheck/BuildRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A68 /* BuildCheck/BuildRun.swift */; };
+		AAAA00000000000000000A69 /* BuildCheck/ProcedureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A6A /* BuildCheck/ProcedureStore.swift */; };
+		AAAA00000000000000000A6B /* BuildCheck/BuildRunStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A6C /* BuildCheck/BuildRunStore.swift */; };
+		AAAA00000000000000000A6D /* BuildCheck/ChimeTone.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A6E /* BuildCheck/ChimeTone.swift */; };
+		AAAA00000000000000000A6F /* BuildCheck/BuildCheckVision.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A70 /* BuildCheck/BuildCheckVision.swift */; };
+		AAAA00000000000000000A71 /* BuildCheck/BuildChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A72 /* BuildCheck/BuildChecker.swift */; };
+		AAAA00000000000000000A73 /* BuildCheck/ProcedureImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A74 /* BuildCheck/ProcedureImporter.swift */; };
+		AAAA00000000000000000A75 /* BuildCheck/BuildRunPDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A76 /* BuildCheck/BuildRunPDF.swift */; };
+		AAAA00000000000000000A77 /* BuildCheckViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A78 /* BuildCheckViewModel.swift */; };
+		AAAA00000000000000000A79 /* BuildCheckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A7A /* BuildCheckView.swift */; };
+		AAAA00000000000000000A7B /* ProcedureEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A7C /* ProcedureEditorView.swift */; };
+		AAAA00000000000000000A7D /* BuildRunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A7E /* BuildRunView.swift */; };
+		AAAA00000000000000000A7F /* BuildRunReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000A80 /* BuildRunReviewView.swift */; };
+		AAAA00000000000000000E01 /* EmoDrink/PhysiologySnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E02 /* EmoDrink/PhysiologySnapshot.swift */; };
+		AAAA00000000000000000E03 /* EmoDrink/DrinkCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E04 /* EmoDrink/DrinkCatalog.swift */; };
+		AAAA00000000000000000E05 /* Resources/EmoDrink/asahi-drinks.json in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E06 /* Resources/EmoDrink/asahi-drinks.json */; };
+		AAAA00000000000000000E07 /* EmoDrink/DrinkRecommender.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E08 /* EmoDrink/DrinkRecommender.swift */; };
+		AAAA00000000000000000E09 /* EmoDrink/PhysiologySource.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E0A /* EmoDrink/PhysiologySource.swift */; };
+		AAAA00000000000000000E0B /* EmoDrink/PhysiologyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E0C /* EmoDrink/PhysiologyStore.swift */; };
+		AAAA00000000000000000E0D /* EmoDrink/VendingMachineGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E0E /* EmoDrink/VendingMachineGate.swift */; };
+		AAAA00000000000000000E0F /* EmoDrink/VendingMachineDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E10 /* EmoDrink/VendingMachineDetector.swift */; };
+		AAAA00000000000000000E11 /* EmoDrink/EmoDrinkPersona.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E12 /* EmoDrink/EmoDrinkPersona.swift */; };
+		AAAA00000000000000000E13 /* EmoDrink/EmoDrinkCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E14 /* EmoDrink/EmoDrinkCommands.swift */; };
+		AAAA00000000000000000E15 /* EmoDrinkViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */; };
+		AAAA00000000000000000E17 /* EmoDrinkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E18 /* EmoDrinkView.swift */; };
+		AAAA0000000000000000887 /* People/FaceEmbedder.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000888 /* People/FaceEmbedder.swift */; };
+		AAAA0000000000000000889 /* People/RosterImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000890 /* People/RosterImport.swift */; };
+		AAAA0000000000000000891 /* RosterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000892 /* RosterView.swift */; };
+		AAAA0000000000000000893 /* People/FaceEmbedding.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000894 /* People/FaceEmbedding.swift */; };
+		AAAA0000000000000000895 /* faceid.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = AAAA0000000000000000896 /* faceid.mlpackage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -191,11 +191,9 @@
 		AAAA00000000000000000106 /* HermesAudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesAudioManager.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000107 /* HermesAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesAPIClient.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000108 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		AAAA00000000000000000E06 /* asahi-drinks.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Resources/EmoDrink/asahi-drinks.json; sourceTree = "<group>"; };
 		AAAA00000000000000000109 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		AAAA0000000000000000012A /* Hermes.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Hermes.xcconfig; sourceTree = SOURCE_ROOT; };
 		AAAA00000000000000000110 /* HermesGlasses.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HermesGlasses.entitlements; sourceTree = "<group>"; };
-		AAAA00000000000000000111 /* Hermes Glasses.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Hermes Glasses.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AAAA00000000000000000111 /* EmoDrink Glasses.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "EmoDrink Glasses.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAAA00000000000000000112 /* HermesCameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesCameraManager.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000113 /* HermesSpeechRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesSpeechRecognizer.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000114 /* HermesSpeechSynthesizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesSpeechSynthesizer.swift; sourceTree = "<group>"; };
@@ -205,106 +203,78 @@
 		AAAA00000000000000000118 /* HermesDisplayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesDisplayManager.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000119 /* DeviceContextFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceContextFormatter.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000120 /* DeviceContextProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceContextProvider.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000121 /* AIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Providers/AIProvider.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000122 /* AnthropicProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Providers/AnthropicProvider.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000123 /* OpenAICompatibleProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Providers/OpenAICompatibleProvider.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000124 /* GeminiProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Providers/GeminiProvider.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000125 /* NavigationTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/NavigationTypes.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000126 /* IntentDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/IntentDetector.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000127 /* PolylineEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/PolylineEncoder.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000128 /* MapboxStaticMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/MapboxStaticMap.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000129 /* WikipediaImageClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/WikipediaImageClient.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000130 /* MapCredentials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/MapCredentials.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000131 /* NavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/NavigationController.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000132 /* Encounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/Encounter.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000847 /* EncounterEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/EncounterEvent.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000849 /* BadgeParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/BadgeParser.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000851 /* EncounterTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/EncounterTimeline.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000853 /* BadgeReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/BadgeReader.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000859 /* TranscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/TranscriptionService.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000857 /* ConversationRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/ConversationRecorder.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000855 /* BadgeRegion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/BadgeRegion.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000861 /* BadgeCrop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/BadgeCrop.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000863 /* BarcodeReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/BarcodeReader.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000867 /* BadgePortrait.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/BadgePortrait.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000865 /* BadgeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/BadgeDetector.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000133 /* EncounterStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/EncounterStore.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000142 /* ConversationCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/ConversationCapture.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000121 /* Providers/AIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Providers/AIProvider.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000122 /* Providers/AnthropicProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Providers/AnthropicProvider.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000123 /* Providers/OpenAICompatibleProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Providers/OpenAICompatibleProvider.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000124 /* Providers/GeminiProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Providers/GeminiProvider.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000125 /* Navigation/NavigationTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/NavigationTypes.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000126 /* Navigation/IntentDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/IntentDetector.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000127 /* Navigation/PolylineEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/PolylineEncoder.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000128 /* Navigation/MapboxStaticMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/MapboxStaticMap.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000129 /* Navigation/WikipediaImageClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/WikipediaImageClient.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000012A /* Config/Hermes.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Hermes.xcconfig; sourceTree = SOURCE_ROOT; };
+		AAAA00000000000000000130 /* Navigation/MapCredentials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/MapCredentials.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000131 /* Navigation/NavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/NavigationController.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000132 /* Social/Encounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/Encounter.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000133 /* Social/EncounterStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/EncounterStore.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000134 /* PeopleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeopleView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000135 /* VoiceCommandCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandCatalog.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000136 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000137 /* Lens/DwellTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lens/DwellTracker.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000138 /* Lens/ObjectDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lens/ObjectDetector.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000139 /* LensViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensViewModel.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000140 /* LensView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000141 /* yolo11n.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = yolo11n.mlpackage; sourceTree = "<group>"; };
+		AAAA00000000000000000142 /* Social/ConversationCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/ConversationCapture.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000806 /* Lens/LensLogAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lens/LensLogAggregator.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000808 /* Lens/LensSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lens/LensSession.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000810 /* Lens/LensSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lens/LensSessionStore.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000812 /* Lens/LensPDFRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lens/LensPDFRenderer.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000814 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000816 /* ObjectLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectLogView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000818 /* HermesDesign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesDesign.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000820 /* NavigationMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationMapView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000822 /* LensContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensContent.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000842 /* ChoiceDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChoiceDetector.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000870 /* PersonLookupGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonLookupGate.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000878 /* RosterPerson.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/RosterPerson.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000880 /* RosterImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/RosterImporter.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000882 /* RosterStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/RosterStore.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000884 /* FaceMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/FaceMatcher.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000886 /* FaceAlignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/FaceAlignment.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000888 /* FaceEmbedder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/FaceEmbedder.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000894 /* FaceEmbedding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/FaceEmbedding.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000890 /* RosterImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/RosterImport.swift; sourceTree = "<group>"; };
-		AAAA0000000000000000892 /* RosterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RosterView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000874 /* LookupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LookupViewModel.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A78 /* BuildCheckViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheckViewModel.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrinkViewModel.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000876 /* LookupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LookupView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A80 /* BuildRunReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildRunReviewView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A7E /* BuildRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildRunView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A7C /* ProcedureEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcedureEditorView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A7A /* BuildCheckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheckView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000E18 /* EmoDrinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrinkView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000844 /* HermesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesApp.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000846 /* AppDrawerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDrawerView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000824 /* VisionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionSource.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000836 /* VisionRouting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionRouting.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000838 /* Bearing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/Bearing.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000840 /* PlaceSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/PlaceSearch.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000826 /* PhoneCameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneCameraManager.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000828 /* PermissionsCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsCoordinator.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000830 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000832 /* SimulatedLensView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatedLensView.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000834 /* PhoneModeSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneModeSessionView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000136 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000137 /* DwellTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lens/DwellTracker.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000141 /* yolo11n.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = yolo11n.mlpackage; sourceTree = "<group>"; };
-		AAAA0000000000000000896 /* faceid.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = faceid.mlpackage; sourceTree = "<group>"; };
-		AAAA00000000000000000138 /* ObjectDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lens/ObjectDetector.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000139 /* LensViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensViewModel.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000140 /* LensView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000816 /* ObjectLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectLogView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000806 /* LensLogAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lens/LensLogAggregator.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000808 /* LensSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lens/LensSession.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000810 /* LensSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lens/LensSessionStore.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000812 /* LensPDFRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lens/LensPDFRenderer.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000814 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000818 /* HermesDesign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesDesign.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000820 /* NavigationMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationMapView.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A53 /* AiSeeCameraSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeCameraSource.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A0A /* AiSeeConnectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeConnectionService.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A0B /* AiSeeDeviceCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeDeviceCoordinator.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A0C /* AiSeeH264Decoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeH264Decoder.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A0D /* AiSeeLiveStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeLiveStream.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A0E /* AiSeeMicrophone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeMicrophone.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A0F /* AiSeePCMAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeePCMAdapter.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A10 /* AiSeePhotoCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeePhotoCapture.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A11 /* AiSeeSequencing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeSequencing.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A12 /* AiSeeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeTypes.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeClipRecorder.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A76 /* BuildRunPDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRunPDF.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A74 /* ProcedureImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ProcedureImporter.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A72 /* BuildChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildChecker.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A70 /* BuildCheckVision.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildCheckVision.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A6E /* ChimeTone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ChimeTone.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A6C /* BuildRunStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRunStore.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A6A /* ProcedureStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ProcedureStore.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A68 /* BuildRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRun.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A66 /* BuildRunTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRunTracker.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A64 /* ChangeGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ChangeGate.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A62 /* AlertPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/AlertPolicy.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A60 /* BuildCheckPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildCheckPrompt.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A5E /* ProcedureParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ProcedureParser.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A5C /* Procedure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/Procedure.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000A5A /* BuildCheckJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildCheckJSON.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000836 /* VisionRouting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionRouting.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000838 /* Navigation/Bearing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/Bearing.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000840 /* Navigation/PlaceSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/PlaceSearch.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000842 /* ChoiceDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChoiceDetector.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000844 /* HermesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesApp.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000846 /* AppDrawerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDrawerView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000847 /* Social/EncounterEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/EncounterEvent.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000849 /* Social/BadgeParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/BadgeParser.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000851 /* Social/EncounterTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/EncounterTimeline.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000853 /* Social/BadgeReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/BadgeReader.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000855 /* Social/BadgeRegion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/BadgeRegion.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000857 /* Social/ConversationRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/ConversationRecorder.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000859 /* Social/TranscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/TranscriptionService.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000861 /* Social/BadgeCrop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/BadgeCrop.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000863 /* Social/BarcodeReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/BarcodeReader.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000865 /* Social/BadgeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/BadgeDetector.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000867 /* Social/BadgePortrait.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social/BadgePortrait.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000870 /* PersonLookupGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonLookupGate.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000874 /* LookupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LookupViewModel.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000876 /* LookupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LookupView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000878 /* People/RosterPerson.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/RosterPerson.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000880 /* People/RosterImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/RosterImporter.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000882 /* People/RosterStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/RosterStore.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000884 /* People/FaceMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/FaceMatcher.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000886 /* People/FaceAlignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/FaceAlignment.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A0A /* AiSee/AiSeeConnectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeConnectionService.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A0B /* AiSee/AiSeeDeviceCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeDeviceCoordinator.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A0C /* AiSee/AiSeeH264Decoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeH264Decoder.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A0D /* AiSee/AiSeeLiveStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeLiveStream.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A0E /* AiSee/AiSeeMicrophone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeMicrophone.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A0F /* AiSee/AiSeePCMAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeePCMAdapter.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A10 /* AiSee/AiSeePhotoCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeePhotoCapture.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A11 /* AiSee/AiSeeSequencing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeSequencing.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A12 /* AiSee/AiSeeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeTypes.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A20 /* RTKAIDeviceConnection.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = RTKAIDeviceConnection.framework; sourceTree = "<group>"; };
 		AAAA00000000000000000A21 /* RTKAudioConnectSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = RTKAudioConnectSDK.framework; sourceTree = "<group>"; };
 		AAAA00000000000000000A22 /* RTKAudioStreaming.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = RTKAudioStreaming.framework; sourceTree = "<group>"; };
@@ -315,16 +285,46 @@
 		AAAA00000000000000000A27 /* libavutil.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = libavutil.framework; sourceTree = "<group>"; };
 		AAAA00000000000000000A28 /* libswresample.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = libswresample.framework; sourceTree = "<group>"; };
 		AAAA00000000000000000A51 /* GlassesVendor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesVendor.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A53 /* AiSee/AiSeeCameraSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeCameraSource.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000A55 /* GlassesKeyMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesKeyMap.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000E02 /* PhysiologySnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/PhysiologySnapshot.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000E04 /* DrinkCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/DrinkCatalog.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000E08 /* DrinkRecommender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/DrinkRecommender.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000E0A /* PhysiologySource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/PhysiologySource.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000E0C /* PhysiologyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/PhysiologyStore.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000E0E /* VendingMachineGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/VendingMachineGate.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000E10 /* VendingMachineDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/VendingMachineDetector.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000E12 /* EmoDrinkPersona.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/EmoDrinkPersona.swift; sourceTree = "<group>"; };
-		AAAA00000000000000000E14 /* EmoDrinkCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/EmoDrinkCommands.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A58 /* AiSee/AiSeeClipRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSee/AiSeeClipRecorder.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A5A /* BuildCheck/BuildCheckJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildCheckJSON.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A5C /* BuildCheck/Procedure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/Procedure.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A5E /* BuildCheck/ProcedureParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ProcedureParser.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A60 /* BuildCheck/BuildCheckPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildCheckPrompt.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A62 /* BuildCheck/AlertPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/AlertPolicy.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A64 /* BuildCheck/ChangeGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ChangeGate.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A66 /* BuildCheck/BuildRunTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRunTracker.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A68 /* BuildCheck/BuildRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRun.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A6A /* BuildCheck/ProcedureStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ProcedureStore.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A6C /* BuildCheck/BuildRunStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRunStore.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A6E /* BuildCheck/ChimeTone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ChimeTone.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A70 /* BuildCheck/BuildCheckVision.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildCheckVision.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A72 /* BuildCheck/BuildChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildChecker.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A74 /* BuildCheck/ProcedureImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/ProcedureImporter.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A76 /* BuildCheck/BuildRunPDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheck/BuildRunPDF.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A78 /* BuildCheckViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheckViewModel.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A7A /* BuildCheckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCheckView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A7C /* ProcedureEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcedureEditorView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A7E /* BuildRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildRunView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000A80 /* BuildRunReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildRunReviewView.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E02 /* EmoDrink/PhysiologySnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/PhysiologySnapshot.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E04 /* EmoDrink/DrinkCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/DrinkCatalog.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E06 /* Resources/EmoDrink/asahi-drinks.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "Resources/EmoDrink/asahi-drinks.json"; sourceTree = "<group>"; };
+		AAAA00000000000000000E08 /* EmoDrink/DrinkRecommender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/DrinkRecommender.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E0A /* EmoDrink/PhysiologySource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/PhysiologySource.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E0C /* EmoDrink/PhysiologyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/PhysiologyStore.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E0E /* EmoDrink/VendingMachineGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/VendingMachineGate.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E10 /* EmoDrink/VendingMachineDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/VendingMachineDetector.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E12 /* EmoDrink/EmoDrinkPersona.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/EmoDrinkPersona.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E14 /* EmoDrink/EmoDrinkCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/EmoDrinkCommands.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrinkViewModel.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E18 /* EmoDrinkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrinkView.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000888 /* People/FaceEmbedder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/FaceEmbedder.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000890 /* People/RosterImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/RosterImport.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000892 /* RosterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RosterView.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000894 /* People/FaceEmbedding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = People/FaceEmbedding.swift; sourceTree = "<group>"; };
+		AAAA0000000000000000896 /* faceid.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = faceid.mlpackage; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -351,12 +351,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		06E379973076D805008995AB /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				AAAA0000000000000000012A /* Config/Hermes.xcconfig */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
 		AAAA0000000000000000000 = {
 			isa = PBXGroup;
 			children = (
 				AAAA0000000000000000001 /* HermesGlasses */,
 				AAAA00000000000000000A50 /* Vendor/RTK */,
 				AAAA0000000000000000005 /* Products */,
+				06E379973076D805008995AB /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -369,7 +378,7 @@
 				AAAA0000000000000000004 /* Services */,
 				AAAA0000000000000000006 /* Models */,
 				AAAA00000000000000000108 /* Assets.xcassets */,
-				AAAA00000000000000000E06 /* asahi-drinks.json */,
+				AAAA00000000000000000E06 /* Resources/EmoDrink/asahi-drinks.json */,
 				AAAA00000000000000000109 /* Info.plist */,
 				AAAA00000000000000000110 /* HermesGlasses.entitlements */,
 			);
@@ -430,95 +439,103 @@
 				AAAA00000000000000000118 /* HermesDisplayManager.swift */,
 				AAAA00000000000000000119 /* DeviceContextFormatter.swift */,
 				AAAA00000000000000000120 /* DeviceContextProvider.swift */,
-				AAAA00000000000000000121 /* AIProvider.swift */,
-				AAAA00000000000000000122 /* AnthropicProvider.swift */,
-				AAAA00000000000000000123 /* OpenAICompatibleProvider.swift */,
-				AAAA00000000000000000124 /* GeminiProvider.swift */,
-				AAAA00000000000000000125 /* NavigationTypes.swift */,
-				AAAA00000000000000000126 /* IntentDetector.swift */,
-				AAAA00000000000000000127 /* PolylineEncoder.swift */,
-				AAAA00000000000000000128 /* MapboxStaticMap.swift */,
-				AAAA00000000000000000129 /* WikipediaImageClient.swift */,
-				AAAA00000000000000000130 /* MapCredentials.swift */,
-				AAAA00000000000000000131 /* NavigationController.swift */,
-				AAAA00000000000000000132 /* Encounter.swift */,
-				AAAA00000000000000000847 /* EncounterEvent.swift */,
-				AAAA00000000000000000849 /* BadgeParser.swift */,
-				AAAA00000000000000000851 /* EncounterTimeline.swift */,
-				AAAA00000000000000000853 /* BadgeReader.swift */,
-				AAAA00000000000000000859 /* TranscriptionService.swift */,
-				AAAA00000000000000000857 /* ConversationRecorder.swift */,
-				AAAA00000000000000000855 /* BadgeRegion.swift */,
-				AAAA00000000000000000861 /* BadgeCrop.swift */,
-				AAAA00000000000000000863 /* BarcodeReader.swift */,
-				AAAA00000000000000000865 /* BadgeDetector.swift */,
-				AAAA00000000000000000867 /* BadgePortrait.swift */,
-				AAAA00000000000000000133 /* EncounterStore.swift */,
-				AAAA00000000000000000142 /* ConversationCapture.swift */,
+				AAAA00000000000000000121 /* Providers/AIProvider.swift */,
+				AAAA00000000000000000122 /* Providers/AnthropicProvider.swift */,
+				AAAA00000000000000000123 /* Providers/OpenAICompatibleProvider.swift */,
+				AAAA00000000000000000124 /* Providers/GeminiProvider.swift */,
+				AAAA00000000000000000125 /* Navigation/NavigationTypes.swift */,
+				AAAA00000000000000000126 /* Navigation/IntentDetector.swift */,
+				AAAA00000000000000000127 /* Navigation/PolylineEncoder.swift */,
+				AAAA00000000000000000128 /* Navigation/MapboxStaticMap.swift */,
+				AAAA00000000000000000129 /* Navigation/WikipediaImageClient.swift */,
+				AAAA00000000000000000130 /* Navigation/MapCredentials.swift */,
+				AAAA00000000000000000131 /* Navigation/NavigationController.swift */,
+				AAAA00000000000000000132 /* Social/Encounter.swift */,
+				AAAA00000000000000000847 /* Social/EncounterEvent.swift */,
+				AAAA00000000000000000849 /* Social/BadgeParser.swift */,
+				AAAA00000000000000000851 /* Social/EncounterTimeline.swift */,
+				AAAA00000000000000000853 /* Social/BadgeReader.swift */,
+				AAAA00000000000000000859 /* Social/TranscriptionService.swift */,
+				AAAA00000000000000000857 /* Social/ConversationRecorder.swift */,
+				AAAA00000000000000000855 /* Social/BadgeRegion.swift */,
+				AAAA00000000000000000861 /* Social/BadgeCrop.swift */,
+				AAAA00000000000000000863 /* Social/BarcodeReader.swift */,
+				AAAA00000000000000000865 /* Social/BadgeDetector.swift */,
+				AAAA00000000000000000867 /* Social/BadgePortrait.swift */,
+				AAAA00000000000000000133 /* Social/EncounterStore.swift */,
+				AAAA00000000000000000142 /* Social/ConversationCapture.swift */,
 				AAAA00000000000000000135 /* VoiceCommandCatalog.swift */,
 				AAAA00000000000000000822 /* LensContent.swift */,
 				AAAA00000000000000000842 /* ChoiceDetector.swift */,
 				AAAA00000000000000000844 /* HermesApp.swift */,
 				AAAA00000000000000000870 /* PersonLookupGate.swift */,
-				AAAA00000000000000000878 /* RosterPerson.swift */,
-				AAAA00000000000000000880 /* RosterImporter.swift */,
-				AAAA00000000000000000882 /* RosterStore.swift */,
-				AAAA00000000000000000884 /* FaceMatcher.swift */,
-				AAAA00000000000000000886 /* FaceAlignment.swift */,
-				AAAA0000000000000000888 /* FaceEmbedder.swift */,
-				AAAA0000000000000000894 /* FaceEmbedding.swift */,
-				AAAA0000000000000000890 /* RosterImport.swift */,
+				AAAA00000000000000000878 /* People/RosterPerson.swift */,
+				AAAA00000000000000000880 /* People/RosterImporter.swift */,
+				AAAA00000000000000000882 /* People/RosterStore.swift */,
+				AAAA00000000000000000884 /* People/FaceMatcher.swift */,
+				AAAA00000000000000000886 /* People/FaceAlignment.swift */,
+				AAAA0000000000000000888 /* People/FaceEmbedder.swift */,
+				AAAA0000000000000000894 /* People/FaceEmbedding.swift */,
+				AAAA0000000000000000890 /* People/RosterImport.swift */,
 				AAAA00000000000000000824 /* VisionSource.swift */,
 				AAAA00000000000000000836 /* VisionRouting.swift */,
-				AAAA00000000000000000838 /* Bearing.swift */,
-				AAAA00000000000000000840 /* PlaceSearch.swift */,
+				AAAA00000000000000000838 /* Navigation/Bearing.swift */,
+				AAAA00000000000000000840 /* Navigation/PlaceSearch.swift */,
 				AAAA00000000000000000826 /* PhoneCameraManager.swift */,
 				AAAA00000000000000000828 /* PermissionsCoordinator.swift */,
-				AAAA00000000000000000137 /* DwellTracker.swift */,
-				AAAA00000000000000000138 /* ObjectDetector.swift */,
-				AAAA00000000000000000812 /* LensPDFRenderer.swift */,
-				AAAA00000000000000000806 /* LensLogAggregator.swift */,
-				AAAA00000000000000000808 /* LensSession.swift */,
-				AAAA00000000000000000810 /* LensSessionStore.swift */,
-				AAAA00000000000000000A53 /* AiSeeCameraSource.swift */,
-				AAAA00000000000000000A0A /* AiSeeConnectionService.swift */,
-				AAAA00000000000000000A0B /* AiSeeDeviceCoordinator.swift */,
-				AAAA00000000000000000A0C /* AiSeeH264Decoder.swift */,
-				AAAA00000000000000000A0D /* AiSeeLiveStream.swift */,
-				AAAA00000000000000000A0E /* AiSeeMicrophone.swift */,
-				AAAA00000000000000000A0F /* AiSeePCMAdapter.swift */,
-				AAAA00000000000000000A10 /* AiSeePhotoCapture.swift */,
-				AAAA00000000000000000A11 /* AiSeeSequencing.swift */,
-				AAAA00000000000000000A12 /* AiSeeTypes.swift */,
-				AAAA00000000000000000A58 /* AiSeeClipRecorder.swift */,
-				AAAA00000000000000000A76 /* BuildRunPDF.swift */,
-				AAAA00000000000000000A74 /* ProcedureImporter.swift */,
-				AAAA00000000000000000A72 /* BuildChecker.swift */,
-				AAAA00000000000000000A70 /* BuildCheckVision.swift */,
-				AAAA00000000000000000A6E /* ChimeTone.swift */,
-				AAAA00000000000000000A6C /* BuildRunStore.swift */,
-				AAAA00000000000000000A6A /* ProcedureStore.swift */,
-				AAAA00000000000000000A68 /* BuildRun.swift */,
-				AAAA00000000000000000A66 /* BuildRunTracker.swift */,
-				AAAA00000000000000000A64 /* ChangeGate.swift */,
-				AAAA00000000000000000A62 /* AlertPolicy.swift */,
-				AAAA00000000000000000A60 /* BuildCheckPrompt.swift */,
-				AAAA00000000000000000A5E /* ProcedureParser.swift */,
-				AAAA00000000000000000A5C /* Procedure.swift */,
-				AAAA00000000000000000A5A /* BuildCheckJSON.swift */,
+				AAAA00000000000000000137 /* Lens/DwellTracker.swift */,
+				AAAA00000000000000000138 /* Lens/ObjectDetector.swift */,
+				AAAA00000000000000000812 /* Lens/LensPDFRenderer.swift */,
+				AAAA00000000000000000806 /* Lens/LensLogAggregator.swift */,
+				AAAA00000000000000000808 /* Lens/LensSession.swift */,
+				AAAA00000000000000000810 /* Lens/LensSessionStore.swift */,
+				AAAA00000000000000000A53 /* AiSee/AiSeeCameraSource.swift */,
+				AAAA00000000000000000A0A /* AiSee/AiSeeConnectionService.swift */,
+				AAAA00000000000000000A0B /* AiSee/AiSeeDeviceCoordinator.swift */,
+				AAAA00000000000000000A0C /* AiSee/AiSeeH264Decoder.swift */,
+				AAAA00000000000000000A0D /* AiSee/AiSeeLiveStream.swift */,
+				AAAA00000000000000000A0E /* AiSee/AiSeeMicrophone.swift */,
+				AAAA00000000000000000A0F /* AiSee/AiSeePCMAdapter.swift */,
+				AAAA00000000000000000A10 /* AiSee/AiSeePhotoCapture.swift */,
+				AAAA00000000000000000A11 /* AiSee/AiSeeSequencing.swift */,
+				AAAA00000000000000000A12 /* AiSee/AiSeeTypes.swift */,
+				AAAA00000000000000000A58 /* AiSee/AiSeeClipRecorder.swift */,
+				AAAA00000000000000000A76 /* BuildCheck/BuildRunPDF.swift */,
+				AAAA00000000000000000A74 /* BuildCheck/ProcedureImporter.swift */,
+				AAAA00000000000000000A72 /* BuildCheck/BuildChecker.swift */,
+				AAAA00000000000000000A70 /* BuildCheck/BuildCheckVision.swift */,
+				AAAA00000000000000000A6E /* BuildCheck/ChimeTone.swift */,
+				AAAA00000000000000000A6C /* BuildCheck/BuildRunStore.swift */,
+				AAAA00000000000000000A6A /* BuildCheck/ProcedureStore.swift */,
+				AAAA00000000000000000A68 /* BuildCheck/BuildRun.swift */,
+				AAAA00000000000000000A66 /* BuildCheck/BuildRunTracker.swift */,
+				AAAA00000000000000000A64 /* BuildCheck/ChangeGate.swift */,
+				AAAA00000000000000000A62 /* BuildCheck/AlertPolicy.swift */,
+				AAAA00000000000000000A60 /* BuildCheck/BuildCheckPrompt.swift */,
+				AAAA00000000000000000A5E /* BuildCheck/ProcedureParser.swift */,
+				AAAA00000000000000000A5C /* BuildCheck/Procedure.swift */,
+				AAAA00000000000000000A5A /* BuildCheck/BuildCheckJSON.swift */,
 				AAAA00000000000000000A51 /* GlassesVendor.swift */,
 				AAAA00000000000000000A55 /* GlassesKeyMap.swift */,
-				AAAA00000000000000000E02 /* PhysiologySnapshot.swift */,
-				AAAA00000000000000000E04 /* DrinkCatalog.swift */,
-				AAAA00000000000000000E08 /* DrinkRecommender.swift */,
-				AAAA00000000000000000E0A /* PhysiologySource.swift */,
-				AAAA00000000000000000E0C /* PhysiologyStore.swift */,
-				AAAA00000000000000000E0E /* VendingMachineGate.swift */,
-				AAAA00000000000000000E10 /* VendingMachineDetector.swift */,
-				AAAA00000000000000000E12 /* EmoDrinkPersona.swift */,
-				AAAA00000000000000000E14 /* EmoDrinkCommands.swift */,
+				AAAA00000000000000000E02 /* EmoDrink/PhysiologySnapshot.swift */,
+				AAAA00000000000000000E04 /* EmoDrink/DrinkCatalog.swift */,
+				AAAA00000000000000000E08 /* EmoDrink/DrinkRecommender.swift */,
+				AAAA00000000000000000E0A /* EmoDrink/PhysiologySource.swift */,
+				AAAA00000000000000000E0C /* EmoDrink/PhysiologyStore.swift */,
+				AAAA00000000000000000E0E /* EmoDrink/VendingMachineGate.swift */,
+				AAAA00000000000000000E10 /* EmoDrink/VendingMachineDetector.swift */,
+				AAAA00000000000000000E12 /* EmoDrink/EmoDrinkPersona.swift */,
+				AAAA00000000000000000E14 /* EmoDrink/EmoDrinkCommands.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		AAAA0000000000000000005 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AAAA00000000000000000111 /* EmoDrink Glasses.app */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		AAAA0000000000000000006 /* Models */ = {
@@ -528,14 +545,6 @@
 				AAAA0000000000000000896 /* faceid.mlpackage */,
 			);
 			path = Models;
-			sourceTree = "<group>";
-		};
-		AAAA0000000000000000005 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				AAAA00000000000000000111 /* Hermes Glasses.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		AAAA00000000000000000A50 /* Vendor/RTK */ = {
@@ -578,7 +587,7 @@
 				AAAA00000000000000000704 /* MWDATDisplay */,
 			);
 			productName = HermesGlasses;
-			productReference = AAAA00000000000000000111 /* Hermes Glasses.app */;
+			productReference = AAAA00000000000000000111 /* EmoDrink Glasses.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -623,7 +632,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AAAA00000000000000000008 /* Assets.xcassets in Resources */,
-				AAAA00000000000000000E05 /* asahi-drinks.json in Resources */,
+				AAAA00000000000000000E05 /* Resources/EmoDrink/asahi-drinks.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -650,45 +659,45 @@
 				AAAA00000000000000000015 /* HermesDisplayManager.swift in Sources */,
 				AAAA00000000000000000016 /* DeviceContextFormatter.swift in Sources */,
 				AAAA00000000000000000017 /* DeviceContextProvider.swift in Sources */,
-				AAAA00000000000000000018 /* AIProvider.swift in Sources */,
-				AAAA00000000000000000019 /* AnthropicProvider.swift in Sources */,
-				AAAA00000000000000000020 /* OpenAICompatibleProvider.swift in Sources */,
-				AAAA00000000000000000021 /* GeminiProvider.swift in Sources */,
-				AAAA00000000000000000022 /* NavigationTypes.swift in Sources */,
-				AAAA00000000000000000023 /* IntentDetector.swift in Sources */,
-				AAAA00000000000000000024 /* PolylineEncoder.swift in Sources */,
-				AAAA00000000000000000025 /* MapboxStaticMap.swift in Sources */,
-				AAAA00000000000000000026 /* WikipediaImageClient.swift in Sources */,
-				AAAA00000000000000000027 /* MapCredentials.swift in Sources */,
-				AAAA00000000000000000028 /* NavigationController.swift in Sources */,
-				AAAA00000000000000000029 /* Encounter.swift in Sources */,
-				AAAA00000000000000000848 /* EncounterEvent.swift in Sources */,
-				AAAA00000000000000000850 /* BadgeParser.swift in Sources */,
-				AAAA00000000000000000852 /* EncounterTimeline.swift in Sources */,
-				AAAA00000000000000000854 /* BadgeReader.swift in Sources */,
-				AAAA00000000000000000860 /* TranscriptionService.swift in Sources */,
-				AAAA00000000000000000858 /* ConversationRecorder.swift in Sources */,
-				AAAA00000000000000000856 /* BadgeRegion.swift in Sources */,
-				AAAA00000000000000000862 /* BadgeCrop.swift in Sources */,
-				AAAA00000000000000000864 /* BarcodeReader.swift in Sources */,
-				AAAA00000000000000000866 /* BadgeDetector.swift in Sources */,
-				AAAA00000000000000000868 /* BadgePortrait.swift in Sources */,
-				AAAA00000000000000000030 /* EncounterStore.swift in Sources */,
-				AAAA00000000000000000039 /* ConversationCapture.swift in Sources */,
+				AAAA00000000000000000018 /* Providers/AIProvider.swift in Sources */,
+				AAAA00000000000000000019 /* Providers/AnthropicProvider.swift in Sources */,
+				AAAA00000000000000000020 /* Providers/OpenAICompatibleProvider.swift in Sources */,
+				AAAA00000000000000000021 /* Providers/GeminiProvider.swift in Sources */,
+				AAAA00000000000000000022 /* Navigation/NavigationTypes.swift in Sources */,
+				AAAA00000000000000000023 /* Navigation/IntentDetector.swift in Sources */,
+				AAAA00000000000000000024 /* Navigation/PolylineEncoder.swift in Sources */,
+				AAAA00000000000000000025 /* Navigation/MapboxStaticMap.swift in Sources */,
+				AAAA00000000000000000026 /* Navigation/WikipediaImageClient.swift in Sources */,
+				AAAA00000000000000000027 /* Navigation/MapCredentials.swift in Sources */,
+				AAAA00000000000000000028 /* Navigation/NavigationController.swift in Sources */,
+				AAAA00000000000000000029 /* Social/Encounter.swift in Sources */,
+				AAAA00000000000000000848 /* Social/EncounterEvent.swift in Sources */,
+				AAAA00000000000000000850 /* Social/BadgeParser.swift in Sources */,
+				AAAA00000000000000000852 /* Social/EncounterTimeline.swift in Sources */,
+				AAAA00000000000000000854 /* Social/BadgeReader.swift in Sources */,
+				AAAA00000000000000000860 /* Social/TranscriptionService.swift in Sources */,
+				AAAA00000000000000000858 /* Social/ConversationRecorder.swift in Sources */,
+				AAAA00000000000000000856 /* Social/BadgeRegion.swift in Sources */,
+				AAAA00000000000000000862 /* Social/BadgeCrop.swift in Sources */,
+				AAAA00000000000000000864 /* Social/BarcodeReader.swift in Sources */,
+				AAAA00000000000000000866 /* Social/BadgeDetector.swift in Sources */,
+				AAAA00000000000000000868 /* Social/BadgePortrait.swift in Sources */,
+				AAAA00000000000000000030 /* Social/EncounterStore.swift in Sources */,
+				AAAA00000000000000000039 /* Social/ConversationCapture.swift in Sources */,
 				AAAA00000000000000000031 /* PeopleView.swift in Sources */,
 				AAAA00000000000000000032 /* VoiceCommandCatalog.swift in Sources */,
 				AAAA00000000000000000821 /* LensContent.swift in Sources */,
 				AAAA00000000000000000841 /* ChoiceDetector.swift in Sources */,
 				AAAA00000000000000000843 /* HermesApp.swift in Sources */,
 				AAAA00000000000000000869 /* PersonLookupGate.swift in Sources */,
-				AAAA00000000000000000877 /* RosterPerson.swift in Sources */,
-				AAAA00000000000000000879 /* RosterImporter.swift in Sources */,
-				AAAA00000000000000000881 /* RosterStore.swift in Sources */,
-				AAAA00000000000000000883 /* FaceMatcher.swift in Sources */,
-				AAAA00000000000000000885 /* FaceAlignment.swift in Sources */,
-				AAAA0000000000000000887 /* FaceEmbedder.swift in Sources */,
-				AAAA0000000000000000893 /* FaceEmbedding.swift in Sources */,
-				AAAA0000000000000000889 /* RosterImport.swift in Sources */,
+				AAAA00000000000000000877 /* People/RosterPerson.swift in Sources */,
+				AAAA00000000000000000879 /* People/RosterImporter.swift in Sources */,
+				AAAA00000000000000000881 /* People/RosterStore.swift in Sources */,
+				AAAA00000000000000000883 /* People/FaceMatcher.swift in Sources */,
+				AAAA00000000000000000885 /* People/FaceAlignment.swift in Sources */,
+				AAAA0000000000000000887 /* People/FaceEmbedder.swift in Sources */,
+				AAAA0000000000000000893 /* People/FaceEmbedding.swift in Sources */,
+				AAAA0000000000000000889 /* People/RosterImport.swift in Sources */,
 				AAAA0000000000000000891 /* RosterView.swift in Sources */,
 				AAAA00000000000000000873 /* LookupViewModel.swift in Sources */,
 				AAAA00000000000000000A77 /* BuildCheckViewModel.swift in Sources */,
@@ -702,65 +711,65 @@
 				AAAA00000000000000000845 /* AppDrawerView.swift in Sources */,
 				AAAA00000000000000000823 /* VisionSource.swift in Sources */,
 				AAAA00000000000000000835 /* VisionRouting.swift in Sources */,
-				AAAA00000000000000000837 /* Bearing.swift in Sources */,
-				AAAA00000000000000000839 /* PlaceSearch.swift in Sources */,
+				AAAA00000000000000000837 /* Navigation/Bearing.swift in Sources */,
+				AAAA00000000000000000839 /* Navigation/PlaceSearch.swift in Sources */,
 				AAAA00000000000000000825 /* PhoneCameraManager.swift in Sources */,
 				AAAA00000000000000000827 /* PermissionsCoordinator.swift in Sources */,
 				AAAA00000000000000000829 /* OnboardingView.swift in Sources */,
 				AAAA00000000000000000831 /* SimulatedLensView.swift in Sources */,
 				AAAA00000000000000000833 /* PhoneModeSessionView.swift in Sources */,
 				AAAA00000000000000000033 /* SettingsView.swift in Sources */,
-				AAAA00000000000000000034 /* DwellTracker.swift in Sources */,
+				AAAA00000000000000000034 /* Lens/DwellTracker.swift in Sources */,
 				AAAA00000000000000000038 /* yolo11n.mlpackage in Sources */,
 				AAAA0000000000000000895 /* faceid.mlpackage in Sources */,
-				AAAA00000000000000000035 /* ObjectDetector.swift in Sources */,
+				AAAA00000000000000000035 /* Lens/ObjectDetector.swift in Sources */,
 				AAAA00000000000000000036 /* LensViewModel.swift in Sources */,
 				AAAA00000000000000000037 /* LensView.swift in Sources */,
 				AAAA00000000000000000815 /* ObjectLogView.swift in Sources */,
-				AAAA00000000000000000805 /* LensLogAggregator.swift in Sources */,
-				AAAA00000000000000000807 /* LensSession.swift in Sources */,
-				AAAA00000000000000000809 /* LensSessionStore.swift in Sources */,
-				AAAA00000000000000000811 /* LensPDFRenderer.swift in Sources */,
+				AAAA00000000000000000805 /* Lens/LensLogAggregator.swift in Sources */,
+				AAAA00000000000000000807 /* Lens/LensSession.swift in Sources */,
+				AAAA00000000000000000809 /* Lens/LensSessionStore.swift in Sources */,
+				AAAA00000000000000000811 /* Lens/LensPDFRenderer.swift in Sources */,
 				AAAA00000000000000000813 /* ShareSheet.swift in Sources */,
 				AAAA00000000000000000817 /* HermesDesign.swift in Sources */,
 				AAAA00000000000000000819 /* NavigationMapView.swift in Sources */,
-				AAAA00000000000000000A54 /* AiSeeCameraSource.swift in Sources */,
-				AAAA00000000000000000A01 /* AiSeeConnectionService.swift in Sources */,
-				AAAA00000000000000000A02 /* AiSeeDeviceCoordinator.swift in Sources */,
-				AAAA00000000000000000A03 /* AiSeeH264Decoder.swift in Sources */,
-				AAAA00000000000000000A04 /* AiSeeLiveStream.swift in Sources */,
-				AAAA00000000000000000A05 /* AiSeeMicrophone.swift in Sources */,
-				AAAA00000000000000000A06 /* AiSeePCMAdapter.swift in Sources */,
-				AAAA00000000000000000A07 /* AiSeePhotoCapture.swift in Sources */,
-				AAAA00000000000000000A08 /* AiSeeSequencing.swift in Sources */,
-				AAAA00000000000000000A09 /* AiSeeTypes.swift in Sources */,
-				AAAA00000000000000000A57 /* AiSeeClipRecorder.swift in Sources */,
-				AAAA00000000000000000A75 /* BuildRunPDF.swift in Sources */,
-				AAAA00000000000000000A73 /* ProcedureImporter.swift in Sources */,
-				AAAA00000000000000000A71 /* BuildChecker.swift in Sources */,
-				AAAA00000000000000000A6F /* BuildCheckVision.swift in Sources */,
-				AAAA00000000000000000A6D /* ChimeTone.swift in Sources */,
-				AAAA00000000000000000A6B /* BuildRunStore.swift in Sources */,
-				AAAA00000000000000000A69 /* ProcedureStore.swift in Sources */,
-				AAAA00000000000000000A67 /* BuildRun.swift in Sources */,
-				AAAA00000000000000000A65 /* BuildRunTracker.swift in Sources */,
-				AAAA00000000000000000A63 /* ChangeGate.swift in Sources */,
-				AAAA00000000000000000A61 /* AlertPolicy.swift in Sources */,
-				AAAA00000000000000000A5F /* BuildCheckPrompt.swift in Sources */,
-				AAAA00000000000000000A5D /* ProcedureParser.swift in Sources */,
-				AAAA00000000000000000A5B /* Procedure.swift in Sources */,
-				AAAA00000000000000000A59 /* BuildCheckJSON.swift in Sources */,
+				AAAA00000000000000000A54 /* AiSee/AiSeeCameraSource.swift in Sources */,
+				AAAA00000000000000000A01 /* AiSee/AiSeeConnectionService.swift in Sources */,
+				AAAA00000000000000000A02 /* AiSee/AiSeeDeviceCoordinator.swift in Sources */,
+				AAAA00000000000000000A03 /* AiSee/AiSeeH264Decoder.swift in Sources */,
+				AAAA00000000000000000A04 /* AiSee/AiSeeLiveStream.swift in Sources */,
+				AAAA00000000000000000A05 /* AiSee/AiSeeMicrophone.swift in Sources */,
+				AAAA00000000000000000A06 /* AiSee/AiSeePCMAdapter.swift in Sources */,
+				AAAA00000000000000000A07 /* AiSee/AiSeePhotoCapture.swift in Sources */,
+				AAAA00000000000000000A08 /* AiSee/AiSeeSequencing.swift in Sources */,
+				AAAA00000000000000000A09 /* AiSee/AiSeeTypes.swift in Sources */,
+				AAAA00000000000000000A57 /* AiSee/AiSeeClipRecorder.swift in Sources */,
+				AAAA00000000000000000A75 /* BuildCheck/BuildRunPDF.swift in Sources */,
+				AAAA00000000000000000A73 /* BuildCheck/ProcedureImporter.swift in Sources */,
+				AAAA00000000000000000A71 /* BuildCheck/BuildChecker.swift in Sources */,
+				AAAA00000000000000000A6F /* BuildCheck/BuildCheckVision.swift in Sources */,
+				AAAA00000000000000000A6D /* BuildCheck/ChimeTone.swift in Sources */,
+				AAAA00000000000000000A6B /* BuildCheck/BuildRunStore.swift in Sources */,
+				AAAA00000000000000000A69 /* BuildCheck/ProcedureStore.swift in Sources */,
+				AAAA00000000000000000A67 /* BuildCheck/BuildRun.swift in Sources */,
+				AAAA00000000000000000A65 /* BuildCheck/BuildRunTracker.swift in Sources */,
+				AAAA00000000000000000A63 /* BuildCheck/ChangeGate.swift in Sources */,
+				AAAA00000000000000000A61 /* BuildCheck/AlertPolicy.swift in Sources */,
+				AAAA00000000000000000A5F /* BuildCheck/BuildCheckPrompt.swift in Sources */,
+				AAAA00000000000000000A5D /* BuildCheck/ProcedureParser.swift in Sources */,
+				AAAA00000000000000000A5B /* BuildCheck/Procedure.swift in Sources */,
+				AAAA00000000000000000A59 /* BuildCheck/BuildCheckJSON.swift in Sources */,
 				AAAA00000000000000000A52 /* GlassesVendor.swift in Sources */,
 				AAAA00000000000000000A56 /* GlassesKeyMap.swift in Sources */,
-				AAAA00000000000000000E01 /* PhysiologySnapshot.swift in Sources */,
-				AAAA00000000000000000E03 /* DrinkCatalog.swift in Sources */,
-				AAAA00000000000000000E07 /* DrinkRecommender.swift in Sources */,
-				AAAA00000000000000000E09 /* PhysiologySource.swift in Sources */,
-				AAAA00000000000000000E0B /* PhysiologyStore.swift in Sources */,
-				AAAA00000000000000000E0D /* VendingMachineGate.swift in Sources */,
-				AAAA00000000000000000E0F /* VendingMachineDetector.swift in Sources */,
-				AAAA00000000000000000E11 /* EmoDrinkPersona.swift in Sources */,
-				AAAA00000000000000000E13 /* EmoDrinkCommands.swift in Sources */,
+				AAAA00000000000000000E01 /* EmoDrink/PhysiologySnapshot.swift in Sources */,
+				AAAA00000000000000000E03 /* EmoDrink/DrinkCatalog.swift in Sources */,
+				AAAA00000000000000000E07 /* EmoDrink/DrinkRecommender.swift in Sources */,
+				AAAA00000000000000000E09 /* EmoDrink/PhysiologySource.swift in Sources */,
+				AAAA00000000000000000E0B /* EmoDrink/PhysiologyStore.swift in Sources */,
+				AAAA00000000000000000E0D /* EmoDrink/VendingMachineGate.swift in Sources */,
+				AAAA00000000000000000E0F /* EmoDrink/VendingMachineDetector.swift in Sources */,
+				AAAA00000000000000000E11 /* EmoDrink/EmoDrinkPersona.swift in Sources */,
+				AAAA00000000000000000E13 /* EmoDrink/EmoDrinkCommands.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -769,7 +778,7 @@
 /* Begin XCBuildConfiguration section */
 		AAAA00000000000000000502 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AAAA0000000000000000012A /* Hermes.xcconfig */;
+			baseConfigurationReference = AAAA0000000000000000012A /* Config/Hermes.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -778,15 +787,15 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				"EXCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*]" = (
-					"RTKAIDeviceConnection.framework",
-					"RTKAudioConnectSDK.framework",
-					"RTKAudioStreaming.framework",
-					"RTKLEFoundation.framework",
-					"OpenAIRealtimeAccess.framework",
-					"libavcodec.framework",
-					"libavformat.framework",
-					"libavutil.framework",
-					"libswresample.framework",
+					RTKAIDeviceConnection.framework,
+					RTKAudioConnectSDK.framework,
+					RTKAudioStreaming.framework,
+					RTKLEFoundation.framework,
+					OpenAIRealtimeAccess.framework,
+					libavcodec.framework,
+					libavformat.framework,
+					libavutil.framework,
+					libswresample.framework,
 				);
 				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]" = (
 					"$(inherited)",
@@ -794,9 +803,20 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HermesGlasses/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = EmoDrink;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Hermes connects to your smart glasses (Meta Ray-Ban or AiSee) over Bluetooth.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Hermes Glasses uses this iPhone's camera as the eye in phone mode, when you have no glasses on: the live view stays on your phone and a frame is sent to the assistant only when you ask about what you're looking at.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Hermes Glasses connects to the Hermes bridge running on your Mac over the local network and receives AiSee glasses video over a local Wi-Fi hotspot.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Hermes Glasses shares your approximate location with the assistant so it can answer questions about where you are, nearby places, and the weather.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Hermes listens through your iPhone or your glasses' microphone so you can talk to your assistant.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Hermes Glasses tells the assistant whether you're walking, driving, or still, so answers fit what you're doing.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Hermes Glasses saves video clips you record through your AiSee glasses to your photo library.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Hermes Glasses transcribes your speech on this device so your words appear instantly as you talk.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -805,10 +825,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.flowsxr.emodrinkglasses;
 				PRODUCT_NAME = "EmoDrink Glasses";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				"SWIFT_INCLUDE_PATHS[sdk=iphoneos*]" = (
-					"$(inherited)",
-					"$(SRCROOT)/Vendor/RTK",
-				);
+				"SWIFT_INCLUDE_PATHS[sdk=iphoneos*]" = "$(inherited) $(SRCROOT)/Vendor/RTK";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -816,7 +833,7 @@
 		};
 		AAAA00000000000000000503 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AAAA0000000000000000012A /* Hermes.xcconfig */;
+			baseConfigurationReference = AAAA0000000000000000012A /* Config/Hermes.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -825,15 +842,15 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				"EXCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*]" = (
-					"RTKAIDeviceConnection.framework",
-					"RTKAudioConnectSDK.framework",
-					"RTKAudioStreaming.framework",
-					"RTKLEFoundation.framework",
-					"OpenAIRealtimeAccess.framework",
-					"libavcodec.framework",
-					"libavformat.framework",
-					"libavutil.framework",
-					"libswresample.framework",
+					RTKAIDeviceConnection.framework,
+					RTKAudioConnectSDK.framework,
+					RTKAudioStreaming.framework,
+					RTKLEFoundation.framework,
+					OpenAIRealtimeAccess.framework,
+					libavcodec.framework,
+					libavformat.framework,
+					libavutil.framework,
+					libswresample.framework,
 				);
 				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]" = (
 					"$(inherited)",
@@ -841,9 +858,20 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HermesGlasses/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = EmoDrink;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Hermes connects to your smart glasses (Meta Ray-Ban or AiSee) over Bluetooth.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Hermes Glasses uses this iPhone's camera as the eye in phone mode, when you have no glasses on: the live view stays on your phone and a frame is sent to the assistant only when you ask about what you're looking at.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Hermes Glasses connects to the Hermes bridge running on your Mac over the local network and receives AiSee glasses video over a local Wi-Fi hotspot.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Hermes Glasses shares your approximate location with the assistant so it can answer questions about where you are, nearby places, and the weather.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Hermes listens through your iPhone or your glasses' microphone so you can talk to your assistant.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Hermes Glasses tells the assistant whether you're walking, driving, or still, so answers fit what you're doing.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Hermes Glasses saves video clips you record through your AiSee glasses to your photo library.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Hermes Glasses transcribes your speech on this device so your words appear instantly as you talk.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -853,11 +881,8 @@
 				PRODUCT_NAME = "EmoDrink Glasses";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				"SWIFT_INCLUDE_PATHS[sdk=iphoneos*]" = "$(inherited) $(SRCROOT)/Vendor/RTK";
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				"SWIFT_INCLUDE_PATHS[sdk=iphoneos*]" = (
-					"$(inherited)",
-					"$(SRCROOT)/Vendor/RTK",
-				);
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};

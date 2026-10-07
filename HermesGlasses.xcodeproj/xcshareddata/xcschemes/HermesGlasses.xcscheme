@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "AAAA00000000000000000301"
-               BuildableName = "Hermes Glasses.app"
+               BuildableName = "EmoDrink Glasses.app"
                BlueprintName = "HermesGlasses"
                ReferencedContainer = "container:HermesGlasses.xcodeproj">
             </BuildableReference>
@@ -45,7 +45,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AAAA00000000000000000301"
-            BuildableName = "Hermes Glasses.app"
+            BuildableName = "EmoDrink Glasses.app"
             BlueprintName = "HermesGlasses"
             ReferencedContainer = "container:HermesGlasses.xcodeproj">
          </BuildableReference>
