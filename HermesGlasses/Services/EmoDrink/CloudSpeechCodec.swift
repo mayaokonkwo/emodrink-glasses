@@ -37,13 +37,17 @@ enum CloudSpeechCodec {
         language == .ja ? "Kore" : "Aoede"
     }
 
-    /// `POST .../models/<model>:generateContent?key=<key>`.
-    static func endpoint(model: String, key: String) -> URL? {
-        guard !model.isEmpty, !key.isEmpty,
-              var components = URLComponents(string: baseURL + model + ":generateContent")
-        else { return nil }
-        components.queryItems = [URLQueryItem(name: "key", value: key)]
-        return components.url
+    /// `POST .../models/<model>:generateContent`; the key goes in the
+    /// `x-goog-api-key` header, never in the URL.
+    static func endpoint(model: String) -> URL? {
+        guard !model.isEmpty else { return nil }
+        return URL(string: baseURL + model + ":generateContent")
+    }
+
+    /// Whole-call timeout for a line: 3 s plus 0.03 s per character, at most
+    /// 10 s (a 40-character line gets 4.2 s, a 200-character reply 9 s).
+    static func timeout(forCharacterCount count: Int) -> TimeInterval {
+        min(10, 3 + Double(count) * 0.03)
     }
 
     /// The generateContent body asking for audio only, in the language's voice.

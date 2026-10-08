@@ -21,14 +21,14 @@ mode.
   (fed by the gitignored `Config/Secrets.xcconfig`), and never overwrites a
   user key: the Keychain is written only when that provider has none.
 - **TTS is Gemini first, on-device fallback.** `HermesSpeechSynthesizer`
-  fetches each spoken line from Gemini text-to-speech (`CloudSpeech`, 4 s
-  timeout, voices Kore for ja and Aoede for en) and plays it with
+  fetches each spoken line from Gemini text-to-speech (`CloudSpeech`,
+  length-aware timeout 3 to 10 s, voices Kore for ja and Aoede for en) and plays it with
   `AVAudioPlayer` on the app's existing audio session; offline, on any error
   or after the timeout it speaks the same line with `AVSpeechSynthesizer`.
   Key and model come from Info.plist `EmoDrinkBundledAI` (`TTSKey`,
   `TTSModel`, fed by the gitignored Secrets.xcconfig); setting
-  `emodrink_cloud_voice` (default true). The key rides in the URL query, so
-  never log a request URL or a URLError's userInfo.
+  `emodrink_cloud_voice` (default true). The key rides in the
+  `x-goog-api-key` header, never in the URL.
 - **STT is on-device.** `SFSpeechRecognizer`, on-device when supported. There
   is no server path.
 - **Audio session uses mode `.default`, not `.voiceChat`** - voiceChat's DSP

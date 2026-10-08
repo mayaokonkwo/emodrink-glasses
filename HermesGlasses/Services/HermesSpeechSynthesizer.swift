@@ -2,7 +2,7 @@
 // HermesSpeechSynthesizer.swift
 //
 // Text-to-speech for the spoken lines. With a `CloudSpeech` configured, a
-// line is fetched from Gemini (4 s timeout) and played with AVAudioPlayer;
+// line is fetched from Gemini (length-aware timeout, 3 to 10 s) and played with AVAudioPlayer;
 // offline, on any error or after the timeout, the same line is spoken by
 // the on-device AVSpeechSynthesizer voice. Both play through the app's
 // current audio session and route (this file never touches the session).
@@ -40,7 +40,6 @@ final class HermesSpeechSynthesizer: NSObject, @unchecked Sendable {
     /// Each cloud attempt's outcome: true = Gemini audio played, false = fell
     /// back on-device. Delivered on the main queue.
     var onCloudOutcome: ((Bool) -> Void)?
-    static let cloudTimeout: TimeInterval = 4
 
     override init() {
         super.init()
@@ -112,7 +111,7 @@ final class HermesSpeechSynthesizer: NSObject, @unchecked Sendable {
         logger.info("Speaking \(trimmed.count) chars with the cloud voice")
         fetchTask = Task { @MainActor [weak self] in
             do {
-                let wav = try await cloud.synthesize(trimmed, language: language, timeout: Self.cloudTimeout)
+                let wav = try await cloud.synthesize(trimmed, language: language)
                 guard let self, generation == self.cloudGeneration, !Task.isCancelled else { return }
                 self.fetchTask = nil
                 let player = try AVAudioPlayer(data: wav)

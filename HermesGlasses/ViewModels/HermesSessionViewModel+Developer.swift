@@ -128,8 +128,10 @@ extension HermesSessionViewModel {
         }
     }
 
+    /// Appends one timestamped line; keeps the newest 200.
     func traceDisplay(_ event: String) {
         displayTestTrace.append(DisplayTestReport.traceLine(event, at: Date()))
+        if displayTestTrace.count > 200 { displayTestTrace.removeFirst(displayTestTrace.count - 200) }
     }
 
     /// The report, the SDK state read right after a send, and (after a

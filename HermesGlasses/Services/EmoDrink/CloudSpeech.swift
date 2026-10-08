@@ -4,7 +4,7 @@
 // The natural cloud voice: one Gemini text-to-speech call per line, WAV
 // back. Every failure (offline, HTTP error, no audio, the timeout) throws,
 // and HermesSpeechSynthesizer then speaks the same line on-device. The key
-// rides in the URL's query, so errors are never logged with their URL.
+// rides in the x-goog-api-key header, never in the URL.
 //
 
 import Foundation
@@ -25,14 +25,17 @@ final class CloudSpeech: Sendable {
     }
 
     /// The line spoken in the language's Gemini voice, as WAV data. Throws
-    /// `CloudSpeechError.timedOut` when the whole call takes over `timeout`.
-    func synthesize(_ text: String, language: Language, timeout: TimeInterval = 4) async throws -> Data {
-        guard let url = CloudSpeechCodec.endpoint(model: model, key: key) else {
+    /// `CloudSpeechError.timedOut` when the whole call takes over `timeout`;
+    /// nil means a length-aware timeout (`CloudSpeechCodec.timeout`).
+    func synthesize(_ text: String, language: Language, timeout: TimeInterval? = nil) async throws -> Data {
+        guard !key.isEmpty, let url = CloudSpeechCodec.endpoint(model: model) else {
             throw CloudSpeechError.badEndpoint
         }
+        let timeout = timeout ?? CloudSpeechCodec.timeout(forCharacterCount: text.count)
         var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(key, forHTTPHeaderField: "x-goog-api-key")
         request.httpBody = try CloudSpeechCodec.requestBody(text: text, language: language)
         let session = self.session
 
@@ -57,7 +60,7 @@ final class CloudSpeech: Sendable {
         CloudSpeechCodec.wavData(fromPCM16: pcm, sampleRate: sampleRate, channels: channels)
     }
 
-    /// A log-safe description: never the URL (it carries the key).
+    /// A log-safe description: an error's text, never its request.
     static func describe(_ error: Error) -> String {
         if let cloud = error as? CloudSpeechError { return cloud.errorDescription ?? "cloud voice error" }
         if let url = error as? URLError { return "URLError \(url.code.rawValue)" }

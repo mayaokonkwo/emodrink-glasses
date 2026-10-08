@@ -18,10 +18,13 @@ expect(CloudSpeechCodec.voiceName(for: .ja) == "Kore", "Japanese speaks with Kor
 expect(CloudSpeechCodec.voiceName(for: .en) == "Aoede", "English speaks with Aoede")
 
 // Endpoint.
-let url = CloudSpeechCodec.endpoint(model: "test-model-tts", key: "dummy")
-expect(url?.absoluteString == "https://generativelanguage.googleapis.com/v1beta/models/test-model-tts:generateContent?key=dummy", "endpoint carries the model and the key")
-expect(CloudSpeechCodec.endpoint(model: "", key: "dummy") == nil, "no model, no endpoint")
-expect(CloudSpeechCodec.endpoint(model: "m", key: "") == nil, "no key, no endpoint")
+let url = CloudSpeechCodec.endpoint(model: "test-model-tts")
+expect(url?.absoluteString == "https://generativelanguage.googleapis.com/v1beta/models/test-model-tts:generateContent", "endpoint carries the model and no key")
+expect(CloudSpeechCodec.endpoint(model: "") == nil, "no model, no endpoint")
+
+// Length-aware timeout.
+expect(abs(CloudSpeechCodec.timeout(forCharacterCount: 40) - 4.2) < 0.0001, "40 characters -> 4.2 s")
+expect(CloudSpeechCodec.timeout(forCharacterCount: 400) == 10, "400 characters -> capped at 10 s")
 
 // Request body.
 func body(_ text: String, _ language: Language) -> [String: Any] {
