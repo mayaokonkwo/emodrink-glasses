@@ -1,20 +1,19 @@
 //
 // VisionSource.swift
 //
-// The one seam between "what Hermes sees" and which hardware it comes
-// from. Five features use a camera - visual queries, "remember this
-// person", conversation capture, the Lens screen, and the Photo test - and
-// all five talk to this protocol, so phone mode reaches every one of them
-// without a single `if phoneMode` branch at a call site.
+// The one seam between "what EmoDrink sees" and which hardware it comes
+// from. Drink mode, visual queries and the Photo test talk to this
+// protocol, so phone mode reaches every one of them without an
+// `if phoneMode` branch at a call site.
 //
 // Frames arrive already reduced to what the app actually consumes: a
-// UIImage to draw and a CVPixelBuffer to run vision on. That conversion used
-// to live in LensViewModel; doing it here means the DAT SDK's VideoFrame
-// type stops at this boundary.
+// UIImage to draw (and, from the iPhone, a CVPixelBuffer). The glasses
+// source is GlassesLinkVision below, over GlassesLink, so the DAT SDK's
+// VideoFrame type never leaves GlassesLink.
 //
 
-import CoreMedia
 import CoreVideo
+import Foundation
 import UIKit
 
 /// One frame from whichever eye is active.
@@ -52,27 +51,13 @@ protocol VisionSource: AnyObject {
     func capturePhoto() async throws -> Data
 }
 
-// MARK: - Glasses
+// MARK: - Stills
 
-extension HermesCameraManager: VisionSource {
-    var sourceLabel: String { "Ray-Ban camera" }
-
-    /// Adapts the DAT SDK's `VideoFrame` callback to `VisionFrame`. The
-    /// decode happens once, here, on the SDK thread that delivered it.
-    func startLiveStream(
-        onFrame: @escaping @Sendable (VisionFrame) -> Void,
-        onError: @escaping @Sendable (String) -> Void
-    ) async throws {
-        try await startLiveStream(
-            onVideoFrame: { frame in
-                onFrame(VisionFrame(
-                    image: frame.makeUIImage(),
-                    pixelBuffer: CMSampleBufferGetImageBuffer(frame.sampleBuffer)
-                ))
-            },
-            onError: onError
-        )
-    }
+enum VisionStill {
+    /// One quality for every still the app produces - glasses camera and
+    /// phone camera. They both end up in a provider's vision endpoint, so
+    /// they must not drift apart.
+    static let jpegQuality: CGFloat = 0.85
 }
 
 // MARK: - Glasses through GlassesLink
@@ -169,7 +154,7 @@ final class GlassesLinkVision {
     }
 
     private static func jpeg(_ image: UIImage) throws -> Data {
-        guard let data = image.jpegData(compressionQuality: HermesCameraManager.jpegQuality) else {
+        guard let data = image.jpegData(compressionQuality: VisionStill.jpegQuality) else {
             throw GlassesVisionError.noFrame
         }
         return data

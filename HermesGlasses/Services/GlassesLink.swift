@@ -205,6 +205,7 @@ final class GlassesLink {
 
     @ObservationIgnored private var displayObservers: [String: @MainActor (DisplayState?) -> Void] = [:]
     @ObservationIgnored private var sessionObservers: [String: @MainActor (DeviceSessionState?) -> Void] = [:]
+    @ObservationIgnored private var sessionErrorObservers: [String: @MainActor (DeviceSessionError) -> Void] = [:]
 
     @ObservationIgnored private var registrationTask: Task<Void, Never>?
     @ObservationIgnored private var deviceStreamTask: Task<Void, Never>?
@@ -267,6 +268,12 @@ final class GlassesLink {
 
     func observeSession(_ key: String, _ handler: @escaping @MainActor (DeviceSessionState?) -> Void) {
         sessionObservers[key] = handler
+    }
+
+    /// Every DeviceSessionError the session reports (after GlassesLink has
+    /// logged it and failed any pending send).
+    func observeSessionErrors(_ key: String, _ handler: @escaping @MainActor (DeviceSessionError) -> Void) {
+        sessionErrorObservers[key] = handler
     }
 
     private func notifyDisplay() {
@@ -500,6 +507,7 @@ final class GlassesLink {
             add("send FAILED: session error before display was ready")
             pending.continuation.resume(returning: false)
         }
+        for handler in sessionErrorObservers.values { handler(error) }
     }
 
     // MARK: - Display (DisplayViewModel)

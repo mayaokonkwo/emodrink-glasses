@@ -190,9 +190,10 @@ HermesGlasses/
 │   ├── HermesSpeechRecognizer.swift   # on-device live STT
 │   ├── HermesSpeechSynthesizer.swift  # the voice
 │   ├── HermesAudioManager.swift       # mic capture + playback + mic switching
-│   ├── HermesCameraManager.swift      # glasses camera (DAT)
+│   ├── GlassesLink.swift              # the one DAT path: session, display, camera
+│   ├── VisionSource.swift             # eyes: GlassesLinkVision and the iPhone
 │   ├── PhoneCameraManager.swift       # iPhone camera (phone mode)
-│   ├── HermesDisplayManager.swift     # the lens on Ray-Ban Display
+│   ├── HermesDisplayManager.swift     # HUD screens, sent to the lens via GlassesLink
 │   ├── DirectClient.swift             # provider calls and conversation memory
 │   ├── Providers/                     # AIProvider seam
 │   └── EmoDrink/                      # physiology feed, picker, persona, gate, intents

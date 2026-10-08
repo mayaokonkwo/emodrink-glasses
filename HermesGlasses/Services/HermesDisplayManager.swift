@@ -11,7 +11,6 @@
 //
 
 import Foundation
-import MWDATCore
 import MWDATDisplay
 import os
 
@@ -76,19 +75,7 @@ final class HermesDisplayManager {
     /// GlassesLink's display state at the last change, to spot `.started`.
     private var lastLinkState: DisplayState?
 
-    private var display: Display?
-    private var stateListenerToken: AnyListenerToken?
-    private var stateTask: Task<Void, Never>?
-    private var stateContinuation: AsyncStream<DisplayState>.Continuation?
-    /// Meta's DisplayAccess sample gives the display 10 s to reach
-    /// `.started`, then gives up and says so. Without it a display that
-    /// never starts sat in `.connecting` forever, silently.
-    private var readinessTask: Task<Void, Never>?
-    static let readinessTimeoutSeconds: Double = 10
-    /// Latest view queued while the capability is still attaching
-    private var pendingView: FlexBox?
-    /// Serialized send pipeline: newest queued view wins, one send in
-    /// flight at a time (BLE sends can complete out of order otherwise)
+    /// Newest view waiting for the send pipeline (see `send`).
     private var queuedView: FlexBox?
     private var sendTask: Task<Void, Never>?
     private var dwellTask: Task<Void, Never>?
@@ -103,7 +90,7 @@ final class HermesDisplayManager {
         }
     }
 
-    // MARK: - Lifecycle (GlassesLink)
+    // MARK: - Lifecycle
 
     /// Put the HUD on the real lens: attach the display through GlassesLink
     /// (session created if needed), or redraw at once when it is already up.
@@ -123,7 +110,6 @@ final class HermesDisplayManager {
     /// attached to GlassesLink's session for the next activate.
     func deactivate() {
         cancelDwell()
-        pendingView = nil
         queuedView = nil
         lastReplyText = ""
         let wasActive = isActive
@@ -174,108 +160,6 @@ final class HermesDisplayManager {
     private func redrawAfterAttach() {
         guard sendTask == nil, queuedView == nil, !suppressAttachRedraw else { return }
         _ = attachRedraw?()
-    }
-
-    // MARK: - Lifecycle (old DeviceSession attach)
-
-    /// Attach the display capability on the shared voice session.
-    func start(session: DeviceSession) {
-        guard display == nil else {
-            NSLog("[EmoDrink] display start skipped: already attached (status \(status))")
-            return
-        }
-        status = .connecting
-        NSLog("[EmoDrink] display addDisplay (session state \(session.state))")
-
-        do {
-            let capability = try session.addDisplay()
-
-            let (stream, continuation) = AsyncStream.makeStream(of: DisplayState.self)
-            stateContinuation = continuation
-            stateListenerToken = capability.statePublisher.listen { state in
-                continuation.yield(state)
-            }
-
-            stateTask = Task { [weak self] in
-                for await state in stream {
-                    guard let self, !Task.isCancelled else { return }
-                    NSLog("[EmoDrink] display state \(state)")
-                    self.onStateTrace?(String(describing: state))
-                    switch state {
-                    case .starting, .stopping:
-                        break
-                    case .started:
-                        self.readinessTask?.cancel()
-                        self.readinessTask = nil
-                        self.status = .connected
-                        self.debug("Display attached")
-                        if let view = self.pendingView {
-                            self.pendingView = nil
-                            self.transmit(view)
-                        } else if !self.suppressAttachRedraw, self.attachRedraw?() == true {
-                            // The fresh card wins over anything queued.
-                            self.pendingView = nil
-                        }
-                    case .stopped:
-                        // Mid-session drop unless stop() already ran
-                        if self.status != .off {
-                            self.status = .unavailable("Display stopped")
-                        }
-                        self.cleanup()
-                        return
-                    }
-                }
-            }
-
-            capability.start()
-            display = capability
-            startReadinessTimeout()
-        } catch {
-            status = .unavailable(error.localizedDescription)
-            NSLog("[EmoDrink] display addDisplay failed: \(error)")
-            debug("Display attach failed: \(error.localizedDescription)")
-        }
-    }
-
-    func stop() {
-        cancelDwell()
-        pendingView = nil
-        lastReplyText = ""
-        status = .off
-        display?.stop()
-        // Tear down synchronously - waiting for the async .stopped event
-        // leaves `display` non-nil, and a quick start() would then bail on
-        // its guard and never re-attach. cleanup() is idempotent, so the
-        // late .stopped event (stream already finished) is harmless.
-        cleanup()
-    }
-
-    private func startReadinessTimeout() {
-        readinessTask?.cancel()
-        readinessTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(Self.readinessTimeoutSeconds * 1_000_000_000))
-            guard !Task.isCancelled, let self, self.status == .connecting else { return }
-            let state = self.sdkStateDescription ?? "none"
-            NSLog("[EmoDrink] display not started within \(Int(Self.readinessTimeoutSeconds)) s (display.state \(state)), stopping it")
-            self.onStateTrace?("timed out (display.state \(state))")
-            self.readinessTask = nil
-            self.pendingView = nil
-            self.display?.stop()
-            self.cleanup()
-            self.status = .unavailable("Timed out waiting for the display to become ready.")
-        }
-    }
-
-    private func cleanup() {
-        readinessTask?.cancel()
-        readinessTask = nil
-        stateListenerToken = nil
-        stateContinuation?.finish()
-        stateContinuation = nil
-        stateTask?.cancel()
-        stateTask = nil
-        display = nil
-        queuedView = nil
     }
 
     // MARK: - Screens
@@ -436,25 +320,6 @@ final class HermesDisplayManager {
                 let sent = await self.link.send(next, label: "HUD")
                 if !sent {
                     self.debug("Display send failed (display \(self.link.displayStateText))")
-                }
-            }
-            self?.sendTask = nil
-        }
-    }
-
-    private func transmit(_ view: FlexBox) {
-        guard display != nil else { return }
-        queuedView = view
-        guard sendTask == nil else { return }  // drain loop already running
-        sendTask = Task { [weak self] in
-            while let self, let next = self.queuedView {
-                self.queuedView = nil
-                guard let display = self.display else { break }
-                do {
-                    try await display.send(next)
-                } catch {
-                    NSLog("[EmoDrink] display send failed: \(error)")
-                    self.debug("Display send failed: \(error.localizedDescription)")
                 }
             }
             self?.sendTask = nil

@@ -6,8 +6,6 @@
 // and plays back responses through the glasses.
 //
 
-import CoreMedia
-import MWDATCamera
 import MWDATCore
 import Observation
 import os
@@ -237,15 +235,7 @@ final class HermesSessionViewModel {
     // Internal, not private: the +Glasses / +Developer extensions use it.
     @ObservationIgnored let wearables: WearablesInterface
     // Internal, not private: the +Glasses / +Developer extensions use it.
-    @ObservationIgnored var deviceSelector: AutoDeviceSelector
-    // Internal, not private: the +Glasses / +Developer extensions use it.
-    @ObservationIgnored var deviceSession: DeviceSession?
-    // Internal, not private: the +Glasses / +Developer extensions use it.
     @ObservationIgnored let audioManager = HermesAudioManager()
-    // Internal, not private: the +Glasses / +Developer extensions use it.
-    @ObservationIgnored var sessionObserverTask: Task<Void, Never>?
-    // Internal, not private: the +Glasses / +Developer extensions use it.
-    @ObservationIgnored let cameraManager = HermesCameraManager()
     @ObservationIgnored private let phoneCameraManager = PhoneCameraManager()
     @ObservationIgnored private let speechRecognizer = HermesSpeechRecognizer()
     @ObservationIgnored private let speechSynthesizer = HermesSpeechSynthesizer()
@@ -263,15 +253,6 @@ final class HermesSessionViewModel {
     /// Last photo sent in Direct mode, reused only when a fresh capture fails.
     @ObservationIgnored private var lastDirectPhoto: Data?
     @ObservationIgnored private var lastDirectPhotoAt: Date?
-    /// Camera-only session owned by the Lens view (nil while the voice
-    /// session provides the camera, or when Lens is closed).
-    // Internal, not private: the +Glasses / +Developer extensions use it.
-    @ObservationIgnored var lensSession: DeviceSession?
-    /// How many callers hold the camera through `ensureCameraSession()`.
-    /// Each successful ensure adds one, each `releaseCameraSession()` takes
-    /// one; the camera-only session is torn down only at zero. Internal for
-    /// the +Glasses / +Developer extensions.
-    @ObservationIgnored var lensUsers = 0
 
     /// Resumed by the first reply (or error) that follows a test's query.
     // Internal, not private: the +Glasses / +Developer extensions use it.
@@ -283,11 +264,6 @@ final class HermesSessionViewModel {
 
     /// Exposed for UI to show audio route
     var audio: HermesAudioManager { audioManager }
-
-    /// The glasses camera specifically - only for code that needs the DAT
-    /// lifecycle (session configure/reset). Everything that just wants to
-    /// SEE should use `vision`.
-    var camera: HermesCameraManager { cameraManager }
 
     /// The iPhone camera, for the phone-mode screen's status tiles.
     var phoneCamera: PhoneCameraManager { phoneCameraManager }
@@ -375,20 +351,6 @@ final class HermesSessionViewModel {
 
     func unpinVisionRoute() { pinnedVisionRoute = nil }
 
-    /// Mirrors `AutoDeviceSelector.activeDevice`, which lives on an SDK
-    /// object and is therefore invisible to SwiftUI's observation. Reading
-    /// it directly meant the launch screen rendered once while the SDK was
-    /// still discovering, saw nil, and never re-read - so the glasses looked
-    /// unreachable until some *other* state change forced a redraw (toggling
-    /// the eye to Phone and back, which is exactly how this was spotted).
-    /// The same discovery delay is why a cold-launch auto start waits up to
-    /// 3 s for this to turn non-nil (ContentView.autoStartIfNeeded) before
-    /// the route is resolved and pinned.
-    private(set) var activeGlassesDevice: DeviceIdentifier?
-
-    @ObservationIgnored private var activeDeviceTask: Task<Void, Never>?
-    @ObservationIgnored private var registrationTask: Task<Void, Never>?
-
     /// A Meta device the SDK can open a session on right now: GlassesLink
     /// reports it registered, link connected and compatible.
     var glassesAvailable: Bool { glassesLink.deviceReady }
@@ -471,13 +433,6 @@ final class HermesSessionViewModel {
         self.glassesLink = glassesLink
         self.displayManager = HermesDisplayManager(link: glassesLink)
         self.glassesVision = GlassesLinkVision(link: glassesLink)
-        // Display-capable devices only, as Meta's DisplayAccess sample does:
-        // a session opened on any other device can never attach the lens.
-        self.deviceSelector = AutoDeviceSelector(
-            wearables: wearables,
-            filter: { $0.supportsDisplay() }
-        )
-        self.activeGlassesDevice = self.deviceSelector.activeDevice
         reloadDirectProviderState()
         // Wired at init, NOT at session start: lens callbacks must exist
         // before any session does (see CLAUDE.md, display callbacks).
@@ -486,56 +441,9 @@ final class HermesSessionViewModel {
             Task { @MainActor [weak self] in self?.cloudVoiceFellBack = !success }
         }
         applyLanguage()
-    }
-
-    deinit {
-        sessionObserverTask?.cancel()
-        activeDeviceTask?.cancel()
-        registrationTask?.cancel()
-    }
-
-    /// Meta's DisplayAccess sample resets its display session whenever
-    /// registration drops to `.available` or `.unavailable`: the lens is
-    /// detached and a fresh display-filtered selector replaces the old one
-    /// (whose device may be gone for good). A running session is left to
-    /// the SDK, which stops it and reports through its state stream.
-    private func observeRegistration() {
-        let stream = wearables.registrationStateStream()
-        registrationTask = Task { [weak self] in
-            for await state in stream {
-                guard let self, !Task.isCancelled else { return }
-                NSLog("[EmoDrink] registration \(state)")
-                guard state == .available || state == .unavailable else { continue }
-                self.deviceSelector = AutoDeviceSelector(
-                    wearables: self.wearables,
-                    filter: { $0.supportsDisplay() }
-                )
-                self.activeDeviceTask?.cancel()
-                self.activeGlassesDevice = self.deviceSelector.activeDevice
-                self.observeActiveDevice()
-            }
-        }
-    }
-
-    /// Keep `activeGlassesDevice` live. Eligibility changes whenever the
-    /// glasses wake, sleep, or wander out of Bluetooth range, and every one
-    /// of those must reach the UI without the user poking something.
-    private func observeActiveDevice() {
-        let stream = deviceSelector.activeDeviceStream()
-        activeDeviceTask = Task { [weak self] in
-            for await device in stream {
-                guard let self, !Task.isCancelled else { return }
-                if self.activeGlassesDevice != device {
-                    self.activeGlassesDevice = device
-                    NSLog("[Hermes] activeDevice → \(device ?? "nil")")
-                    // Glasses just became usable - re-check the camera grant
-                    // so the warning under the toggle is true rather than
-                    // whatever was cached at launch.
-                    if device != nil {
-                        await self.refreshGlassesCameraStatus()
-                    }
-                }
-            }
+        // Update notices and session errors from the shared glasses session.
+        glassesLink.observeSessionErrors("session") { [weak self] error in
+            self?.handleSessionError(error)
         }
     }
 
@@ -1152,8 +1060,6 @@ final class HermesSessionViewModel {
         let emoEnding = onEmoDrinkSessionEnding
         onEmoDrinkSessionEnding = nil
         emoEnding?()
-        sessionObserverTask?.cancel()
-        sessionObserverTask = nil
         cueQueue.removeAll()
         speechSynthesizer.stop()
         speechRecognizer.stop()
@@ -1171,8 +1077,8 @@ final class HermesSessionViewModel {
         phoneCameraError = nil
         lensContent = .blank
         pendingPhoto = nil
-        deviceSession?.stop()
-        deviceSession = nil
+        // GlassesLink keeps its session (and attached display) for the next
+        // start and for the Glasses basics screen; Reset there ends it.
         connectionState = .disconnected
     }
 

@@ -16,7 +16,6 @@
 		AAAA00000000000000000005 /* HermesSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000105 /* HermesSessionViewModel.swift */; };
 		AAAA00000000000000000006 /* HermesAudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000106 /* HermesAudioManager.swift */; };
 		AAAA00000000000000000008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000108 /* Assets.xcassets */; };
-		AAAA00000000000000000009 /* HermesCameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000112 /* HermesCameraManager.swift */; };
 		AAAA00000000000000000010 /* HermesSpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000113 /* HermesSpeechRecognizer.swift */; };
 		AAAA00000000000000000011 /* HermesSpeechSynthesizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000114 /* HermesSpeechSynthesizer.swift */; };
 		AAAA00000000000000000012 /* DirectClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000115 /* DirectClient.swift */; };
@@ -97,7 +96,6 @@
 		AAAA00000000000000000109 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AAAA00000000000000000110 /* HermesGlasses.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HermesGlasses.entitlements; sourceTree = "<group>"; };
 		AAAA00000000000000000111 /* EmoDrink Glasses.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "EmoDrink Glasses.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		AAAA00000000000000000112 /* HermesCameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesCameraManager.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000113 /* HermesSpeechRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesSpeechRecognizer.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000114 /* HermesSpeechSynthesizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesSpeechSynthesizer.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000115 /* DirectClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectClient.swift; sourceTree = "<group>"; };
@@ -228,7 +226,6 @@
 			isa = PBXGroup;
 			children = (
 				AAAA00000000000000000106 /* HermesAudioManager.swift */,
-				AAAA00000000000000000112 /* HermesCameraManager.swift */,
 				AAAA00000000000000000113 /* HermesSpeechRecognizer.swift */,
 				AAAA00000000000000000114 /* HermesSpeechSynthesizer.swift */,
 				AAAA00000000000000000115 /* DirectClient.swift */,
@@ -368,7 +365,6 @@
 				AAAA00000000000000000E36 /* GlassesBasicsViewModel.swift in Sources */,
 				AAAA00000000000000000005 /* HermesSessionViewModel.swift in Sources */,
 				AAAA00000000000000000006 /* HermesAudioManager.swift in Sources */,
-				AAAA00000000000000000009 /* HermesCameraManager.swift in Sources */,
 				AAAA00000000000000000010 /* HermesSpeechRecognizer.swift in Sources */,
 				AAAA00000000000000000011 /* HermesSpeechSynthesizer.swift in Sources */,
 				AAAA00000000000000000012 /* DirectClient.swift in Sources */,

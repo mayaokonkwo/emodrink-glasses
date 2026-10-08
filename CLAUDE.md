@@ -43,12 +43,19 @@ mode.
 - **Glasses camera needs a separate permission** granted through the Meta AI
   app: `wearables.requestPermission(.camera)` (the Photo test button runs it).
   Streams fail with `permissionDenied` otherwise.
-- **Camera streams are one-shot:** fresh `addCamera()` per capture (SDK 1.0; `camera.stream`), the Camera stopped
-  via `defer` on every path. Config matches Meta's CameraAccess sample
-  (`.raw`, `.low`, 24 fps).
-- **Display HUD (Ray-Ban Display):** `HermesDisplayManager` attaches
-  `addDisplay()` to the SAME DeviceSession as the camera. Every display
-  call is best-effort - errors are logged, never surfaced. Settings keys:
+- **Every DAT call goes through `GlassesLink`** (`Services/GlassesLink.swift`),
+  the code proven on the owner's Ray-Ban Display by the Glasses basics
+  tests (Settings › Glasses › Developer › Glasses basics) and a near-copy of
+  Meta's DisplayAccess and CameraAccess samples. One instance, created in
+  `HermesGlassesApp`, owns the ONE DeviceSession, the Display (send waits
+  for `.started`, 10 s timeout) and the Camera (`.raw`, `.low`, 24 fps,
+  `frame.makeUIImage()`, keyed consumers). Nothing else creates a session,
+  adds a display or adds a camera: the older paths did not work on device.
+- **Display HUD (Ray-Ban Display):** `HermesDisplayManager` builds the
+  screens and sends them through `GlassesLink.send`; `activate()` /
+  `deactivate()` follow the glasses session and the HUD setting, and its
+  status mirrors GlassesLink's display state. Every display call is
+  best-effort - errors are logged, never surfaced. Settings keys:
   `display_hud_enabled` (default true), `display_silent_mode`.
 - **Glasses mic and the HUD are mutually exclusive.** The glasses mic is
   Bluetooth HFP (the DAT SDK has no audio capability); an active HFP/SCO
@@ -96,16 +103,14 @@ mode.
   a dead end.
 - **The test panel must work from a cold start.** It exists to diagnose a
   broken setup, so requiring a running session is backwards. `testPhoto`
-  borrows a camera-only session via `withCameraSession` and releases it;
-  `testVisualQuery` warms one first; `testDisplay` makes its own.
-- **Stream resolution is negotiated, never assumed.** `addStream` returns a
-  bare `nil` (no thrown error, no reason) when the firmware won't serve the
-  config you asked for. A live stream that demanded `.high` failed on device
-  while every path that works - one-shot capture, and Meta's own
-  CameraAccess sample - uses `.low`. `startLiveStream` now walks
-  `.high → .medium → .low`, twice, and logs which one opened. The one
-  persistent stream is drink mode's: started in `EmoDrinkViewModel.startStream`,
-  stopped in `stopStream`. If you add a config knob, ladder it.
+  and `testVisualQuery` get their photo from `GlassesLinkVision`, which opens
+  GlassesLink's camera for a moment; `testDisplay` sends through GlassesLink,
+  which opens the session and attaches the lens when needed.
+- **The glasses stream is `.low`, as in Meta's CameraAccess sample.**
+  `addCamera` returns a bare `nil` when the firmware won't serve a config.
+  Drink mode's stream is a GlassesLink camera consumer (started in
+  `EmoDrinkViewModel.startStream`, stopped in `stopStream`); a visual
+  query's photo is the latest frame.
 - **Display callbacks are wired in `init`, not `startSession`.** `wireDisplay()`
   must stay in the initialiser: the lens is reachable (display test, a pick by
   voice) before any session-scoped wiring exists.
@@ -195,9 +200,11 @@ mode.
   lens strings (`EmoDrinkStrings`), reasons and persona use. It only runs
   while the recognizer is stopped, so a mid-session change applies next
   session.
-- **The Developer Display test attaches the lens itself.** No session: a
-  camera-only DeviceSession for the display alone, 10 s to attach (the DisplayAccess sample's deadline), SDK
-  clearDisplay(), card ("EmoDrink" / "Lens OK") for 15 s, then torn down.
+- **The Developer Display test (and Test lens) sends through GlassesLink.**
+  The send opens the session and attaches the lens when needed, 10 s to
+  `.started` (the DisplayAccess sample's deadline); an attached lens is
+  cleared first; the card ("EmoDrink" / "Lens OK") stays 15 s, then the HUD
+  card comes back (or the lens is cleared).
   Every DisplayState and step is traced with a timestamp into
   `displayTestTrace` (shown under the report, with a Clear lens button), and
   the report carries the SDK's `display.state` read right after the send. Outcomes are `DisplayTestReport` (pure, tested in

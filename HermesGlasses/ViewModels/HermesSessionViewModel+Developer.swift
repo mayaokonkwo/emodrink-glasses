@@ -12,18 +12,6 @@ import UIKit
 extension HermesSessionViewModel {
     // MARK: - Test panel
 
-    /// Run `body` with a camera session available, creating a temporary
-    /// camera-only one if nothing is running and tearing it down after.
-    /// The test panel is for diagnosing a broken setup - insisting on a
-    /// working session first is exactly backwards.
-    func withCameraSession<T>(
-        _ body: () async throws -> T
-    ) async throws -> T {
-        try await ensureCameraSession()
-        defer { releaseCameraSession() }
-        return try await body()
-    }
-
     /// Camera alone - no Hermes involved. Runs the interactive permission
     /// flow (opens Meta AI) if camera access was never granted, and brings
     /// its own session so it works from a cold start.

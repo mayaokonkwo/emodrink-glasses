@@ -5,7 +5,7 @@
 // no glasses on you, so the phone becomes the eye and the lens is
 // simulated on screen.
 //
-// Deliberately shaped like HermesCameraManager so the two are
+// Deliberately shaped like GlassesLinkVision so the two are
 // interchangeable:
 //   * one persistent stream, torn down by stopLiveStream()
 //   * capturePhoto() serves the freshest live frame rather than opening a
@@ -134,7 +134,7 @@ final class PhoneCameraManager: NSObject, @unchecked Sendable, VisionSource {
     /// JPEG of the freshest streamed frame. If nothing is streaming - a
     /// visual query on the glasses route that fell back to the phone, say -
     /// spin the camera up briefly, take one frame, and shut it down again.
-    /// Mirrors HermesCameraManager's one-shot behaviour so either eye can
+    /// Mirrors GlassesLinkVision's one-shot behaviour so either eye can
     /// serve a still without the caller knowing which it is.
     func capturePhoto() async throws -> Data {
         if let jpeg = latestJPEG() { return jpeg }
@@ -160,7 +160,7 @@ final class PhoneCameraManager: NSObject, @unchecked Sendable, VisionSource {
         guard let image = stateLock.withLockUnchecked({ $0.latestImage }) else {
             return nil
         }
-        return image.jpegData(compressionQuality: HermesCameraManager.jpegQuality)
+        return image.jpegData(compressionQuality: VisionStill.jpegQuality)
     }
 
     // MARK: - Permission
