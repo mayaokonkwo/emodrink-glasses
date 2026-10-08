@@ -157,8 +157,11 @@ final class EmoDrinkViewModel {
     /// by the home screen on appear; `autoWatch` gates only that on-appear
     /// call (in ContentView), never this.
     func start() async {
+        // A Stop while the session starts must win: bail, do not watch.
+        let gen = hermesVM.sessionGeneration
         if hermesVM.connectionState == .disconnected {
             await hermesVM.startSession()
+            guard !hermesVM.stoppedSince(gen) else { return }
         }
         guard hermesVM.connectionState != .disconnected else {
             sessionBlocked = sessionFailureText()
@@ -472,13 +475,19 @@ final class EmoDrinkViewModel {
         defer { isStarting = false }
         guard catalog != nil else { fail("The drink catalogue is missing from this build."); return }
 
+        // A Stop during any await below ends the session; drink mode must
+        // then stay off rather than come back on a dead session.
+        let gen = hermesVM.sessionGeneration
         if hermesVM.connectionState == .disconnected {
             await hermesVM.startSession()
+            guard !hermesVM.stoppedSince(gen) else { return }
             guard hermesVM.connectionState != .disconnected else { sessionBlocked = sessionFailureText(); return }
             startedSession = true
         }
         sessionBlocked = micDenied ? strings.micBlocked : nil
-        guard hermesVM.hasVisionSource, await hermesVM.ensureVisionPermission(interactive: true) else {
+        let granted = hermesVM.hasVisionSource ? await hermesVM.ensureVisionPermission(interactive: true) : false
+        guard gen == hermesVM.sessionGeneration else { startedSession = false; return }
+        guard granted else {
             fail("Drink mode needs a camera - connect the glasses or allow the iPhone camera.")
             if startedSession { startedSession = false; hermesVM.endSession() }
             return
@@ -504,9 +513,9 @@ final class EmoDrinkViewModel {
         drinkModeStartedAt = Date()
         hermesVM.onEmoDrinkSessionEnding = { [weak self] in self?.stopDrinkMode(sessionEnding: true) }
         await refreshSnapshot()
-        guard drinkModeOn else { return }
+        guard drinkModeOn, gen == hermesVM.sessionGeneration else { return }
         await startStream()
-        guard drinkModeOn else { return }
+        guard drinkModeOn, gen == hermesVM.sessionGeneration else { return }
         if !momentActive { hermesVM.showEmoDrinkWatchingOnLens() }
         ticker?.cancel()
         ticker = Task { [weak self] in

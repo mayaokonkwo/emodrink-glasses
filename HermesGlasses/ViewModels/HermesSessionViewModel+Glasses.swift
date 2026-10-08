@@ -172,6 +172,15 @@ extension HermesSessionViewModel {
                             }
                         }
                     }
+                    // Cancelled (a Stop during connect) before the session
+                    // started or failed: resume, so startSession returns
+                    // instead of waiting forever.
+                    done.withLock { finished in
+                        if !finished {
+                            finished = true
+                            cont.resume(throwing: CancellationError())
+                        }
+                    }
                 }
 
                 // Now start the session
@@ -203,7 +212,8 @@ extension HermesSessionViewModel {
             // Caller decides whether this is fatal or a cue to use the phone,
             // so no alert here - just the breadcrumb.
             NSLog("[Hermes] glasses session failed: \(error.localizedDescription)")
-            deviceSession = nil
+            // A newer start may already own `deviceSession`.
+            if deviceSession === session { deviceSession = nil }
             return false
         }
 
@@ -221,6 +231,9 @@ extension HermesSessionViewModel {
         case .started:
             isGlassesConnected = true
         case .stopped, .stopping:
+            // While connecting, startSession sees the failure itself (and may
+            // fall back to the phone); ending here would read as a Stop.
+            guard connectionState != .connecting else { return }
             endSession()
         case .paused:
             connectionState = .disconnected

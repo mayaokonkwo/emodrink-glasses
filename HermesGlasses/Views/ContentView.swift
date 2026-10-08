@@ -139,25 +139,38 @@ struct ContentView: View {
         guard !didAutoStart, onboardingComplete, emoDrinkVM.autoWatch,
               hermesVM.connectionState == .disconnected else { return }
         didAutoStart = true
+        await waitForGlassesIfPaired()
         await emoDrinkVM.start()
     }
 
-    private var running: Bool { hermesVM.connectionState != .disconnected }
+    /// The SDK discovers paired glasses a moment after launch; starting at
+    /// once would resolve and pin the iPhone camera before it sees them.
+    /// Waits up to 3 s (every 250 ms), then starts anyway (phone fallback).
+    private func waitForGlassesIfPaired() async {
+        guard wearablesVM.registrationState == .registered,
+              hermesVM.phoneModePreference != .always else { return }
+        var polls = 0
+        while !hermesVM.glassesAvailable, polls < 12 {
+            try? await Task.sleep(for: .milliseconds(250))
+            polls += 1
+        }
+    }
 
-    /// The Start button always starts the session and drink mode, whatever
-    /// the auto-watch setting: `start()` only turns drink mode on when
-    /// `autoWatch` is on, so drink mode is started here when it is still off.
+    private var running: Bool { hermesVM.connectionState != .disconnected }
+    private var connecting: Bool { hermesVM.connectionState == .connecting }
+
+    /// The Start button: `start()` starts the session, then drink mode,
+    /// whatever the auto-watch setting (that gates only the on-open start).
     private func startWatching() async {
         await emoDrinkVM.start()
-        guard emoDrinkVM.sessionBlocked == nil, !emoDrinkVM.drinkModeOn,
-              hermesVM.connectionState != .disconnected else { return }
-        await emoDrinkVM.startDrinkMode()
     }
 
     private var startStopRow: some View {
         HStack(spacing: 12) {
-            HermesPrimaryButton(title: running ? "Stop" : "Start",
-                                systemImage: running ? "stop.fill" : "play.fill") {
+            // Disabled while connecting, so a tap cannot land mid-connect.
+            HermesPrimaryButton(title: connecting ? "Starting…" : (running ? "Stop" : "Start"),
+                                systemImage: running ? "stop.fill" : "play.fill",
+                                enabled: !connecting) {
                 if running { emoDrinkVM.stop() } else { Task { await startWatching() } }
             }
             if emoDrinkVM.drinkModeOn {

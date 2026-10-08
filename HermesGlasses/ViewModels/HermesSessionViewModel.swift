@@ -26,6 +26,19 @@ final class HermesSessionViewModel {
     private(set) var voiceName: String?
 
     var connectionState: HermesConnectionState = .disconnected
+    /// Bumped by every `endSession()`. A `startSession()` that awaited
+    /// across a Stop sees a newer generation and returns without bringing
+    /// the session back.
+    private(set) var sessionGeneration = 0
+    /// The generation a start's own failure (no key, audio setup) ended
+    /// the session at, so a caller can tell that from a Stop.
+    private(set) var startFailedGeneration: Int?
+
+    /// True when the session was ended after `generation` by something other
+    /// than the start's own failure: a Stop, or the glasses going away.
+    func stoppedSince(_ generation: Int) -> Bool {
+        sessionGeneration != generation && startFailedGeneration != sessionGeneration
+    }
     var isGlassesConnected: Bool = false
     /// Words recognized so far in the current utterance (live)
     var liveTranscript: String = ""
@@ -336,6 +349,9 @@ final class HermesSessionViewModel {
     /// still discovering, saw nil, and never re-read - so the glasses looked
     /// unreachable until some *other* state change forced a redraw (toggling
     /// the eye to Phone and back, which is exactly how this was spotted).
+    /// The same discovery delay is why a cold-launch auto start waits up to
+    /// 3 s for this to turn non-nil (ContentView.autoStartIfNeeded) before
+    /// the route is resolved and pinned.
     private(set) var activeGlassesDevice: DeviceIdentifier?
 
     @ObservationIgnored private var activeDeviceTask: Task<Void, Never>?
@@ -498,22 +514,40 @@ final class HermesSessionViewModel {
         // open when this button is reachable; this is belt-and-braces.)
         dropCameraSession()
 
+        // A Stop (endSession) while any await below is pending bumps the
+        // generation; every resume checks it and leaves the session down.
+        let gen = sessionGeneration
         connectionState = .connecting
 
         logVisionDiagnostics("startSession")
+        // Resolved now, after any launch wait for the SDK to discover the
+        // glasses, and pinned below for the whole session.
         var route = visionRoute
 
-        if route == .glasses, await connectGlassesSession() == false {
-            // Eligibility can lapse between the check and the start, and the
-            // SDK is the only one who knows. Rather than leaving the user at
-            // "No eligible device available" with no way forward, drop to the
-            // phone - unless they explicitly turned that off.
-            guard VisionRouting.mayFallBackToPhone(preference: phoneModePreference) else {
-                connectionState = .disconnected
+        if route == .glasses {
+            let connected = await connectGlassesSession()
+            guard gen == sessionGeneration else {
+                // Stopped while connecting: no phone fallback, no notice.
+                // endSession already stopped the session; undo what the
+                // connect set afterwards unless a newer start owns it.
+                if connectionState == .disconnected {
+                    isGlassesConnected = false
+                    cameraManager.reset()
+                }
                 return
             }
-            show(notice: "Glasses unreachable - using this iPhone as the eye.")
-            route = .phone
+            if !connected {
+                // Eligibility can lapse between the check and the start, and the
+                // SDK is the only one who knows. Rather than leaving the user at
+                // "No eligible device available" with no way forward, drop to the
+                // phone - unless they explicitly turned that off.
+                guard VisionRouting.mayFallBackToPhone(preference: phoneModePreference) else {
+                    connectionState = .disconnected
+                    return
+                }
+                show(notice: "Glasses unreachable - using this iPhone as the eye.")
+                route = .phone
+            }
         }
 
         pinVisionRoute(route)
@@ -523,6 +557,12 @@ final class HermesSessionViewModel {
             // No DeviceSession, no display attach - the phone is the eye and
             // the lens is simulated on screen (design 5b).
             await startPhoneVision()
+            guard gen == sessionGeneration else {
+                // Stopped while the camera opened: endSession already ran,
+                // so close the stream it could not see yet.
+                if connectionState == .disconnected { phoneCameraManager.stopLiveStream() }
+                return
+            }
         }
 
         // Personal context (time/location/motion/battery/weather) -
@@ -535,12 +575,14 @@ final class HermesSessionViewModel {
             guard !directProvider.requiresKey || DirectClient.hasKey(for: directProvider.id) else {
                 show("No API key set for \(directProvider.displayName). Add one in Settings.")
                 endSession()
+                startFailedGeneration = sessionGeneration
                 return
             }
         }
 
         applyLanguage(announceFallback: true)
         let speechOK = await speechRecognizer.requestAuthorization()
+        guard gen == sessionGeneration else { return }
         if !speechOK {
             show(HermesSpeechError.notAuthorized.localizedDescription)
         }
@@ -622,12 +664,19 @@ final class HermesSessionViewModel {
 
         do {
             let bluetoothActive = try await audioManager.startCapture(route: micSource.captureRoute)
+            guard gen == sessionGeneration else {
+                // Stopped while the mic opened: close what just started.
+                if connectionState == .disconnected { audioManager.stopCapture() }
+                return
+            }
             if micSource == .glasses && !bluetoothActive { show(notice: Self.glassesMicFallbackNotice) }
             if micSource == .headset && !bluetoothActive { show(notice: Self.headsetMicFallbackNotice) }
             if speechOK { try speechRecognizer.start() }
         } catch {
+            guard gen == sessionGeneration else { return }
             show("Audio setup failed: \(error.localizedDescription)")
             endSession()
+            startFailedGeneration = sessionGeneration
             return
         }
 
@@ -1019,6 +1068,7 @@ final class HermesSessionViewModel {
     }
 
     func endSession() {
+        sessionGeneration += 1
         let emoEnding = onEmoDrinkSessionEnding
         onEmoDrinkSessionEnding = nil
         emoEnding?()
