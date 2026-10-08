@@ -76,6 +76,9 @@ final class HermesSessionViewModel {
     var lastTestAudioRoute: String? = nil
     /// The Developer Display test's last outcome, in the spec's words.
     var displayTestReport: String?
+    /// The Display test's timeline: every DisplayState the SDK reported and
+    /// each test step, "HH:mm:ss event". Also logs Clear lens.
+    var displayTestTrace: [String] = []
 
     // MARK: EmoDrink hooks (set by EmoDrinkViewModel)
 

@@ -59,7 +59,14 @@ expect(!DisplayTestReport.noGlasses.isSuccess && !DisplayTestReport.micInUse.isS
 expect(DisplayTestReport.preflight(glassesReachable: false, glassesMicActive: true) == .noGlasses, "no glasses wins over the mic")
 expect(DisplayTestReport.preflight(glassesReachable: true, glassesMicActive: true) == .micInUse, "glasses mic blocks the HUD")
 expect(DisplayTestReport.preflight(glassesReachable: true, glassesMicActive: false) == nil, "otherwise attach")
-expect(DisplayTestReport.attachTimeoutSeconds == 5 && DisplayTestReport.cardSeconds == 4, "5 s attach wait, 4 s card")
+expect(DisplayTestReport.attachTimeoutSeconds == 5 && DisplayTestReport.cardSeconds == 15, "5 s attach wait, 15 s card")
+expect(DisplayTestReport.sent.message(sdkState: "started") == "Test card sent (display.state: started)", "sent report carries the SDK state")
+expect(DisplayTestReport.sent.message(sdkState: nil) == "Test card sent", "no SDK state, plain report")
+expect(DisplayTestReport.noGlasses.message(sdkState: "started") == "No glasses connected", "failures never carry the SDK state")
+let utc = TimeZone(identifier: "UTC")!
+let at = Date(timeIntervalSince1970: 13 * 3600 + 49 * 60 + 21)
+expect(DisplayTestReport.traceLine("starting", at: at, timeZone: utc) == "13:49:21 starting", "trace line is HH:mm:ss then the event")
+expect(DisplayTestReport.traceLine("released", at: at.addingTimeInterval(16), timeZone: utc) == "13:49:37 released", "trace line seconds roll over")
 
 if failures > 0 {
     print("\(failures) test(s) FAILED")

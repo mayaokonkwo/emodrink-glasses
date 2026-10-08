@@ -47,13 +47,13 @@ for lang in Language.allCases {
                t.stress(71), t.stepsAlready(8400),
                t.lensOn, t.lensAttaching, t.lensOff, t.lensUnavailable("x"), t.lensBlockedByMic,
                t.glassesCameraLive, t.glassesWaitingForCamera,
-               t.cloudVoiceToggle, t.cloudVoice("Kore"), t.onDeviceFallback, t.cloudVoiceFellBack]
+               t.cloudVoiceToggle, t.cloudVoice("Kore"), t.onDeviceFallback, t.cloudVoiceFellBack, t.clearLensButton]
     expect(all.allSatisfy { !$0.trimmingCharacters(in: .whitespaces).isEmpty }, "\(lang): every string is non-empty")
     expect(all.allSatisfy { !$0.contains("\u{2014}") }, "\(lang): no em dashes")
     let fixed = [t.watchingText, t.choiceHeading, t.noMachine, t.cameraNotReady, t.checkResting, t.sessionDidNotStart, t.cameraLost, t.enjoy, t.stoppedTitle, t.stoppedHint, t.visionCheckFailed, t.whyLabel, t.thanksLabel,
                  t.lensOn, t.lensAttaching, t.lensOff, t.lensUnavailable("x"), t.lensBlockedByMic,
                  t.glassesCameraLive, t.glassesWaitingForCamera,
-                 t.cloudVoiceToggle, t.onDeviceFallback, t.cloudVoiceFellBack]
+                 t.cloudVoiceToggle, t.onDeviceFallback, t.cloudVoiceFellBack, t.clearLensButton]
     if lang == .ja {
         expect(fixed.allSatisfy(hasJapanese), "ja: lens and spoken lines are Japanese")
     } else {
@@ -73,6 +73,7 @@ expect(EmoDrinkStrings(language: .en).lensOff == "Lens off", "en lens off")
 expect(EmoDrinkStrings(language: .en).lensUnavailable("Display stopped") == "Lens unavailable: Display stopped", "en lens unavailable carries the reason")
 expect(EmoDrinkStrings(language: .ja).lensUnavailable("Display stopped").hasSuffix("Display stopped"), "ja lens unavailable carries the reason")
 expect(EmoDrinkStrings(language: .en).lensBlockedByMic == "Lens hidden by glasses mic", "en lens hidden by mic")
+expect(EmoDrinkStrings(language: .en).clearLensButton == "Clear lens", "en clear lens button")
 
 // Glasses camera badge (device fix B).
 expect(EmoDrinkStrings(language: .en).glassesCameraLive == "Glasses camera · live", "en glasses camera live")

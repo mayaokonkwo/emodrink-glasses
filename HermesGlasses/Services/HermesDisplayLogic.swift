@@ -63,7 +63,8 @@ enum DisplayTestReport: Equatable {
     /// How long the test waits for the display capability to attach.
     static let attachTimeoutSeconds: Double = 5
     /// How long the test card stays before the lens returns to normal.
-    static let cardSeconds: Double = 4
+    /// Long enough to put the glasses on and look.
+    static let cardSeconds: Double = 15
 
     var message: String {
         switch self {
@@ -76,6 +77,22 @@ enum DisplayTestReport: Equatable {
     }
 
     var isSuccess: Bool { self == .sent }
+
+    /// The report with the SDK's `display.state` read right after the send,
+    /// so "sent" says whether the display still thought it was started.
+    func message(sdkState: String?) -> String {
+        guard self == .sent, let sdkState else { return message }
+        return "\(message) (display.state: \(sdkState))"
+    }
+
+    /// One line of the test's trace: "13:49:22 started".
+    static func traceLine(_ event: String, at date: Date, timeZone: TimeZone = .current) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = timeZone
+        formatter.dateFormat = "HH:mm:ss"
+        return "\(formatter.string(from: date)) \(event)"
+    }
 
     /// What can be known before touching the SDK. Nil = go ahead and attach.
     static func preflight(glassesReachable: Bool, glassesMicActive: Bool) -> DisplayTestReport? {

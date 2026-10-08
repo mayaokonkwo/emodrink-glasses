@@ -105,6 +105,7 @@ struct EmoDrinkStrings: Equatable {
     var lensOff: String { ja ? "レンズオフ" : "Lens off" }
     func lensUnavailable(_ reason: String) -> String { ja ? "レンズ利用不可: \(reason)" : "Lens unavailable: \(reason)" }
     var lensBlockedByMic: String { ja ? "メガネのマイク使用中のためレンズ非表示" : "Lens hidden by glasses mic" }
+    var clearLensButton: String { ja ? "レンズを消去" : "Clear lens" }
 
     // MARK: Camera badge (home stage, glasses mode)
 

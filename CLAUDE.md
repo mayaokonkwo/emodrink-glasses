@@ -196,8 +196,11 @@ mode.
   while the recognizer is stopped, so a mid-session change applies next
   session.
 - **The Developer Display test attaches the lens itself.** No session: a
-  camera-only DeviceSession for the display alone, 5 s to attach, card for
-  4 s, then torn down. Outcomes are `DisplayTestReport` (pure, tested in
+  camera-only DeviceSession for the display alone, 5 s to attach, SDK
+  clearDisplay(), card ("EmoDrink" / "Lens OK") for 15 s, then torn down.
+  Every DisplayState and step is traced with a timestamp into
+  `displayTestTrace` (shown under the report, with a Clear lens button), and
+  the report carries the SDK's `display.state` read right after the send. Outcomes are `DisplayTestReport` (pure, tested in
   `tests/display-logic`): sent, no glasses, display session failed (SDK
   error), glasses mic in use (call screen hides the HUD).
 

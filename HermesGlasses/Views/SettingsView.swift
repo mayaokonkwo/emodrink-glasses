@@ -317,6 +317,27 @@ private struct DeveloperPage: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .lineLimit(4)
                     }
+                    if !hermesVM.displayTestTrace.isEmpty {
+                        VStack(alignment: .leading, spacing: 1) {
+                            ForEach(Array(hermesVM.displayTestTrace.enumerated()), id: \.offset) { _, line in
+                                Text(line)
+                            }
+                        }
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    Button {
+                        Task { await hermesVM.clearLensFromDeveloper() }
+                    } label: {
+                        Text(EmoDrinkStrings(language: .en).clearLensButton)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(HermesTheme.accentOnCard)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(HermesTheme.accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
                     // The Display test's outcome already shows above; show it once.
                     if let failure = hermesVM.lastTestFailure, failure != hermesVM.displayTestReport {
                         Text(failure)

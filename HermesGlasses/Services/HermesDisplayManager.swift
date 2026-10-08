@@ -58,6 +58,11 @@ final class HermesDisplayManager {
     /// Set by the Developer display test around its own attach, so the
     /// redraw cannot land after (and over) the test card.
     var suppressAttachRedraw = false
+    /// Every DisplayState the SDK reports, as text ("starting", "started",
+    /// ...). Set by the Developer display test to trace the attach.
+    var onStateTrace: ((String) -> Void)?
+    /// The SDK's own `display.state` right now; nil when not attached.
+    var sdkStateDescription: String? { display.map { String(describing: $0.state) } }
 
     private var display: Display?
     private var stateListenerToken: AnyListenerToken?
@@ -92,6 +97,7 @@ final class HermesDisplayManager {
             stateTask = Task { [weak self] in
                 for await state in stream {
                     guard let self, !Task.isCancelled else { return }
+                    self.onStateTrace?(String(describing: state))
                     switch state {
                     case .starting, .stopping:
                         break
@@ -268,6 +274,18 @@ final class HermesDisplayManager {
             )
         }
         try await display.send(HermesDisplayScreens.testScreen())
+    }
+
+    /// The SDK's clearDisplay(). Throws when the lens is not attached, so
+    /// the Developer page can say why nothing happened.
+    func clearDisplay() async throws {
+        guard let display else {
+            throw NSError(
+                domain: "HermesDisplay", code: 2,
+                userInfo: [NSLocalizedDescriptionKey: "Display not attached (status: \(status))"]
+            )
+        }
+        try await display.clearDisplay()
     }
 
     // MARK: - Plumbing

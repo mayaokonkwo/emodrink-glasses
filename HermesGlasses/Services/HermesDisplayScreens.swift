@@ -188,12 +188,13 @@ enum HermesDisplayScreens {
         FlexBox(direction: .column) {}
     }
 
-    /// Static screen for the test panel's Display button.
+    /// Static screen for the test panel's Display button: high contrast and
+    /// simple, one large heading and one primary line, nothing else.
     static func testScreen() -> FlexBox {
-        FlexBox(direction: .column, spacing: 8) {
-            Text("EmoDrink display", style: .heading)
-            Text("Test card", style: .body, color: .secondary)
+        FlexBox(direction: .column, spacing: 12, alignment: .center, crossAlignment: .center) {
+            Text("EmoDrink", style: .heading, color: .primary)
+            Text("Lens OK", style: .body, color: .primary)
         }
-        .padding(24)
+        .padding(32)
     }
 }
