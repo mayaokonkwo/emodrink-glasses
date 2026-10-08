@@ -17,6 +17,8 @@ enum IntentDetector {
         "recommend a drink", "recommend me a drink", "which drink", "what do i drink",
         "何を飲めばいい", "何を飲めばいいですか", "何飲めばいい", "何飲もう", "何を飲もう",
         "おすすめの飲み物", "おすすめの飲み物は", "おすすめは",
+        "何を飲めば良い", "なにを飲めばいい", "何飲めばいいかな", "何を飲めばいいか", "何を飲めばいいかな",
+        "何がいい", "何を飲んだらいい", "飲み物のおすすめ",
     ]
     static let startDrinkModeCommands: Set<String> = [
         "start drink mode", "drink mode on", "begin drink mode", "start emodrink",

@@ -4,9 +4,10 @@
 // Spoken or tapped text to one of the offered drinks (index 0..2), or nil.
 // Reads ordinals and numbers in English and Japanese ("two", "the second
 // one", 「二番目」「二つ目」「最初の」), the lens button's own label ("2 Calpis
-// Water"), and a DISTINCTIVE token of a drink's English or Japanese name:
-// a token two options share ("Asahi", or "water" when two names contain it)
-// never decides. Both languages are always read, because speech recognition
+// Water"), a drink's EXACT full name in either script (so "Mitsuya Cider"
+// is not lost to "Mitsuya Cider Zero"), and a DISTINCTIVE token of a
+// drink's English or Japanese name: a token two options share ("Asahi", or
+// "water" when two names contain it) never decides. Both languages are always read, because speech recognition
 // mixes scripts; `language` is part of the signature for future tie-breaks.
 // Short utterances only, so a question that mentions a drink is still a
 // question. Foundation only; tested in tests/emodrink-choice.
@@ -111,13 +112,23 @@ enum DrinkChoiceParser {
             .filter { $0.count >= 3 && !stopTokens.contains($0) })
     }
 
+    /// Lowercased like the utterance, so 「スーパーH2O」 meets "スーパーh2o".
     private static func japaneseTokens(_ name: String) -> Set<String> {
-        Set(name.split(separator: " ").map(String.init).filter { $0.count >= 2 })
+        Set(name.lowercased().split(separator: " ").map(String.init).filter { $0.count >= 2 })
+    }
+
+    /// A name with case, punctuation and spaces gone, for exact matching.
+    private static func squashed(_ text: String) -> String {
+        normalize(text).replacingOccurrences(of: " ", with: "")
     }
 
     private static func nameIndex(_ s: String, options: [ChoiceOption]) -> Int? {
         let words = s.split(separator: " ").map(String.init)
         let core = words.joined()
+        // An exact full name wins before any token rule.
+        if let exact = options.firstIndex(where: { squashed($0.name) == core || squashed($0.nameJa) == core }) {
+            return exact
+        }
         let japaneseText = core.unicodeScalars.contains { $0.value >= 0x3040 }
         if japaneseText {
             guard core.count <= maxJapaneseChars else { return nil }

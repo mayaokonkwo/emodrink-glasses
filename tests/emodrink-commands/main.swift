@@ -42,6 +42,14 @@ expect(EmoDrinkCommands.spoken("どうも") == .thanks, "どうも")
 expect(EmoDrinkCommands.spoken("オッケー") == .thanks, "オッケー")
 expect(EmoDrinkCommands.spoken("戻る") == .back, "戻る")
 expect(EmoDrinkCommands.spoken("停止") == .stop, "停止")
+for phrase in ["ありがとうございました", "ありがとうございます", "ありがとうね", "サンキュー"] {
+    expect(EmoDrinkCommands.spoken(phrase) == .thanks, "\(phrase) is thanks")
+    expect(EmoDrinkCommands.spoken(phrase + "。") == .thanks, "\(phrase)。 is thanks")
+}
+for phrase in ["なんで", "何で"] {
+    expect(EmoDrinkCommands.spoken(phrase) == .why, "\(phrase) is why")
+    expect(EmoDrinkCommands.spoken(phrase + "？") == .why, "\(phrase)？ is why")
+}
 expect(EmoDrinkCommands.spoken("なぜか分からない") == nil, "なぜ inside a sentence is not a command")
 expect(EmoDrinkCommands.spoken("ありがとう、でもカフェインは入ってる？") == nil, "thanks inside a question is not a command")
 

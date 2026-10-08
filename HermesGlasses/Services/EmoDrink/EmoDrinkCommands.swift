@@ -16,7 +16,7 @@ enum EmoDrinkCommands {
 
     static let whyPhrases: Set<String> = [
         "why", "why this", "why this one", "why that", "why that one", "tell me why",
-        "なぜ", "どうして", "理由は", "なんで", "なぜこれ",
+        "なぜ", "どうして", "理由は", "なんで", "何で", "なぜこれ",
     ]
     static let somethingElsePhrases: Set<String> = [
         "something else", "another", "another one", "next", "next one", "other options", "what else",
@@ -25,7 +25,8 @@ enum EmoDrinkCommands {
     ]
     static let thanksPhrases: Set<String> = [
         "thanks", "thank you", "cheers", "got it", "perfect", "okay thanks", "ok thanks",
-        "ありがとう", "ありがとうございます", "どうも", "オッケー", "おっけー",
+        "ありがとう", "ありがとうございます", "ありがとうございました", "ありがとうね", "サンキュー",
+        "どうも", "オッケー", "おっけー",
     ]
     static let backPhrases: Set<String> = [
         "back", "go back", "show all three", "show me all three", "the three",

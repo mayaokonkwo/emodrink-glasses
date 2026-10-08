@@ -96,6 +96,25 @@ expect(pick("soda", calpises), 1, "soda")
 expect(pick("no", calpises), nil, "short words never match")
 expect(pick("black", calpises), 2, "black")
 
+// Japanese tokens are lowercased like the utterance.
+expect(pick("スーパーH2O", asahis, .ja), 1, "スーパーH2O with an uppercase H")
+expect(pick("「スーパーH2O」", asahis, .ja), 1, "「スーパーH2O」 in quotes")
+expect(pick("スーパーh2o", asahis, .ja), 1, "スーパーh2o lowercase")
+
+// An exact full name wins before the distinctive-token rule.
+let ciders = [
+    ChoiceOption(name: "Mitsuya Cider", nameJa: "三ツ矢サイダー"),
+    ChoiceOption(name: "Mitsuya Cider Zero", nameJa: "三ツ矢サイダー ゼロ"),
+    ChoiceOption(name: "Wilkinson Tansan", nameJa: "ウィルキンソン タンサン"),
+]
+expect(pick("Mitsuya Cider", ciders), 0, "exact English name beats the longer name")
+expect(pick("mitsuya cider.", ciders), 0, "exact English name, any case and punctuation")
+expect(pick("Mitsuya Cider Zero", ciders), 1, "the longer exact name")
+expect(pick("zero", ciders), 1, "zero is still a distinctive token")
+expect(pick("三ツ矢サイダー", ciders, .ja), 0, "exact Japanese name beats the longer name")
+expect(pick("三ツ矢サイダー ゼロ", ciders, .ja), 1, "exact longer Japanese name")
+expect(pick("WILKINSON TANSAN", ciders), 2, "exact name is case-insensitive")
+
 // Not a choice.
 expect(pick(""), nil, "empty")
 expect(pick("hello"), nil, "unrelated word")

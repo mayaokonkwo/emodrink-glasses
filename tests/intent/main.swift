@@ -38,6 +38,11 @@ expectEqual(IntentDetector.detect("見守りを停止"), .stopDrinkMode, "見守
 expectEqual(IntentDetector.detect("ドリンク モード 停止"), .stopDrinkMode, "spaces a recogniser inserted between Japanese words")
 expectEqual(IntentDetector.detect("何を飲めばいいか迷う"), .none, "a longer Japanese sentence is not the command")
 expectEqual(IntentDetector.normalizeCommand("「なぜ」？"), "なぜ", "Japanese quotes and question mark go")
+for phrase in ["何を飲めば良い", "なにを飲めばいい", "何飲めばいいかな", "何を飲めばいいか", "何を飲めばいいかな",
+               "何がいい", "何を飲んだらいい", "飲み物のおすすめ"] {
+    expectEqual(IntentDetector.detect(phrase), .recommendDrink, phrase)
+    expectEqual(IntentDetector.detect(phrase + "？"), .recommendDrink, phrase + "？")
+}
 
 print(failures == 0 ? "\nALL PASS" : "\n\(failures) FAILURES")
 exit(failures == 0 ? 0 : 1)
