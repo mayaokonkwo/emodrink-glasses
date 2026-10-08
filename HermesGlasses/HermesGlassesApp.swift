@@ -19,27 +19,16 @@ private let logger = Logger(subsystem: "com.flowsxr.hermesglasses", category: "s
 
 @main
 struct HermesGlassesApp: App {
-    @State private var wearablesViewModel: WearablesViewModel
-    @State private var hermesSessionViewModel: HermesSessionViewModel
-    @State private var emoDrinkViewModel: EmoDrinkViewModel
-    @State private var permissions = PermissionsCoordinator()
-
-    /// First launch runs the three-step wizard (glasses → permissions →
-    /// ready) so nobody meets a bare system dialog with no explanation.
-    @AppStorage("onboarding_complete") private var onboardingComplete = false
-
-    // Light/dark override, applied to the whole window (see AppearanceMode).
-    @AppStorage(AppearanceMode.storageKey) private var appearanceRaw =
-        AppearanceMode.system.rawValue
-    private var appearance: AppearanceMode {
-        AppearanceMode(rawValue: appearanceRaw) ?? .system
-    }
+    /// The only screen until the two fundamentals (glasses display text,
+    /// glasses camera feed) work. ContentView, onboarding and the
+    /// EmoDrink/Hermes view models stay in the codebase but are not
+    /// constructed, so nothing auto-starts a session, the camera or
+    /// drink watching at launch.
+    @State private var basicsViewModel: GlassesBasicsViewModel
 
     init() {
-        // Step 0: the gift build's bundled assistant key. First, so the
-        // session view model created below reads the seeded provider,
-        // model and key in its reloadDirectProviderState(). Never
-        // overwrites a key the user typed.
+        // Step 0: the gift build's bundled assistant key. Never overwrites
+        // a key the user typed.
         BundledAIKey.seedIfNeeded()
 
         // Step 1: Configure the DAT SDK once at launch
@@ -49,6 +38,7 @@ struct HermesGlassesApp: App {
             // Unconditional: a release build with a broken SDK config should
             // still leave a breadcrumb, not just the DEBUG console.
             logger.error("Failed to configure Wearables SDK: \(error.localizedDescription, privacy: .public)")
+            NSLog("[Basics] Wearables.configure() failed: %@", error.localizedDescription)
         }
 
         #if DEBUG
@@ -60,84 +50,20 @@ struct HermesGlassesApp: App {
         }
         #endif
 
-        let wearables = Wearables.shared
-        self._wearablesViewModel = State(
-            wrappedValue: WearablesViewModel(wearables: wearables)
+        self._basicsViewModel = State(
+            wrappedValue: GlassesBasicsViewModel(wearables: Wearables.shared)
         )
-        let session = HermesSessionViewModel(wearables: wearables)
-        self._hermesSessionViewModel = State(wrappedValue: session)
-        self._emoDrinkViewModel = State(wrappedValue: EmoDrinkViewModel(hermesVM: session))
     }
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                ContentView(
-                    wearablesVM: wearablesViewModel,
-                    hermesVM: hermesSessionViewModel,
-                    emoDrinkVM: emoDrinkViewModel
-                )
+            GlassesBasicsView(viewModel: basicsViewModel)
                 // Handle Meta AI URL callback after registration
                 .onOpenURL { url in
                     Task {
                         _ = try? await Wearables.shared.handleUrl(url)
                     }
                 }
-                .alert("EmoDrink Error", isPresented: $hermesSessionViewModel.showError) {
-                    Button("OK") { hermesSessionViewModel.dismissError() }
-                } message: {
-                    Text(hermesSessionViewModel.errorMessage)
-                }
-                // Separate surface, deliberately not titled as a fault: a
-                // fallback that worked ("using the iPhone mic") is news, not
-                // an error, and the Error alert said otherwise.
-                .alert("EmoDrink", isPresented: $hermesSessionViewModel.showNotice) {
-                    if let action = hermesSessionViewModel.noticeAction {
-                        Button(action.title) { hermesSessionViewModel.performNoticeAction() }
-                    }
-                    Button("OK") { hermesSessionViewModel.dismissNotice() }
-                } message: {
-                    Text(hermesSessionViewModel.noticeMessage)
-                }
-            }
-            // A cover, not a sibling: as a sibling it laid out UNDER the
-            // session screen, leaving half the app visible above it.
-            //
-            // Gated on `onboardingComplete`: onboarding's own glasses step
-            // can also drive `registrationState` to `.registering` (its
-            // "Connect Glasses" button), and it already shows its own
-            // inline waiting state (OnboardingView.swift:75-82) for exactly
-            // that. Without the gate, two full-screen covers wanted to
-            // present at once.
-            .fullScreenCover(isPresented: Binding(
-                get: {
-                    onboardingComplete
-                        && wearablesViewModel.registrationState == .registering
-                },
-                set: { _ in }
-            )) {
-                RegistrationInProgressView(viewModel: wearablesViewModel)
-            }
-            // Force light/dark for the whole window (sheets included).
-            .preferredColorScheme(appearance.colorScheme)
-            .fullScreenCover(isPresented: Binding(
-                get: { !onboardingComplete },
-                set: { onboardingComplete = !$0 }
-            )) {
-                OnboardingView(
-                    wearablesVM: wearablesViewModel,
-                    hermesVM: hermesSessionViewModel,
-                    permissions: permissions
-                ) { startSession in
-                    onboardingComplete = true
-                    // With "Watch for vending machines" on, ContentView's
-                    // onChange(of: onboardingComplete) starts session and
-                    // drink mode; starting here too would race it.
-                    if startSession && !emoDrinkViewModel.autoWatch {
-                        Task { await hermesSessionViewModel.startSession() }
-                    }
-                }
-            }
         }
     }
 }
