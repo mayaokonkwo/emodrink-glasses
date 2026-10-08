@@ -16,35 +16,53 @@ It is a fork of [Hermes Glasses](https://github.com/prasanthsasikumar/hermes-gla
 MIT licensed, cut down to EmoDrink alone. Everything else Hermes does
 lives on in the Hermes Glasses repo.
 
+<p align="center">
+  <img src="docs/media/icon.png" width="96" alt="EmoDrink app icon: a white morning sun rising over a navy horizon with three bubbles">
+</p>
+
+<p align="center">
+  <img src="docs/media/home-glasses-camera.png" width="280" alt="EmoDrink home on an iPhone: the live Ray-Ban Display camera feed with the three-drink card overlaid, today's sleep and HRV numbers, and the Pick one list">
+  &nbsp;&nbsp;
+  <img src="docs/media/home.png" width="280" alt="EmoDrink home before starting: the simulated lens, today's sleep, score, HRV and resting heart rate, a Stopped card, and the Start and Test lens buttons">
+</p>
+<p align="center"><em>Left: first run on the glasses, the stage showing the Ray-Ban Display camera live while the lens offers three drinks. Right: the home before Start. A video at a real machine in Singapore is coming.</em></p>
+
 ## First ten minutes
 
 1. **Install.** Build from Xcode onto the iPhone. The bundle id
    (`com.flowsxr.hermesglasses`) must be the one registered with the Meta
    Wearables Developer Center, and `Config/Secrets.xcconfig` must carry the
    Meta app id and the assistant key (copy `Config/Secrets.example.xcconfig`).
-2. **Glasses.** In the Meta AI app, turn on developer mode for the glasses,
-   then pair them from EmoDrink (Settings › Glasses › Connect glasses) and
-   allow the glasses camera when Meta AI asks. No glasses on you? Phone mode
-   uses the iPhone camera instead.
-3. **Permissions.** Allow each prompt as it comes: microphone and speech
+2. **Glasses.** In the Meta AI app (v272 or later, glasses firmware v125 or
+   later), put the glasses on, open Settings › App Info and tap App Version
+   five times for Developer Mode, then press **Install** to put the Device
+   Access Toolkit on the glasses (accept the Wi-Fi prompt). Pair them from
+   EmoDrink (Settings › Glasses › Connect glasses), allow the glasses camera
+   when Meta AI asks, and allow local network access when iOS asks: the lens
+   uses a Wi-Fi link. No glasses on you? Phone mode uses the iPhone camera.
+3. **Check the two basics.** Settings › Glasses › Developer › Glasses basics
+   has three tests built straight from Meta's samples: send text to the lens,
+   show the glasses camera on the phone, and run the vending machine check
+   with the answer on the lens. If any of these fails, nothing else will work.
+4. **Permissions.** Allow each prompt as it comes: microphone and speech
    recognition (to pick by voice), camera (to see the machine), Bluetooth and
    local network (to reach the glasses), and location and motion (device
    context for the assistant: where you are, the weather, walking or still).
-4. **Start watching.** Tap **Start** on the home screen (it also starts by
+5. **Start watching.** Tap **Start** on the home screen (it also starts by
    itself when the app opens). The lens shows "Drink mode", "Watching for a
    vending machine" and a hint to say "what should I drink" /
    「何を飲めばいい」. At a machine it shows three numbered drinks; pick one by
    tap, number or name, then "Why" / 「なぜ」 or "Thanks" / 「ありがとう」.
-5. **A better voice.** On the iPhone, Settings › Accessibility › Spoken
+6. **A better voice.** On the iPhone, Settings › Accessibility › Spoken
    Content › Voices › Japanese › Kyoko (Enhanced), and an Enhanced English
    voice under English. EmoDrink uses the best one installed.
-6. **Phone in a pocket.** Use headset mode ("Headset Mic", Settings › Language and
+7. **Phone in a pocket.** Use headset mode ("Headset Mic", Settings › Language and
    voice › Microphone): the lens stays free and the mic still hears you. The
    glasses' own mic brings up their call screen over the lens.
-7. **The data.** The default feed is a fixed sample document, so the card
+8. **The data.** The default feed is a fixed sample document, so the card
    reads "feed dated ..." for it. Turn on "Use sample data" (Settings ›
    Drinks) for an offline demo, or point the feed URL at your own data.
-8. **The budget.** At most 150 vision checks an hour, sent only when the
+9. **The budget.** At most 150 vision checks an hour, sent only when the
    scene changes and settles. Settings › Drinks shows how many are used.
 
 ## What it does
@@ -69,6 +87,9 @@ lives on in the Hermes Glasses repo.
   English or Japanese in Settings › Language and voice. Speech recognition,
   lens text and spoken lines follow it; the voice is the best installed
   (premium, then enhanced), at a measured pace.
+- **Sounds natural.** Spoken lines use Google's Gemini voice (Kore for
+  Japanese, Aoede for English). Offline or on any error it falls back to the
+  best on-device voice at once; Settings › Language and voice shows which.
 - **Talks about it.** Anything else you say goes to the drink persona, which
   knows your numbers and the catalogue and follows the study's rule:
   suggestive, never diagnostic.
@@ -120,6 +141,9 @@ three sample profiles under "Use sample data" work offline.
   the gitignored `Config/Secrets.xcconfig` (`BUNDLED_AI_PROVIDER`,
   `BUNDLED_AI_MODEL`, `BUNDLED_AI_KEY`; see `Config/Secrets.example.xcconfig`).
   Without it the app builds as before and asks for a key in Settings.
+- **The voice key is built in too.** `BUNDLED_TTS_KEY` and
+  `BUNDLED_TTS_MODEL` in the same gitignored file give the Gemini voice;
+  without them the app speaks with the on-device voice.
 - **No Mac bridge in this build.** Direct mode is the only mode: the phone
   calls the provider itself.
 - **Glasses still need a Meta Wearables app id** in `Config/Secrets.xcconfig`.
@@ -159,12 +183,17 @@ The phone does everything; there is no server:
 
 - **iOS app** (`HermesGlasses/`): SwiftUI, the
   [Meta Wearables Device Access Toolkit](https://github.com/facebook/meta-wearables-dat-ios)
-  for registration, sessions, camera and the lens, `SFSpeechRecognizer` for
-  on-device speech, `AVSpeechSynthesizer` for the voice.
+  1.0.0 for registration, sessions, camera and the lens, all through one
+  `GlassesLink` service lifted from Meta's DisplayAccess and CameraAccess
+  samples; `SFSpeechRecognizer` for on-device speech; the Gemini voice with
+  `AVSpeechSynthesizer` as the offline fallback.
 
 ## Testing
 
-Settings › Glasses › Developer has the test panel (works from a cold start):
+Start with **Settings › Glasses › Developer › Glasses basics**: lens text,
+glasses camera feed, and the vending machine check on the lens. They use the
+same `GlassesLink` path as the rest of the app, so they prove the
+fundamentals in seconds. Below them, the older test panel:
 
 | Button | Verifies |
 |---|---|
@@ -211,3 +240,7 @@ tools/                                 # pbx-register.py, pbx-unregister.py, mak
   show their call screen over the lens: mic or lens, not both. Headset mode
   (AirPods) keeps both.
 - Glasses photos may arrive rotated (EXIF orientation not yet normalized).
+- Lens button taps from the glasses are wired the way Meta's sample does it
+  but have had less device time than the phone-side taps.
+- Detection works on a photo of a vending machine on a screen, which is how
+  it was tested; a real-machine run and a video are next.
