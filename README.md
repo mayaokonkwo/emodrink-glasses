@@ -16,6 +16,37 @@ It is a fork of [Hermes Glasses](https://github.com/prasanthsasikumar/hermes-gla
 MIT licensed, cut down to EmoDrink alone. Everything else Hermes does
 lives on in the Hermes Glasses repo.
 
+## First ten minutes
+
+1. **Install.** Build from Xcode onto the iPhone. The bundle id
+   (`com.flowsxr.hermesglasses`) must be the one registered with the Meta
+   Wearables Developer Center, and `Config/Secrets.xcconfig` must carry the
+   Meta app id and the assistant key (copy `Config/Secrets.example.xcconfig`).
+2. **Glasses.** In the Meta AI app, turn on developer mode for the glasses,
+   then pair them from EmoDrink (Settings › Glasses › Connect glasses) and
+   allow the glasses camera when Meta AI asks. No glasses on you? Phone mode
+   uses the iPhone camera instead.
+3. **Permissions.** Allow each prompt as it comes: microphone and speech
+   recognition (to pick by voice), camera (to see the machine), Bluetooth and
+   local network (to reach the glasses), and location and motion (device
+   context for the assistant: where you are, the weather, walking or still).
+4. **Start watching.** Tap **Start** on the home screen (it also starts by
+   itself when the app opens). The lens shows "Drink mode", "Watching for a
+   vending machine" and a hint to say "what should I drink" /
+   「何を飲めばいい」. At a machine it shows three numbered drinks; pick one by
+   tap, number or name, then "Why" / 「なぜ」 or "Thanks" / 「ありがとう」.
+5. **A better voice.** On the iPhone, Settings › Accessibility › Spoken
+   Content › Voices › Japanese › Kyoko (Enhanced), and an Enhanced English
+   voice under English. EmoDrink uses the best one installed.
+6. **Phone in a pocket.** Use headset mode ("Headset Mic", Settings › Language and
+   voice › Microphone): the lens stays free and the mic still hears you. The
+   glasses' own mic brings up their call screen over the lens.
+7. **The data.** The default feed is a fixed sample document, so the card
+   reads "feed dated ..." for it. Turn on "Use sample data" (Settings ›
+   Drinks) for an offline demo, or point the feed URL at your own data.
+8. **The budget.** At most 150 vision checks an hour, sent only when the
+   scene changes and settles. Settings › Drinks shows how many are used.
+
 ## What it does
 
 - **Opens watching.** The app starts the session and drink mode by itself
@@ -32,7 +63,7 @@ lives on in the Hermes Glasses repo.
   Group soft drinks; the lens shows the best three as numbered buttons with
   the first one's reason, and a voice names them. The AI never chooses.
 - **You pick by tap, number or name.** "Two", "the second one", 「二番目」,
-  「二つ目」, "Calpis", 「カルピス」. The lens narrows to that drink with Why and
+  「二つ目」, "Wilkinson", 「麦茶」. The lens narrows to that drink with Why and
   Thanks, and a warm one-line reason is spoken.
 - **Japanese both ways.** Auto follows the iPhone's first language, or pick
   English or Japanese in Settings › Language and voice. Speech recognition,
@@ -94,7 +125,8 @@ three sample profiles under "Use sample data" work offline.
 - **Glasses still need a Meta Wearables app id** in `Config/Secrets.xcconfig`.
   Phone mode (the iPhone camera as the eye) works without it.
 
-Settings › Drinks shows the feed URL, sample data and the catalogue; the home screen shows today's numbers. The build uses the bundle id
+Settings › Drinks shows the feed URL, sample data and the catalogue; the
+home screen shows today's numbers. The build uses the bundle id
 `com.flowsxr.hermesglasses`, because the Meta Wearables Developer Center
 ties the app id to that bundle id; the glasses only link to a bundle id
 that is registered there. To ship under another id, register it in the
@@ -178,10 +210,3 @@ tools/                                 # pbx-register.py, pbx-unregister.py, mak
   show their call screen over the lens: mic or lens, not both. Headset mode
   (AirPods) keeps both.
 - Glasses photos may arrive rotated (EXIF orientation not yet normalized).
-
-## Discussion
-
-Write-ups and demos, with questions answered in the comments:
-
-- [r/SideProject - "I built an app that lets you talk to your own AI…"](https://www.reddit.com/r/SideProject/comments/1uvhx6l/i_built_an_app_that_lets_you_talk_to_your_own_ai/)
-- [r/augmentedreality - "My AI agent lives on my Meta Ray-Bans. I asked it…"](https://www.reddit.com/r/augmentedreality/comments/1v0dbcy/my_ai_agent_lives_on_my_meta_raybans_i_asked_it/)
