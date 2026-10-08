@@ -93,6 +93,15 @@ struct BasicsLogLine: Identifiable {
     let text: String
 }
 
+// MARK: - Lens card
+
+/// What Test 1's send path puts on the glasses: a heading and a smaller
+/// line. `detail == nil` means "Sent at <time>" (Test 1's own wording).
+struct BasicsLensCard {
+    let heading: String
+    let detail: String?
+}
+
 // MARK: - View model
 
 @Observable
@@ -124,6 +133,17 @@ final class GlassesBasicsViewModel {
     /// Camera was asked for and is not yet torn down (drives the toggle label).
     private(set) var cameraRequested = false
 
+    // MARK: Test 3: vending machine check
+
+    /// Last result line: "YES: vending machine", "NO" or "Failed: <reason>".
+    var checkResultText = "-"
+    var checkDurationText = "-"
+    var checkCount = 0
+    private(set) var isChecking = false
+    private(set) var autoCheck = false
+    /// FrameTools.canRunVisionChecks reason when checks cannot run.
+    private(set) var visionBlockedReason: String?
+
     // MARK: Log
 
     var log: [BasicsLogLine] = []
@@ -143,6 +163,10 @@ final class GlassesBasicsViewModel {
     var sessionStateText: String { sessionState.map { $0.description } ?? "none" }
     var displayStateText: String { displayState.map(Self.describe) ?? "not attached" }
     var streamStateText: String { Self.describe(streamState) }
+    /// "Check now": camera feed running, a frame exists, vision available.
+    var canCheckNow: Bool {
+        cameraRequested && previewImage != nil && visionBlockedReason == nil && !isChecking
+    }
 
     // MARK: Private
 
@@ -162,8 +186,8 @@ final class GlassesBasicsViewModel {
     @ObservationIgnored private var displayStateTask: Task<Void, Never>?
     @ObservationIgnored private var displayStateContinuation: AsyncStream<DisplayState>.Continuation?
     @ObservationIgnored private var displayReadinessTimeoutTask: Task<Void, Never>?
-    /// DisplayViewModel's pendingAction: the text to send once DisplayState.started arrives.
-    @ObservationIgnored private var pendingDisplayText: String?
+    /// DisplayViewModel's pendingAction: the card to send once DisplayState.started arrives.
+    @ObservationIgnored private var pendingDisplayText: BasicsLensCard?
     /// Add the display as soon as the session reaches `.started`.
     @ObservationIgnored private var wantDisplay = false
 
@@ -173,6 +197,11 @@ final class GlassesBasicsViewModel {
     @ObservationIgnored private var wantCamera = false
     @ObservationIgnored private var fpsWindowStart: Date?
     @ObservationIgnored private var fpsWindowCount = 0
+
+    @ObservationIgnored private var autoCheckTask: Task<Void, Never>?
+    /// Bumped when the camera stops or on Reset, so a check still in flight
+    /// does not put a stale result on the lens (or reopen a session).
+    @ObservationIgnored private var checkGeneration = 0
 
     @ObservationIgnored private var registrationTask: Task<Void, Never>?
     @ObservationIgnored private var deviceStreamTask: Task<Void, Never>?
@@ -197,12 +226,14 @@ final class GlassesBasicsViewModel {
         )
         self.cameraSelector = AutoDeviceSelector(wearables: wearables)
         add("launch: registration \(registrationText)")
+        refreshVisionPreflight()
         observeWearables()
     }
 
     isolated deinit {
         registrationTask?.cancel()
         deviceStreamTask?.cancel()
+        autoCheckTask?.cancel()
         sessionStateTask?.cancel()
         sessionErrorTask?.cancel()
         displayStateTask?.cancel()
@@ -390,7 +421,12 @@ final class GlassesBasicsViewModel {
     // MARK: - Test 1: display (DisplayViewModel)
 
     func sendToGlasses() {
-        let text = displayText
+        sendToLens(BasicsLensCard(heading: displayText, detail: nil))
+    }
+
+    /// Test 1's send path, shared with Test 3: attaches the display the same
+    /// way if it is not attached yet, then sends the card.
+    private func sendToLens(_ text: BasicsLensCard) {
         guard !isSending else {
             add("send ignored: a send is already in flight")
             return
@@ -404,7 +440,7 @@ final class GlassesBasicsViewModel {
 
         // Pending-action pattern: queue, then send on DisplayState.started.
         pendingDisplayText = text
-        add("send queued: \"\(text)\" waits for display .started")
+        add("send queued: \"\(text.heading)\" waits for display .started")
         startDisplayReadinessTimeout()
 
         if display != nil {
@@ -497,15 +533,16 @@ final class GlassesBasicsViewModel {
         }
     }
 
-    private func doSend(_ text: String, on capability: Display) async {
+    private func doSend(_ card: BasicsLensCard, on capability: Display) async {
         defer { isSending = false }
         let sentAt = sentClock.string(from: Date())
+        let detail = card.detail ?? "Sent at \(sentAt)"
         let view = FlexBox(direction: .column, spacing: 12) {
-            Text(text, style: .heading, color: .primary)
-            Text("Sent at \(sentAt)", style: .body, color: .primary)
+            Text(card.heading, style: .heading, color: .primary)
+            Text(detail, style: .body, color: .primary)
         }
         .padding(24)
-        add("display.send(\"\(text)\", sent at \(sentAt))")
+        add("display.send(\"\(card.heading)\", \(detail))")
         do {
             try await capability.send(view)
             add("send OK")
@@ -634,6 +671,7 @@ final class GlassesBasicsViewModel {
     private func stopCamera() {
         wantCamera = false
         cameraRequested = false
+        stopVendingChecks(reason: "camera stopped")
         guard let activeCamera = camera else {
             add("camera stop: no camera attached")
             return
@@ -694,12 +732,126 @@ final class GlassesBasicsViewModel {
 
     /// CameraViewModel.clearStreamResources.
     private func clearStreamResources() {
+        stopVendingChecks(reason: "camera stream stopped")
         streamTokenBag.clear()
         camera?.stop()
         camera = nil
         cameraRequested = false
         streamState = .stopped
         previewImage = nil
+    }
+
+    // MARK: - Test 3: vending machine check
+
+    func refreshVisionPreflight() {
+        let check = FrameTools.canRunVisionChecks
+        visionBlockedReason = check.ok ? nil : (check.reason ?? "vision checks unavailable")
+        if let reason = visionBlockedReason {
+            add("vending check unavailable: \(reason)")
+            setAutoCheck(false)
+        }
+    }
+
+    func checkNow() {
+        guard visionBlockedReason == nil else {
+            add("check ignored: \(visionBlockedReason ?? "vision unavailable")")
+            return
+        }
+        guard !isChecking else {
+            add("check ignored: a check is already in flight")
+            return
+        }
+        guard cameraRequested, let frame = previewImage else {
+            add("check ignored: no camera frame")
+            return
+        }
+        guard let jpeg = FrameTools.downscaledJPEG(frame, maxSide: 1024, quality: 0.7) else {
+            finishCheck(result: "Failed: could not encode frame", heading: "Check failed", seconds: 0, generation: checkGeneration)
+            return
+        }
+
+        isChecking = true
+        let generation = checkGeneration
+        let number = checkCount + 1
+        add("check #\(number): request sent (\(jpeg.count / 1024) KB JPEG, \(DirectClient.provider.displayName))")
+        let started = Date()
+        Task { [weak self] in
+            do {
+                let reply = try await DirectClient().askOneShot(
+                    systemPrompt: VendingMachineDetector.systemPrompt,
+                    userText: VendingMachineDetector.userText,
+                    photoJPEG: jpeg,
+                    timeout: 20)
+                let seconds = Date().timeIntervalSince(started)
+                guard let self else { return }
+                let yes = VendingMachineDetector.isYes(reply)
+                let oneLine = reply.replacingOccurrences(of: "\n", with: " ")
+                self.add("check #\(number): reply \"\(oneLine.prefix(120))\" in \(String(format: "%.2f", seconds)) s")
+                self.finishCheck(
+                    result: yes ? "YES: vending machine" : "NO",
+                    heading: yes ? "Vending machine" : "No machine",
+                    seconds: seconds, generation: generation)
+            } catch {
+                let seconds = Date().timeIntervalSince(started)
+                guard let self else { return }
+                let reason = error.localizedDescription
+                self.add("check #\(number): ERROR \(reason) [\(error)] after \(String(format: "%.2f", seconds)) s")
+                self.finishCheck(result: "Failed: \(reason)", heading: "Check failed", seconds: seconds, generation: generation)
+            }
+        }
+    }
+
+    private func finishCheck(result: String, heading: String, seconds: Double, generation: Int) {
+        isChecking = false
+        checkCount += 1
+        checkResultText = result
+        checkDurationText = String(format: "%.2f s", seconds)
+        guard generation == checkGeneration else {
+            add("check result not sent to lens: camera stopped or reset meanwhile")
+            return
+        }
+        let at = sentClock.string(from: Date())
+        sendToLens(BasicsLensCard(
+            heading: heading,
+            detail: "Checked at \(at) (\(String(format: "%.1f", seconds)) s)"))
+    }
+
+    func setAutoCheck(_ on: Bool) {
+        if on {
+            guard !autoCheck else { return }
+            guard visionBlockedReason == nil, cameraRequested else {
+                add("auto check not started: \(visionBlockedReason ?? "camera feed not running")")
+                return
+            }
+            autoCheck = true
+            add("auto check ON (every 5 s)")
+            autoCheckTask = Task { [weak self] in
+                while !Task.isCancelled {
+                    do { try await Task.sleep(for: .seconds(5)) } catch { return }
+                    guard let self, self.autoCheck else { return }
+                    if self.isChecking {
+                        self.add("auto check: tick skipped, a check is in flight")
+                    } else if self.previewImage == nil {
+                        self.add("auto check: tick skipped, no frame")
+                    } else {
+                        self.checkNow()
+                    }
+                }
+            }
+        } else {
+            autoCheckTask?.cancel()
+            autoCheckTask = nil
+            guard autoCheck else { return }
+            autoCheck = false
+            add("auto check OFF")
+        }
+    }
+
+    /// Camera stop or Reset: end the 5 s loop and drop in-flight lens sends.
+    private func stopVendingChecks(reason: String) {
+        checkGeneration += 1
+        if autoCheck { add("auto check stopped: \(reason)") }
+        setAutoCheck(false)
     }
 
     // MARK: - Reset
@@ -727,6 +879,7 @@ final class GlassesBasicsViewModel {
 
     /// DisplayViewModel.clearSessionState + CameraViewModel.cleanupSession.
     private func teardownAll() {
+        stopVendingChecks(reason: "teardown")
         isSending = false
         pendingDisplayText = nil
         finishDisplayReadinessWait()

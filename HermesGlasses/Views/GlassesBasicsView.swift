@@ -19,6 +19,7 @@ struct GlassesBasicsView: View {
                 statusSection
                 displaySection
                 cameraSection
+                vendingSection
                 resetSection
                 logSection
             }
@@ -100,7 +101,36 @@ struct GlassesBasicsView: View {
         }
     }
 
-    // MARK: - 4. Reset
+    // MARK: - 4. Vending machine check
+
+    private var vendingSection: some View {
+        Section("Test 3: Vending machine check") {
+            if let reason = viewModel.visionBlockedReason {
+                Text("Unavailable: \(reason)")
+                    .foregroundStyle(.red)
+            }
+            Button {
+                viewModel.checkNow()
+            } label: {
+                Text(viewModel.isChecking ? "Checking..." : "Check now")
+                    .font(.title3.bold())
+                    .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(!viewModel.canCheckNow)
+            Toggle("Check every 5 s", isOn: Binding(
+                get: { viewModel.autoCheck },
+                set: { viewModel.setAutoCheck($0) }
+            ))
+            .disabled(viewModel.visionBlockedReason != nil || !viewModel.cameraRequested)
+            row("Last result", viewModel.checkResultText)
+            row("Time taken", viewModel.checkDurationText)
+            row("Checks run", "\(viewModel.checkCount)")
+        }
+    }
+
+    // MARK: - 5. Reset
 
     private var resetSection: some View {
         Section {
