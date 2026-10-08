@@ -74,6 +74,9 @@ struct EmoDrinkStrings: Equatable {
     var choiceHeading: String { ja ? "どれにする？" : "Pick one" }
     var choiceHint: String { ja ? "タップか、番号か名前で選べます" : "Tap, or say a number or a name" }
     var noMachine: String { ja ? "自販機が見当たりません" : "No vending machine in view" }
+    var cameraNotReady: String { ja ? "カメラの準備ができていません" : "Camera not ready yet" }
+    var checkResting: String { ja ? "今の時間の確認回数を使い切りました" : "This hour's checks are used up" }
+    var sessionDidNotStart: String { ja ? "セッションを開始できませんでした。" : "The session did not start." }
     var micBlocked: String {
         ja ? "声で選ぶには、マイクと音声認識を許可してください。" : "Allow the microphone and speech recognition to pick by voice."
     }

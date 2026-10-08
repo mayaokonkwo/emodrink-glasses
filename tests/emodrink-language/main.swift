@@ -39,14 +39,15 @@ let hasJapanese: (String) -> Bool = { $0.unicodeScalars.contains { (0x3040...0x3
 for lang in Language.allCases {
     let t = EmoDrinkStrings(language: lang)
     let all = [t.watchingHeading, t.watchingText, t.watchingHint, t.idleTitle, t.idleHint, t.choiceHeading, t.choiceHint,
-               t.cameraLost, t.cameraStopped, t.cameraDidNotOpen, t.noMachine, t.micBlocked, t.enjoy,
+               t.cameraLost, t.cameraStopped, t.cameraDidNotOpen, t.noMachine, t.cameraNotReady, t.checkResting,
+               t.sessionDidNotStart, t.micBlocked, t.enjoy,
                t.whyLabel, t.thanksLabel, t.backLabel, t.voiceInstallHint, t.afterCutoff,
                t.choicesLine(names: ["A", "B", "C"]), t.chosenLine(name: "A", reasons: ["x"]), t.whyLine(reasons: ["x"]),
                t.slept(hours: 5.1), t.sleepScore(48), t.hrvUnder(ms: 14), t.hrvAbove(ms: 6), t.restingHROver(7),
                t.stress(71), t.stepsAlready(8400)]
     expect(all.allSatisfy { !$0.trimmingCharacters(in: .whitespaces).isEmpty }, "\(lang): every string is non-empty")
     expect(all.allSatisfy { !$0.contains("\u{2014}") }, "\(lang): no em dashes")
-    let fixed = [t.watchingText, t.choiceHeading, t.noMachine, t.cameraLost, t.enjoy, t.whyLabel, t.thanksLabel, t.backLabel]
+    let fixed = [t.watchingText, t.choiceHeading, t.noMachine, t.cameraNotReady, t.checkResting, t.sessionDidNotStart, t.cameraLost, t.enjoy, t.whyLabel, t.thanksLabel, t.backLabel]
     if lang == .ja {
         expect(fixed.allSatisfy(hasJapanese), "ja: lens and spoken lines are Japanese")
     } else {

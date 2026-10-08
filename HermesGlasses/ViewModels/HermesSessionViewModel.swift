@@ -816,6 +816,14 @@ final class HermesSessionViewModel {
         }
     }
 
+    /// Into the background in phone mode: iOS interrupts the iPhone camera
+    /// anyway, so stop the stream outright (`isStreaming` goes false) and
+    /// let `resumePhoneVisionIfNeeded()` start it again in front.
+    func pausePhoneVisionForBackground() {
+        guard phoneModeActive, phoneCameraManager.isStreaming else { return }
+        phoneCameraManager.stopLiveStream()
+    }
+
     /// Back from the background in phone mode: the iPhone camera stream
     /// stopped while the app was hidden, so start it again.
     func resumePhoneVisionIfNeeded() async {

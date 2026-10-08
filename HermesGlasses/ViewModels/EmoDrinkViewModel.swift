@@ -17,8 +17,10 @@
 // is pure and tested; this file only wires.
 //
 
+import AVFoundation
 import Foundation
 import Observation
+import Speech
 import UIKit
 import Vision
 
@@ -83,7 +85,9 @@ final class EmoDrinkViewModel {
     private(set) var liveImage: UIImage?
     private(set) var fetching = false
     private(set) var checkingNow = false
-    /// "No vending machine in view", shown for 3 s after a Check now NO.
+    /// Check now's 3 s line on the home card: "No vending machine in view"
+    /// after a NO, "Camera not ready yet" with no fresh frame, or the
+    /// hour's budget spent.
     private(set) var noMachineNotice: String?
     /// Why the session could not start (no mic or speech permission).
     private(set) var sessionBlocked: String?
@@ -149,18 +153,36 @@ final class EmoDrinkViewModel {
 
     // MARK: Start / stop (home screen, app open)
 
-    /// Session first, then drink mode when the watch setting is on. Used by
-    /// the Start button and, with `autoWatch` on, when the home screen appears.
+    /// Session first, then drink mode, always. Used by the Start button and
+    /// by the home screen on appear; `autoWatch` gates only that on-appear
+    /// call (in ContentView), never this.
     func start() async {
         if hermesVM.connectionState == .disconnected {
             await hermesVM.startSession()
         }
         guard hermesVM.connectionState != .disconnected else {
-            sessionBlocked = strings.micBlocked
+            sessionBlocked = sessionFailureText()
             return
         }
-        sessionBlocked = nil
-        if autoWatch { await startDrinkMode() }
+        sessionBlocked = micDenied ? strings.micBlocked : nil
+        await startDrinkMode()
+    }
+
+    /// Microphone or speech recognition refused. The session still reaches
+    /// listening in that case, so this is read from the grants, not the state.
+    private var micDenied: Bool {
+        let speech = SFSpeechRecognizer.authorizationStatus()
+        return AVAudioApplication.shared.recordPermission == .denied || speech == .denied || speech == .restricted
+    }
+
+    /// Why the session stayed disconnected: the mic line only when the mic
+    /// is the reason, else what the session itself reported (a missing key,
+    /// absent glasses), else a generic line.
+    private func sessionFailureText() -> String {
+        if micDenied { return strings.micBlocked }
+        if hermesVM.showError, !hermesVM.errorMessage.isEmpty { return hermesVM.errorMessage }
+        if hermesVM.showNotice, !hermesVM.noticeMessage.isEmpty { return hermesVM.noticeMessage }
+        return strings.sessionDidNotStart
     }
 
     func stop() {
@@ -383,6 +405,8 @@ final class EmoDrinkViewModel {
         guard momentActive else { return }
         step = nil
         options = []
+        currentPick = nil
+        recommendation = nil
         currentPrompt = nil
         hermesVM.setPersonaOverride(nil)
         if !drinkModeOn { hermesVM.onEmoDrinkSessionEnding = nil }
@@ -450,10 +474,10 @@ final class EmoDrinkViewModel {
 
         if hermesVM.connectionState == .disconnected {
             await hermesVM.startSession()
-            guard hermesVM.connectionState != .disconnected else { sessionBlocked = strings.micBlocked; return }
+            guard hermesVM.connectionState != .disconnected else { sessionBlocked = sessionFailureText(); return }
             startedSession = true
         }
-        sessionBlocked = nil
+        sessionBlocked = micDenied ? strings.micBlocked : nil
         guard hermesVM.hasVisionSource, await hermesVM.ensureVisionPermission(interactive: true) else {
             fail("Drink mode needs a camera - connect the glasses or allow the iPhone camera.")
             if startedSession { startedSession = false; hermesVM.endSession() }
@@ -514,17 +538,18 @@ final class EmoDrinkViewModel {
     }
 
     /// "Check now": the latest frame goes to the detector at once, past the
-    /// change gate and the cooldown but never past the hourly budget. A NO
-    /// shows "No vending machine in view" for 3 s.
+    /// change gate and the cooldown but never past the hourly budget. A NO,
+    /// no fresh frame, or a spent budget each show their line for 3 s.
     func checkNow() async {
         guard drinkModeOn, !momentActive, !checkInFlight else { return }
         let now = Date()
         guard gate.canCheckNow(now: now) else {
             restingUntil = gate.restingUntil(now: now)
+            flashNotice(strings.checkResting)
             return
         }
-        guard let image = latestImage else {
-            flashNoMachine()
+        guard let image = latestImage, let at = latestImageAt, now.timeIntervalSince(at) <= staleAfter else {
+            flashNotice(strings.cameraNotReady)
             return
         }
         gate.recordSent(at: now)
@@ -533,11 +558,13 @@ final class EmoDrinkViewModel {
         checkInFlight = true
         checkingNow = true
         defer { checkingNow = false }
-        if await check(image) == false { flashNoMachine() }
+        if await check(image) == false { flashNotice(strings.noMachine) }
     }
 
-    private func flashNoMachine() {
-        noMachineNotice = strings.noMachine
+    /// The home card's 3 s line after Check now: no machine, camera not
+    /// ready, or the hour's budget spent.
+    private func flashNotice(_ text: String) {
+        noMachineNotice = text
         noMachineTask?.cancel()
         noMachineTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(Self.noMachineSeconds))
@@ -553,6 +580,7 @@ final class EmoDrinkViewModel {
     func appDidEnterBackground() {
         guard drinkModeOn, hermesVM.visionRoute == .phone else { return }
         pausedForBackground = true
+        hermesVM.pausePhoneVisionForBackground()
     }
 
     /// Back in front: restart the phone camera if it was lost, give frames a
