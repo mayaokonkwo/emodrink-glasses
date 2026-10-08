@@ -290,14 +290,9 @@ private struct GlassesStatusPage: View {
         }
     }
 
+    /// The same five states as the home badge; Settings labels stay English.
     private var displayText: String {
-        switch hermesVM.displayStatus {
-        case .off: return "Off (no session)"
-        case .connecting: return "Connecting…"
-        case .connected:
-            return hermesVM.lensBlockedByCallScreen ? "Connected - hidden by call screen (glasses mic)" : "Connected"
-        case .unavailable(let reason): return "Unavailable - \(reason)"
-        }
+        hermesVM.lensStatusText(EmoDrinkStrings(language: .en))
     }
 }
 
@@ -396,13 +391,9 @@ private struct DeveloperPage: View {
         }
     }
 
+    /// The same five states as the home badge; Settings labels stay English.
     private var displayText: String {
-        switch hermesVM.displayStatus {
-        case .off: return "Off"
-        case .connecting: return "Connecting…"
-        case .connected: return "Connected"
-        case .unavailable: return "Unavailable"
-        }
+        hermesVM.lensStatusText(EmoDrinkStrings(language: .en))
     }
 }
 

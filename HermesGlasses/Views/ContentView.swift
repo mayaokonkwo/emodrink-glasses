@@ -4,11 +4,14 @@
 // The EmoDrink home: one screen, top to bottom.
 //   1. Lens stage: the iPhone camera with the simulated lens over it in
 //      phone mode; a dark stage with a "Glasses connected" badge and the
-//      same simulated lens (mirroring the Ray-Ban) in glasses mode.
+//      same simulated lens (mirroring the Ray-Ban) in glasses mode. A
+//      second badge names the real lens's status.
 //   2. Today: sleep, score, HRV, resting HR, and where the numbers came from.
 //   3. Pick: watching (or stopped), with why the AI was skipped when it
 //      was; the three drinks as chips; or the chosen drink with Why / Thanks.
-//   4. Start / Stop, with "Check now" beside it while watching.
+//   4. Start / Stop, with "Check now" beside it while watching and
+//      "Test lens" whenever glasses are registered (its report shows
+//      under the row for 6 s).
 // Toolbar: Transcript and Settings. A plain VStack in the safe area with
 // 16 pt side padding; nothing is wider than the screen.
 //
@@ -56,6 +59,10 @@ struct ContentView: View {
     @State private var settingsRoute: SettingsRoute?
     /// Auto-watch runs once per launch, not on every appear.
     @State private var didAutoStart = false
+    /// The Test lens report, shown under the Start / Stop row for 6 s.
+    @State private var lensTestNotice: String?
+    /// Bumped per Test lens tap, so an older 6 s timer cannot clear a newer report.
+    @State private var lensTestToken = 0
 
     var body: some View {
         NavigationStack {
@@ -64,6 +71,13 @@ struct ContentView: View {
                 TodayCard(vm: emoDrinkVM)
                 PickCard(vm: emoDrinkVM)
                 startStopRow
+                if let notice = lensTestNotice {
+                    Label(notice, systemImage: "eyeglasses")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 12)
@@ -194,7 +208,33 @@ struct ContentView: View {
                 .disabled(emoDrinkVM.checkingNow || emoDrinkVM.momentActive)
                 .fixedSize()
             }
+            if wearablesVM.registrationState == .registered {
+                Button {
+                    Task { await testLens() }
+                } label: {
+                    if hermesVM.testRunning.contains("Display") {
+                        ProgressView()
+                    } else {
+                        Text("Test lens").font(.system(size: 15, weight: .semibold))
+                    }
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(HermesTheme.accentOnCard)
+                .disabled(hermesVM.testRunning.contains("Display"))
+                .fixedSize()
+            }
         }
+    }
+
+    /// Runs the Developer panel's Display test and shows its report under
+    /// the Start / Stop row for 6 s.
+    private func testLens() async {
+        await hermesVM.testDisplay()
+        lensTestToken += 1
+        let token = lensTestToken
+        lensTestNotice = hermesVM.displayTestReport
+        try? await Task.sleep(for: .seconds(6))
+        if lensTestToken == token { lensTestNotice = nil }
     }
 }
 
@@ -214,15 +254,24 @@ private struct LensStage: View {
         .background(HermesTheme.lensStage)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(alignment: .bottomLeading) {
-            Text(badge)
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundStyle(HermesTheme.cream.opacity(0.8))
-                .padding(.horizontal, 7)
-                .padding(.vertical, 4)
-                .background(HermesTheme.lensChrome.opacity(0.7), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
-                .padding(10)
+            HStack(spacing: 6) {
+                badgeLabel(badge).fixedSize()
+                badgeLabel(hermesVM.lensStatusText(EmoDrinkStrings(language: hermesVM.activeLanguage)))
+            }
+            .padding(10)
         }
         .environment(\.colorScheme, .dark)
+    }
+
+    private func badgeLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 10, design: .monospaced))
+            .foregroundStyle(HermesTheme.cream.opacity(0.8))
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 4)
+            .background(HermesTheme.lensChrome.opacity(0.7), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
     }
 
     private var badge: String {

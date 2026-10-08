@@ -89,6 +89,14 @@ struct EmoDrinkStrings: Equatable {
            : "For a more natural voice, download an Enhanced English voice in Settings › Accessibility › Spoken Content › Voices."
     }
 
+    // MARK: Lens status (home badge, Settings)
+
+    var lensOn: String { ja ? "レンズ表示中" : "Lens on" }
+    var lensAttaching: String { ja ? "レンズ接続中" : "Lens attaching" }
+    var lensOff: String { ja ? "レンズオフ" : "Lens off" }
+    func lensUnavailable(_ reason: String) -> String { ja ? "レンズ利用不可: \(reason)" : "Lens unavailable: \(reason)" }
+    var lensBlockedByMic: String { ja ? "メガネのマイク使用中のためレンズ非表示" : "Lens hidden by glasses mic" }
+
     // MARK: Spoken
 
     var cameraLost: String { ja ? "カメラの映像が届きません。ドリンクモードを一時停止します。" : "Camera lost. Drink mode is paused." }
