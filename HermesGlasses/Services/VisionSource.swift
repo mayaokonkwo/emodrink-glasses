@@ -104,6 +104,7 @@ final class GlassesLinkVision {
         guard !streaming else { throw GlassesVisionError.streamInUse }
         streaming = true
         var stopped = false
+        var opened = false
         link.startCamera(
             consumer: Self.streamConsumer,
             onFrame: { image in onFrame(VisionFrame(image: image, pixelBuffer: nil)) },
@@ -111,7 +112,8 @@ final class GlassesLinkVision {
                 stopped = true
                 guard let self, self.streaming else { return }
                 self.streaming = false
-                onError("glasses camera stopped")
+                // Before this call returns, the throw below reports it.
+                if opened { onError("glasses camera stopped") }
             }
         )
         // Wait for the stream (or its failure). A slow start is not an
@@ -124,6 +126,7 @@ final class GlassesLinkVision {
         if stopped {
             throw GlassesVisionError.cameraUnavailable
         }
+        opened = true
     }
 
     func stopLiveStream() {
