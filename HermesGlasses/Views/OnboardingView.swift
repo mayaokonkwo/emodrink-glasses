@@ -27,6 +27,12 @@ struct OnboardingView: View {
 
     private static let stepCount = 3
 
+    private var voiceHint: String? {
+        let language = EmoDrinkLanguage.resolved
+        guard VoicePicker.needsEnhancedHint(for: language, available: HermesSpeechSynthesizer.installedVoices()) else { return nil }
+        return EmoDrinkStrings(language: language).voiceInstallHint
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             content
@@ -244,11 +250,21 @@ struct OnboardingView: View {
                                    denied: "Camera declined - no phone-mode eye")
             }
 
-            Text("The glasses camera is a separate grant from the Meta AI app - EmoDrink asks for it as soon as the glasses finish pairing, and you can re-request it any time from Settings → Devices.")
+            Text("The glasses camera is a separate grant from the Meta AI app - EmoDrink asks for it as soon as the glasses finish pairing, and you can re-request it any time from Settings › Glasses.")
                 .font(.system(size: 13))
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 8)
+
+            // One line, only when the best installed voice for the language the
+            // app will speak is default quality (VoicePicker).
+            if let hint = voiceHint {
+                Text(hint)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 8)
+            }
 
             Spacer()
         }
@@ -367,7 +383,7 @@ struct OnboardingView: View {
             }
         default:
             if ready {
-                HermesPrimaryButton(title: "Start Session", systemImage: "mic") {
+                HermesPrimaryButton(title: "Start watching", systemImage: "mic") {
                     onFinish(true)
                 }
                 Button("Not now") { onFinish(false) }

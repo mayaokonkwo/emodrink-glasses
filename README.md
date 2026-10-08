@@ -1,8 +1,8 @@
 # EmoDrink Glasses
 
-One drink, picked from how you slept, offered the moment you reach the
+Three drinks, picked from how you slept, offered the moment you reach the
 vending machine. On **Meta Ray-Ban Display** glasses, or an iPhone alone in
-phone mode.
+phone mode. In Japanese or English.
 
 EmoDrink Glasses continues the [EmoDrink](https://dl.acm.org/doi/full/10.1145/3795011.3797399)
 work (Augmented Humans 2026, AHLab with Asahi as the study's industry
@@ -13,50 +13,50 @@ seconds. Built as a thank-you for Taka, who ran the study and lent the
 glasses.
 
 It is a fork of [Hermes Glasses](https://github.com/prasanthsasikumar/hermes-glasses),
-MIT licensed, cut down to EmoDrink alone: navigation, people, Lens, Build
-Check, AiSee and the Mac bridge are deleted from this repo. They live on in
-the Hermes Glasses repo.
+MIT licensed, cut down to EmoDrink alone. Everything else Hermes does
+lives on in the Hermes Glasses repo.
 
 ## What it does
 
+- **Opens watching.** The app starts the session and drink mode by itself
+  ("Watch for vending machines when the app opens", Settings › Drinks, on by
+  default). A frame goes to the vision provider only when the scene changes
+  and settles (at most 150 small calls an hour), with one yes or no
+  question: is there a vending machine? "Check now" asks at once.
 - **Reads your morning.** Last night's sleep hours and score, HRV and
-  resting heart rate against your usual, steps and stress, from a small
-  JSON document at a URL you control (the repo's own `mock/physiology.json`
-  by default, so it works out of the box). That default is a fixed sample
-  document, not a watch; the card says so. Three sample profiles (rested,
-  short night, stressed) for an offline demo.
-- **Picks one drink, on the phone.** A small deterministic rule maps the
-  numbers to a coarse recovery and arousal state, the way EmoDrink did, and
-  ranks a catalogue of twelve public Asahi Group soft drinks (water,
-  sparkling, Calpis, teas, canned coffee, isotonic). The pick is
-  reproducible; the AI never chooses.
-- **Offers it on the lens.** Drink name, Japanese name, a one-line reason,
-  and three buttons: Why, Something else, Thanks. Tap or just say them.
-- **Talks about it.** Anything else you say goes to your AI provider in a
-  drink persona that knows your numbers and the catalogue, and follows the
-  study's rule: suggestive, never diagnostic. No emotion labels, no health
-  claims.
-- **Drink mode.** Say "start drink mode" and the glasses watch quietly. A
-  frame goes to the vision provider only when the scene changes and
-  settles (at most 150 small calls an hour), with one yes or no question:
-  is there a vending machine? Yes shows the pick. Two minutes of quiet
-  follow every pick.
-- **Works without the camera.** "What should I drink" picks anywhere.
-  Without an API key the pick still appears, spoken from the rules.
+  resting heart rate against your usual, steps and stress, from a small JSON
+  document at a URL you control (the repo's `mock/physiology.json` by
+  default, a fixed sample, and the card says so). Three sample profiles for
+  an offline demo.
+- **Offers three drinks.** A deterministic rule ranks twelve public Asahi
+  Group soft drinks; the lens shows the best three as numbered buttons with
+  the first one's reason, and a voice names them. The AI never chooses.
+- **You pick by tap, number or name.** "Two", "the second one", 「二番目」,
+  「二つ目」, "Calpis", 「カルピス」. The lens narrows to that drink with Why and
+  Thanks, and a warm one-line reason is spoken.
+- **Japanese both ways.** Auto follows the iPhone's first language, or pick
+  English or Japanese in Settings › Language and voice. Speech recognition,
+  lens text and spoken lines follow it; the voice is the best installed
+  (premium, then enhanced), at a measured pace.
+- **Talks about it.** Anything else you say goes to the drink persona, which
+  knows your numbers and the catalogue and follows the study's rule:
+  suggestive, never diagnostic.
 
 ## Say
 
 | Say | What happens |
 |---|---|
-| "What should I drink" | The pick, now |
-| "Start drink mode" / "Stop drink mode" | Camera watching on / off |
-| "Why" | The reason, in the persona |
-| "Something else" | The next drink in rank order |
-| "Thanks" | Ends the moment |
+| "What should I drink" / 「何を飲めばいい」 | Three drinks, now |
+| "Two", "the first one", a drink's name / 「二番目」「最初の」 | That drink, and why it fits |
+| "Why" / 「なぜ」 | The reason, in the persona |
+| "Back" / 「戻る」 | The three again |
+| "Something else" / 「他には」 | The next three |
+| "Thanks" / 「ありがとう」 | Ends the moment |
+| "Start drink mode" / 「見守りを開始」, "Stop drink mode" / 「見守りを停止」 | Watching on / off |
 
 ## Your own data
 
-Point the feed URL (the EmoDrink tile on the home screen) at a JSON document of this shape,
+Point the feed URL (Settings › Drinks) at a JSON document of this shape,
 for example one a watch sync writes:
 
 ```json
@@ -94,8 +94,7 @@ three sample profiles under "Use sample data" work offline.
 - **Glasses still need a Meta Wearables app id** in `Config/Secrets.xcconfig`.
   Phone mode (the iPhone camera as the eye) works without it.
 
-Tap the **EmoDrink** tile on the home screen to see today's numbers, switch
-to sample data, change the feed URL, or toggle drink mode. The build uses the bundle id
+Settings › Drinks shows the feed URL, sample data and the catalogue; the home screen shows today's numbers. The build uses the bundle id
 `com.flowsxr.hermesglasses`, because the Meta Wearables Developer Center
 ties the app id to that bundle id; the glasses only link to a bundle id
 that is registered there. To ship under another id, register it in the
@@ -104,6 +103,7 @@ project. EmoDrink therefore replaces Hermes Glasses on a phone that has it.
 
 ## Design
 
+- Focus spec: `docs/superpowers/specs/2026-10-08-emodrink-focus-design.md`
 - Spec: `docs/superpowers/specs/2026-10-07-emodrink-glasses-design.md`
   (the implementation plan lives beside it locally; `docs/superpowers/plans` is gitignored, as in Hermes)
 

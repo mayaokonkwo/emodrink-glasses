@@ -161,15 +161,35 @@ mode.
 - **EmoDrink:** the pick is on-device (`DrinkRecommender`, pure, tested) and
   the AI only phrases and converses. `EmoDrinkViewModel` is owned by the App
   struct and borrows the session through hooks (`emoDrinkClaimer`,
-  `onEmoDrinkIntent`, `onEmoDrinkSessionEnding`, `emoDrinkLensIdle`). While a
-  drink is on the lens the claimer takes only its replies; everything else
-  goes to the assistant with `DirectClient.systemPromptOverride` set to the
-  persona. `askPersona` detaches the claimer for one query so the generated
-  "why" question cannot loop. Drink mode reuses `ChangeGate` through
-  `VendingMachineGate` (8 s spacing, 150/h, 120 s cooldown after a pick) and
-  `FrameTools.canRunVisionChecks` as its preflight. The default physiology
-  feed is this repo's `mock/physiology.json` on raw.githubusercontent.com:
-  pushing a change to that file changes what every install reads.
+  `onEmoDrinkIntent`, `onEmoDrinkSessionEnding`, `emoDrinkLensIdle`). The
+  moment has two steps: `.choices` (three drinks as `LensContent
+  .emoDrinkChoices`, buttons `1 <name>`) and `.chosen` (the card with Why /
+  Thanks). The claimer takes EmoDrinkCommands replies first, then
+  `DrinkChoiceParser` (numbers, ordinals, a DISTINCTIVE name token; a token
+  two options share never decides), then the drink-mode intents; everything
+  else goes to the assistant with `DirectClient.systemPromptOverride` set to
+  the persona. `askPersona` detaches the claimer for one query so the
+  generated "why" question cannot loop. Drink mode reuses `ChangeGate`
+  through `VendingMachineGate` (8 s spacing, 150/h, 120 s cooldown after a
+  pick; "Check now" skips the change gate and the cooldown, never the
+  budget) and `FrameTools.canRunVisionChecks` as its preflight. The default
+  physiology feed is this repo's `mock/physiology.json` on
+  raw.githubusercontent.com: pushing a change to that file changes what
+  every install reads.
+- **Language is resolved once per session.** `HermesSessionViewModel
+  .applyLanguage()` turns `emodrink_language` (auto/en/ja; auto = the
+  iPhone's FIRST preferred language) into a recognizer locale and a voice
+  (`VoicePicker`: premium, enhanced, default; preferred names; never a
+  novelty voice, never another language's voice). No ja-JP recognizer:
+  notice and English. No ja-JP voice: English. `activeLanguage` is what the
+  lens strings (`EmoDrinkStrings`), reasons and persona use. It only runs
+  while the recognizer is stopped, so a mid-session change applies next
+  session.
+- **The Developer Display test attaches the lens itself.** No session: a
+  camera-only DeviceSession for the display alone, 5 s to attach, card for
+  4 s, then torn down. Outcomes are `DisplayTestReport` (pure, tested in
+  `tests/display-logic`): sent, no glasses, display session failed (SDK
+  error), glasses mic in use (call screen hides the HUD).
 
 ## Build & run
 
