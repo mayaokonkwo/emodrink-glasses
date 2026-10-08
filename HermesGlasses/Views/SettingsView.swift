@@ -515,7 +515,27 @@ private struct LanguageVoicePage: View {
 
             Section {
                 LabeledContent("Speaking", value: languageLabel(hermesVM.activeLanguage))
-                LabeledContent("Voice in use", value: hermesVM.voiceName ?? "System default")
+                if hermesVM.cloudVoiceAvailable {
+                    Toggle(voiceStrings.cloudVoiceToggle, isOn: Binding(
+                        get: { hermesVM.cloudVoiceEnabled },
+                        set: { hermesVM.cloudVoiceEnabled = $0 }
+                    ))
+                }
+                if let cloudName = hermesVM.cloudVoiceName {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(voiceStrings.cloudVoice(cloudName))
+                        Text("\(voiceStrings.onDeviceFallback): \(hermesVM.voiceName ?? "System default")")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        if hermesVM.cloudVoiceFellBack {
+                            Text(voiceStrings.cloudVoiceFellBack)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } else {
+                    LabeledContent("Voice in use", value: hermesVM.voiceName ?? "System default")
+                }
                 if hermesVM.voiceNeedsInstallHint {
                     Text(EmoDrinkStrings(language: hermesVM.activeLanguage).voiceInstallHint)
                         .font(.footnote)
@@ -544,6 +564,9 @@ private struct LanguageVoicePage: View {
         .navigationTitle("Language and voice")
         .navigationBarTitleDisplayMode(.inline)
     }
+
+    /// Settings labels stay English, like the lens status rows.
+    private var voiceStrings: EmoDrinkStrings { EmoDrinkStrings(language: .en) }
 
     /// The mid-session note shows only while a session runs: a change then
     /// applies from the next session (applyLanguage() leaves a running

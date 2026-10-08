@@ -24,6 +24,22 @@ final class HermesSessionViewModel {
     /// Only a default-quality voice is installed for the language.
     private(set) var voiceNeedsInstallHint = false
     private(set) var voiceName: String?
+    /// The Gemini voice speaking the lines (Kore / Aoede), nil when the
+    /// cloud voice is off or not bundled: then only the on-device voice.
+    private(set) var cloudVoiceName: String?
+    /// The last cloud attempt failed, so that line used the on-device voice.
+    private(set) var cloudVoiceFellBack = false
+    /// A Gemini text-to-speech key and model were bundled into this build.
+    var cloudVoiceAvailable: Bool { BundledAIKey.ttsKey != nil && BundledAIKey.ttsModel != nil }
+    /// Settings toggle for the natural cloud voice (default on).
+    var cloudVoiceEnabled: Bool =
+        (UserDefaults.standard.object(forKey: HermesSessionViewModel.cloudVoiceKey) as? Bool) ?? true {
+        didSet {
+            UserDefaults.standard.set(cloudVoiceEnabled, forKey: Self.cloudVoiceKey)
+            applyCloudVoice()
+        }
+    }
+    static let cloudVoiceKey = "emodrink_cloud_voice"
 
     var connectionState: HermesConnectionState = .disconnected
     /// Bumped by every `endSession()`. A `startSession()` that awaited
@@ -442,6 +458,9 @@ final class HermesSessionViewModel {
         // Wired at init, NOT at session start: lens callbacks must exist
         // before any session does (see CLAUDE.md, display callbacks).
         wireDisplay()
+        speechSynthesizer.onCloudOutcome = { [weak self] success in
+            Task { @MainActor [weak self] in self?.cloudVoiceFellBack = !success }
+        }
         applyLanguage()
     }
 
@@ -501,7 +520,22 @@ final class HermesSessionViewModel {
         activeLanguage = voice.language
         voiceNeedsInstallHint = voice.needsHint
         voiceName = voice.voiceName
+        applyCloudVoice()
         return activeLanguage
+    }
+
+    /// Point the synthesizer at Gemini when a key and model were bundled and
+    /// the setting is on; otherwise on-device only. The cloud voice follows
+    /// the on-device voice's language. Safe mid-session: it applies from the
+    /// next line.
+    func applyCloudVoice() {
+        if cloudVoiceEnabled, let key = BundledAIKey.ttsKey, let model = BundledAIKey.ttsModel {
+            if speechSynthesizer.cloudVoiceName == nil { speechSynthesizer.configureCloud(CloudSpeech(key: key, model: model)) }
+        } else {
+            speechSynthesizer.configureCloud(nil)
+        }
+        cloudVoiceName = speechSynthesizer.cloudVoiceName
+        cloudVoiceFellBack = cloudVoiceName != nil && !speechSynthesizer.cloudVoiceActive
     }
 
     func startSession() async {

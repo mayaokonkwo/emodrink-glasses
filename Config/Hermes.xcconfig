@@ -20,4 +20,10 @@ BUNDLED_AI_PROVIDER =
 BUNDLED_AI_MODEL =
 BUNDLED_AI_KEY =
 
+// Natural cloud voice (Gemini text-to-speech). Key and model live only in
+// the gitignored Secrets.xcconfig; empty here, so the app speaks with the
+// on-device voice alone.
+BUNDLED_TTS_KEY =
+BUNDLED_TTS_MODEL =
+
 #include? "Secrets.xcconfig"

@@ -89,6 +89,15 @@ struct EmoDrinkStrings: Equatable {
            : "For a more natural voice, download an Enhanced English voice in Settings › Accessibility › Spoken Content › Voices."
     }
 
+    // MARK: Voice (Settings › Language and voice)
+
+    var cloudVoiceToggle: String { ja ? "自然なクラウド音声" : "Natural cloud voice" }
+    func cloudVoice(_ name: String) -> String { ja ? "音声: Gemini (\(name))" : "Voice: Gemini (\(name))" }
+    var onDeviceFallback: String { ja ? "端末の音声で代替" : "on-device fallback" }
+    var cloudVoiceFellBack: String {
+        ja ? "Geminiに接続できず、直前の発話は端末の音声でした" : "Gemini unreachable, the last line used the on-device voice"
+    }
+
     // MARK: Lens status (home badge, Settings)
 
     var lensOn: String { ja ? "レンズ表示中" : "Lens on" }

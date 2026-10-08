@@ -58,6 +58,8 @@
 		AAAA00000000000000000E24 /* EmoDrinkLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E25 /* EmoDrinkLanguage.swift */; };
 		AAAA00000000000000000E26 /* DrinkChoiceParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E27 /* DrinkChoiceParser.swift */; };
 		AAAA00000000000000000E28 /* VoicePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E29 /* VoicePicker.swift */; };
+		AAAA00000000000000000E32 /* CloudSpeechCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E33 /* CloudSpeechCodec.swift */; };
+		AAAA00000000000000000E30 /* CloudSpeech.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E31 /* CloudSpeech.swift */; };
 		AAAA00000000000000000E22 /* Intents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E23 /* Intents.swift */; };
 		AAAA00000000000000000E20 /* FrameTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E21 /* FrameTools.swift */; };
 		AAAA00000000000000000E15 /* EmoDrinkViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */; };
@@ -131,6 +133,8 @@
 		AAAA00000000000000000E25 /* EmoDrinkLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/EmoDrinkLanguage.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E27 /* DrinkChoiceParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/DrinkChoiceParser.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E29 /* VoicePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/VoicePicker.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E33 /* CloudSpeechCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/CloudSpeechCodec.swift; sourceTree = "<group>"; };
+		AAAA00000000000000000E31 /* CloudSpeech.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/CloudSpeech.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E23 /* Intents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/Intents.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E21 /* FrameTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrink/FrameTools.swift; sourceTree = "<group>"; };
 		AAAA00000000000000000E16 /* EmoDrinkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmoDrinkViewModel.swift; sourceTree = "<group>"; };
@@ -251,6 +255,8 @@
 				AAAA00000000000000000E25 /* EmoDrinkLanguage.swift */,
 				AAAA00000000000000000E27 /* DrinkChoiceParser.swift */,
 				AAAA00000000000000000E29 /* VoicePicker.swift */,
+				AAAA00000000000000000E33 /* CloudSpeechCodec.swift */,
+				AAAA00000000000000000E31 /* CloudSpeech.swift */,
 				AAAA00000000000000000E23 /* Intents.swift */,
 				AAAA00000000000000000E21 /* FrameTools.swift */,
 			);
@@ -394,6 +400,8 @@
 				AAAA00000000000000000E24 /* EmoDrinkLanguage.swift in Sources */,
 				AAAA00000000000000000E26 /* DrinkChoiceParser.swift in Sources */,
 				AAAA00000000000000000E28 /* VoicePicker.swift in Sources */,
+				AAAA00000000000000000E32 /* CloudSpeechCodec.swift in Sources */,
+				AAAA00000000000000000E30 /* CloudSpeech.swift in Sources */,
 				AAAA00000000000000000E22 /* Intents.swift in Sources */,
 				AAAA00000000000000000E20 /* FrameTools.swift in Sources */,
 			);

@@ -61,6 +61,10 @@
 		<string>$(BUNDLED_AI_MODEL)</string>
 		<key>Provider</key>
 		<string>$(BUNDLED_AI_PROVIDER)</string>
+		<key>TTSKey</key>
+		<string>$(BUNDLED_TTS_KEY)</string>
+		<key>TTSModel</key>
+		<string>$(BUNDLED_TTS_MODEL)</string>
 	</dict>
 </dict>
 </plist>

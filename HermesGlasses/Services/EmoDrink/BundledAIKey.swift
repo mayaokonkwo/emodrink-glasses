@@ -35,17 +35,26 @@ enum BundledAIKey {
     /// The bundled values, or nil when this copy was built without them
     /// (an empty key, or an unexpanded `$(BUNDLED_AI_KEY)` placeholder).
     static func config(bundle: Bundle = .main) -> Config? {
+        let key = value("Key", bundle: bundle) ?? ""
+        let provider = value("Provider", bundle: bundle) ?? ""
+        guard !key.isEmpty, !provider.isEmpty else { return nil }
+        return Config(provider: provider, model: value("Model", bundle: bundle) ?? "", key: key)
+    }
+
+    /// The Gemini text-to-speech key for the natural cloud voice, or nil
+    /// when this copy was built without one.
+    static var ttsKey: String? { value("TTSKey") }
+    /// The Gemini text-to-speech model id, or nil when not bundled.
+    static var ttsModel: String? { value("TTSModel") }
+
+    /// One string from the `EmoDrinkBundledAI` dict; nil when it is
+    /// missing, empty, or an unexpanded `$(...)` placeholder.
+    static func value(_ name: String, bundle: Bundle = .main) -> String? {
         guard let dict = bundle.object(forInfoDictionaryKey: infoKey) as? [String: Any] else {
             return nil
         }
-        func value(_ name: String) -> String {
-            let raw = (dict[name] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            return raw.hasPrefix("$(") ? "" : raw
-        }
-        let key = value("Key")
-        let provider = value("Provider")
-        guard !key.isEmpty, !provider.isEmpty else { return nil }
-        return Config(provider: provider, model: value("Model"), key: key)
+        let raw = (dict[name] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return raw.isEmpty || raw.hasPrefix("$(") ? nil : raw
     }
 
     /// Selects the bundled provider and model on first launch. Stores the
