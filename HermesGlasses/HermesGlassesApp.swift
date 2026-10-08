@@ -92,6 +92,9 @@ struct HermesGlassesApp: App {
                 // fallback that worked ("using the iPhone mic") is news, not
                 // an error, and the Error alert said otherwise.
                 .alert("EmoDrink", isPresented: $hermesSessionViewModel.showNotice) {
+                    if let action = hermesSessionViewModel.noticeAction {
+                        Button(action.title) { hermesSessionViewModel.performNoticeAction() }
+                    }
                     Button("OK") { hermesSessionViewModel.dismissNotice() }
                 } message: {
                     Text(hermesSessionViewModel.noticeMessage)

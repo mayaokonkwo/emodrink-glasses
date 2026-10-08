@@ -206,6 +206,12 @@ final class HermesSessionViewModel {
     /// instead of an absent headset was something that had gone wrong.
     var showNotice: Bool = false
     var noticeMessage: String = ""
+    /// Optional second button on the notice ("Update glasses"). Cleared by
+    /// every notice that does not set one.
+    var noticeAction: NoticeAction?
+    /// Why the last glasses connect failed, when the SDK said why (update
+    /// required). startSession puts it in the fallback notice.
+    @ObservationIgnored var glassesConnectIssue: GlassesConnectIssue?
 
 
     // MARK: - Constants
@@ -454,7 +460,12 @@ final class HermesSessionViewModel {
 
     init(wearables: WearablesInterface) {
         self.wearables = wearables
-        self.deviceSelector = AutoDeviceSelector(wearables: wearables)
+        // Display-capable devices only, as Meta's DisplayAccess sample does:
+        // a session opened on any other device can never attach the lens.
+        self.deviceSelector = AutoDeviceSelector(
+            wearables: wearables,
+            filter: { $0.supportsDisplay() }
+        )
         self.activeGlassesDevice = self.deviceSelector.activeDevice
         reloadDirectProviderState()
         observeActiveDevice()
@@ -562,6 +573,7 @@ final class HermesSessionViewModel {
         var route = visionRoute
 
         if route == .glasses {
+            glassesConnectIssue = nil
             let connected = await connectGlassesSession()
             guard gen == sessionGeneration else {
                 // Stopped while connecting: no phone fallback, no notice.
@@ -578,11 +590,19 @@ final class HermesSessionViewModel {
                 // SDK is the only one who knows. Rather than leaving the user at
                 // "No eligible device available" with no way forward, drop to the
                 // phone - unless they explicitly turned that off.
+                let issue = glassesConnectIssue
+                glassesConnectIssue = nil
+                NSLog("[EmoDrink] glasses connect failed: \(issue?.message ?? "no reason from the SDK")")
                 guard VisionRouting.mayFallBackToPhone(preference: phoneModePreference) else {
+                    if let issue { show(notice: issue.message, action: issue.action) }
                     connectionState = .disconnected
                     return
                 }
-                show(notice: "Glasses unreachable - using this iPhone as the eye.")
+                if let issue {
+                    show(notice: "\(issue.message) Using this iPhone as the eye for now.", action: issue.action)
+                } else {
+                    show(notice: "Glasses unreachable - using this iPhone as the eye.")
+                }
                 route = .phone
             }
         }
@@ -1138,6 +1158,13 @@ final class HermesSessionViewModel {
 
     func dismissNotice() {
         showNotice = false
+        noticeAction = nil
+    }
+
+    func performNoticeAction() {
+        let action = noticeAction
+        dismissNotice()
+        action?.perform()
     }
 
     // MARK: - Private
@@ -1170,8 +1197,10 @@ final class HermesSessionViewModel {
 
     /// The same surface for something that merely happened, phrased as news
     /// rather than as a fault.
-    private func show(notice message: String) {
+    // Internal, not private: the +Glasses extension uses it.
+    func show(notice message: String, action: NoticeAction? = nil) {
         noticeMessage = message
+        noticeAction = action
         showNotice = true
     }
 }

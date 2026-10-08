@@ -82,8 +82,12 @@ final class HermesDisplayManager {
 
     /// Attach the display capability on the shared voice session.
     func start(session: DeviceSession) {
-        guard display == nil else { return }
+        guard display == nil else {
+            NSLog("[EmoDrink] display start skipped: already attached (status \(status))")
+            return
+        }
         status = .connecting
+        NSLog("[EmoDrink] display addDisplay (session state \(session.state))")
 
         do {
             let capability = try session.addDisplay()
@@ -97,6 +101,7 @@ final class HermesDisplayManager {
             stateTask = Task { [weak self] in
                 for await state in stream {
                     guard let self, !Task.isCancelled else { return }
+                    NSLog("[EmoDrink] display state \(state)")
                     self.onStateTrace?(String(describing: state))
                     switch state {
                     case .starting, .stopping:
@@ -126,6 +131,7 @@ final class HermesDisplayManager {
             display = capability
         } catch {
             status = .unavailable(error.localizedDescription)
+            NSLog("[EmoDrink] display addDisplay failed: \(error)")
             debug("Display attach failed: \(error.localizedDescription)")
         }
     }
@@ -273,7 +279,9 @@ final class HermesDisplayManager {
                     "Display not attached (status: \(status))"]
             )
         }
+        NSLog("[EmoDrink] display test card send (display.state \(display.state))")
         try await display.send(HermesDisplayScreens.testScreen())
+        NSLog("[EmoDrink] display test card send returned (display.state \(display.state))")
     }
 
     /// The SDK's clearDisplay(). Throws when the lens is not attached, so
@@ -312,6 +320,7 @@ final class HermesDisplayManager {
                 do {
                     try await display.send(next)
                 } catch {
+                    NSLog("[EmoDrink] display send failed: \(error)")
                     self.debug("Display send failed: \(error.localizedDescription)")
                 }
             }

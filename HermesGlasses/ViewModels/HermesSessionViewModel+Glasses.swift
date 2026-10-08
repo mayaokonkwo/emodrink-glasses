@@ -11,7 +11,120 @@ import MWDATCamera
 import MWDATCore
 import os
 
+/// A second button on the app notice, e.g. "Update glasses".
+struct NoticeAction {
+    let title: String
+    let perform: @MainActor () -> Void
+}
+
+/// Why the glasses could not be used, phrased for the notice.
+struct GlassesConnectIssue {
+    let message: String
+    let action: NoticeAction?
+}
+
+/// Result of the pre-session readiness wait (see `waitForGlassesReady`).
+enum GlassesReadiness: Equatable {
+    case ready
+    /// Glasses firmware too old: no session can start until it is updated.
+    case firmwareUpdateRequired
+    /// The SDK in this build is too old for the glasses.
+    case sdkUpdateRequired
+    /// No connected, compatible device within the wait. The session is
+    /// still tried: the SDK may bring the link up itself.
+    case timedOut
+}
+
+/// Thrown by the camera-only path when the glasses need an update.
+struct GlassesNotReadyError: LocalizedError {
+    let message: String
+    var errorDescription: String? { message }
+}
+
 extension HermesSessionViewModel {
+    // MARK: - Readiness (Meta display-access skill)
+
+    /// Wait (bounded) until the active device reports
+    /// `linkState == .connected` and `compatibility() == .compatible`, as
+    /// Meta's display-access skill requires before `createSession`. Every
+    /// change in what the SDK reports is logged, so a device log shows
+    /// exactly where a connect stops.
+    func waitForGlassesReady(timeout: TimeInterval = 5) async -> GlassesReadiness {
+        let deadline = Date().addingTimeInterval(timeout)
+        var lastLine = ""
+        while true {
+            let id = deviceSelector.activeDevice
+            let device = id.flatMap { wearables.deviceForIdentifier($0) }
+            let compatibility = device?.compatibility()
+            let line = "activeDevice=\(id ?? "nil") " +
+                "link=\(device.map { String(describing: $0.linkState) } ?? "none") " +
+                "compatibility=\(compatibility.map { String(describing: $0) } ?? "none")"
+            if line != lastLine {
+                NSLog("[EmoDrink] glasses readiness \(line)")
+                lastLine = line
+            }
+            if let device, let compatibility {
+                switch compatibility {
+                case .deviceUpdateRequired:
+                    return .firmwareUpdateRequired
+                case .sdkUpdateRequired:
+                    return .sdkUpdateRequired
+                case .compatible where device.linkState == .connected:
+                    return .ready
+                default:
+                    break
+                }
+            }
+            if Date() >= deadline || Task.isCancelled {
+                NSLog("[EmoDrink] glasses readiness: not ready after \(Int(timeout)) s, trying the session anyway")
+                return .timedOut
+            }
+            try? await Task.sleep(nanoseconds: 150_000_000)
+        }
+    }
+
+    /// The notice for a glasses firmware update, with the SDK's own
+    /// "open the update" action.
+    var firmwareUpdateIssue: GlassesConnectIssue {
+        GlassesConnectIssue(
+            message: "Your glasses need a software update before EmoDrink can use them. Update them in the Meta AI app.",
+            action: NoticeAction(title: "Update glasses") { [weak self] in
+                guard let self else { return }
+                Task {
+                    do {
+                        try await self.wearables.openFirmwareUpdate()
+                    } catch {
+                        NSLog("[EmoDrink] openFirmwareUpdate failed: \(error.localizedDescription)")
+                    }
+                }
+            }
+        )
+    }
+
+    /// The notice for the EmoDrink app on the glasses being out of date.
+    var datAppUpdateIssue: GlassesConnectIssue {
+        GlassesConnectIssue(
+            message: "The EmoDrink app on your glasses needs an update. Update it in the Meta AI app.",
+            action: NoticeAction(title: "Update glasses app") { [weak self] in
+                guard let self else { return }
+                Task {
+                    do {
+                        try await self.wearables.openDATGlassesAppUpdate()
+                    } catch {
+                        NSLog("[EmoDrink] openDATGlassesAppUpdate failed: \(error.localizedDescription)")
+                    }
+                }
+            }
+        )
+    }
+
+    var sdkUpdateIssue: GlassesConnectIssue {
+        GlassesConnectIssue(
+            message: "This version of EmoDrink is too old for your glasses. Install the latest EmoDrink.",
+            action: nil
+        )
+    }
+
     // MARK: - Camera-only session
 
     /// Connect the glasses camera WITHOUT starting the voice loop - no mic,
@@ -28,25 +141,51 @@ extension HermesSessionViewModel {
             return
         }
 
+        switch await waitForGlassesReady() {
+        case .firmwareUpdateRequired:
+            let issue = firmwareUpdateIssue
+            show(notice: issue.message, action: issue.action)
+            throw GlassesNotReadyError(message: issue.message)
+        case .sdkUpdateRequired:
+            NSLog("[EmoDrink] camera session: SDK update required, trying anyway")
+        case .ready, .timedOut:
+            break
+        }
+
+        NSLog("[EmoDrink] camera session: createSession")
         let session = try wearables.createSession(deviceSelector: deviceSelector)
-        try session.start()
+        do {
+            try session.start()
+        } catch DeviceSessionError.datAppOnTheGlassesUpdateRequired {
+            let issue = datAppUpdateIssue
+            show(notice: issue.message, action: issue.action)
+            throw GlassesNotReadyError(message: issue.message)
+        }
 
         // Wait until the session actually starts - the camera stream is
         // rejected before that. Polling beats a state-stream subscription
         // here: no replay races, and Lens has no ongoing observer needs.
         let deadline = Date().addingTimeInterval(15)
+        var lastState = session.state
+        NSLog("[EmoDrink] camera session state \(lastState)")
         while session.state != .started {
+            if session.state != lastState {
+                lastState = session.state
+                NSLog("[EmoDrink] camera session state \(lastState)")
+            }
             if case .stopped = session.state {
                 throw DeviceSessionError.unexpectedError(
                     description: "Glasses session stopped before starting"
                 )
             }
             if Date() >= deadline {
+                NSLog("[EmoDrink] camera session: not started within 15 s (state \(session.state))")
                 session.stop()
                 throw HermesCameraError.timeout
             }
             try await Task.sleep(nanoseconds: 150_000_000)
         }
+        NSLog("[EmoDrink] camera session state started")
 
         lensSession = session
         lensUsers += 1
@@ -101,12 +240,26 @@ extension HermesSessionViewModel {
     /// camera its session, and surface camera permission. Returns false
     /// (having already shown the reason) if the glasses can't be reached.
     func connectGlassesSession() async -> Bool {
+        // 0. Wait for a connected, compatible device (Meta display-access
+        // skill). A firmware update blocks everything, so stop here.
+        switch await waitForGlassesReady() {
+        case .firmwareUpdateRequired:
+            glassesConnectIssue = firmwareUpdateIssue
+            return false
+        case .sdkUpdateRequired:
+            // Recorded in case the session then fails; tried anyway.
+            glassesConnectIssue = sdkUpdateIssue
+        case .ready, .timedOut:
+            break
+        }
+
         // 1. Create and start a device session with the glasses
         let session: DeviceSession
         do {
+            NSLog("[EmoDrink] glasses session: createSession")
             session = try wearables.createSession(deviceSelector: deviceSelector)
         } catch {
-            NSLog("[Hermes] createSession failed: \(error.localizedDescription)")
+            NSLog("[EmoDrink] createSession failed: \(error.localizedDescription)")
             return false
         }
         deviceSession = session
@@ -125,6 +278,7 @@ extension HermesSessionViewModel {
                         group.addTask {
                             for await state in stateStream {
                                 if Task.isCancelled { return }
+                                NSLog("[EmoDrink] glasses session state \(state)")
                                 switch state {
                                 case .started:
                                     done.withLock { finished in
@@ -160,6 +314,7 @@ extension HermesSessionViewModel {
                         group.addTask {
                             for await error in errorStream {
                                 if Task.isCancelled { return }
+                                NSLog("[EmoDrink] glasses session error \(error)")
                                 done.withLock { finished in
                                     if !finished {
                                         finished = true
@@ -205,13 +360,16 @@ extension HermesSessionViewModel {
                 }
             }
         } catch DeviceSessionError.datAppOnTheGlassesUpdateRequired {
-            show("Glasses app needs update. Please update in Meta AI app.")
-            connectionState = .disconnected
+            // startSession shows this as the notice (with the update
+            // action) instead of a bare "Glasses unreachable".
+            NSLog("[EmoDrink] glasses session: DAT app on the glasses needs an update")
+            glassesConnectIssue = datAppUpdateIssue
+            if deviceSession === session { deviceSession = nil }
             return false
         } catch {
             // Caller decides whether this is fatal or a cue to use the phone,
             // so no alert here - just the breadcrumb.
-            NSLog("[Hermes] glasses session failed: \(error.localizedDescription)")
+            NSLog("[EmoDrink] glasses session failed: \(error.localizedDescription)")
             // A newer start may already own `deviceSession`.
             if deviceSession === session { deviceSession = nil }
             return false
@@ -245,7 +403,32 @@ extension HermesSessionViewModel {
     }
 
     func handleSessionError(_ error: DeviceSessionError) async {
+        NSLog("[EmoDrink] session error \(error) while \(connectionState)")
+        if let issue = noticeIssue(for: error) {
+            // While connecting, connectGlassesSession records it and
+            // startSession shows it once, in the fallback notice.
+            if connectionState == .connecting {
+                glassesConnectIssue = issue
+            } else {
+                show(notice: issue.message, action: issue.action)
+            }
+            return
+        }
+        // While connecting the connect path reports the failure itself
+        // (and may fall back to the phone); a second alert would race it.
+        guard connectionState != .connecting else { return }
         show(error.localizedDescription)
+    }
+
+    /// Session errors that are news, not faults: shown as a notice, with
+    /// the SDK's update action where there is one.
+    func noticeIssue(for error: DeviceSessionError) -> GlassesConnectIssue? {
+        switch error {
+        case .datAppOnTheGlassesUpdateRequired:
+            return datAppUpdateIssue
+        default:
+            return nil
+        }
     }
 
     /// Check (and optionally request via Meta AI) the glasses camera
