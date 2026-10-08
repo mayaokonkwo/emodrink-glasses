@@ -35,9 +35,9 @@ extension HermesSessionViewModel {
                 }
             }
             let source = vision.sourceLabel
-            let photo = try await withCameraSession {
-                try await captureVisionPhoto()
-            }
+            // The glasses source opens GlassesLink's camera for the photo
+            // when nothing is streaming, so this works from a cold start.
+            let photo = try await captureVisionPhoto()
             pendingPhoto = photo
             lastTestPhoto = UIImage(data: photo)
             lastTestPhotoSource = "\(photo.count / 1024) KB from the \(source)"
@@ -76,16 +76,10 @@ extension HermesSessionViewModel {
     /// Full photo pipeline via a canned visual query
     func testVisualQuery() async {
         await runTest("Visual") { [self] in
-            // Borrowed for the whole round trip: the capture happens inside
-            // submitQuery, so the session has to outlive this call - and
-            // waiting for the answer is what tells us it did. This used to
-            // call ensureCameraSession() and walk away, leaving a cold-start
-            // session running with nothing on any path to release it
-            // (endSession() only tears down the VOICE session).
-            try await withCameraSession {
-                try await awaitTestReply {
-                    submitQuery("What am I looking at? Answer in one short sentence.")
-                }
+            // The capture happens inside submitQuery; the glasses source
+            // opens GlassesLink's camera for it when nothing is streaming.
+            try await awaitTestReply {
+                submitQuery("What am I looking at? Answer in one short sentence.")
             }
         }
     }

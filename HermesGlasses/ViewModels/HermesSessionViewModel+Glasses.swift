@@ -401,23 +401,8 @@ extension HermesSessionViewModel {
         return await ensureCameraPermission(interactive: false)
     }
 
+    /// Through GlassesLink, which holds the grant for the whole app.
     func ensureCameraPermission(interactive: Bool) async -> Bool {
-        do {
-            let status = try await wearables.checkPermissionStatus(.camera)
-            if status == .granted {
-                cameraPermissionGranted = true
-                return true
-            }
-            if interactive {
-                let result = try await wearables.requestPermission(.camera)
-                cameraPermissionGranted = (result == .granted)
-                return result == .granted
-            }
-            cameraPermissionGranted = false
-            return false
-        } catch {
-            cameraPermissionGranted = false
-            return false
-        }
+        await glassesLink.ensureCameraPermission(interactive: interactive)
     }
 }

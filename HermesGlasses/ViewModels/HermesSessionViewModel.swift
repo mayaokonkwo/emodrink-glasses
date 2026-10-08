@@ -97,8 +97,9 @@ final class HermesSessionViewModel {
     /// to finish; drained one at a time by `speechSynthesizer.onFinished`.
     @ObservationIgnored private var cueQueue: [String] = []
 
-    /// Glasses camera permission (granted in the Meta AI app); nil = unknown
-    var cameraPermissionGranted: Bool? = nil
+    /// Glasses camera permission (granted in the Meta AI app); nil = unknown.
+    /// GlassesLink holds it, so the basics screen and Settings agree.
+    var cameraPermissionGranted: Bool? { glassesLink.cameraPermissionGranted }
     /// Preferred microphone source; the banner chip shows the ACTUAL route
     var micSource: MicSource = MicSource(
         rawValue: UserDefaults.standard.string(
@@ -254,6 +255,8 @@ final class HermesSessionViewModel {
     /// The one path to the glasses (session, display, camera), shared with
     /// the Glasses basics screen. Internal for the extensions.
     @ObservationIgnored let glassesLink: GlassesLink
+    /// The Ray-Ban camera as a VisionSource, through GlassesLink.
+    @ObservationIgnored let glassesVision: GlassesLinkVision
     @ObservationIgnored private let contextProvider = DeviceContextProvider()
     // Internal, not private: the +Glasses / +Developer extensions use it.
     @ObservationIgnored var pendingPhoto: Data?
@@ -291,7 +294,7 @@ final class HermesSessionViewModel {
 
     /// The camera EmoDrink sees through: the Ray-Ban, or the iPhone in phone mode.
     var vision: VisionSource {
-        visionRoute == .phone ? phoneCameraManager : cameraManager
+        visionRoute == .phone ? phoneCameraManager : glassesVision
     }
 
     /// Pinned once a session (or the Lens view) commits to an eye, so a
@@ -315,9 +318,10 @@ final class HermesSessionViewModel {
     }
 
     /// Is there an eye at all right now? The iPhone camera is always
-    /// present; the glasses need a live session.
+    /// present; the glasses need a live session or a ready device (the
+    /// camera opens the session through GlassesLink).
     var hasVisionSource: Bool {
-        visionRoute == .phone || isGlassesConnected
+        visionRoute == .phone || isGlassesConnected || glassesAvailable
     }
 
     /// Permission for whichever eye is active. These are two different
@@ -360,8 +364,8 @@ final class HermesSessionViewModel {
             case .phone:
                 // The phone was the route and it failed; the glasses can only
                 // help if a session is actually up.
-                guard deviceSession != nil || lensSession != nil else { throw error }
-                return try await cameraManager.capturePhoto()
+                guard glassesLink.isSessionStarted else { throw error }
+                return try await glassesVision.capturePhoto()
             }
         }
     }
@@ -385,8 +389,9 @@ final class HermesSessionViewModel {
     @ObservationIgnored private var activeDeviceTask: Task<Void, Never>?
     @ObservationIgnored private var registrationTask: Task<Void, Never>?
 
-    /// A Meta device the SDK can open a session on right now.
-    var glassesAvailable: Bool { activeGlassesDevice != nil }
+    /// A Meta device the SDK can open a session on right now: GlassesLink
+    /// reports it registered, link connected and compatible.
+    var glassesAvailable: Bool { glassesLink.deviceReady }
 
     /// Everything the SDK will tell us about eligibility, in one line, so a
     /// device log shows WHY a route was chosen. Diagnostic only.
@@ -398,13 +403,12 @@ final class HermesSessionViewModel {
         return """
         VISIONDIAG registration=\(wearables.registrationState) \
         devices=\(wearables.devices.count) [\(links)] \
-        activeDevice=\(activeGlassesDevice ?? "nil") \
         glassesAvailable=\(glassesAvailable) route=\(visionRoute) \
         pref=\(phoneModePreference.rawValue) phoneModeActive=\(phoneModeActive) \
-        voiceSession=\(deviceSession != nil) lensSession=\(lensSession != nil) \
+        linkSession=\(glassesLink.sessionStateText) linkDisplay=\(glassesLink.displayStateText) \
         connection=\(connectionState) mic=\(micSource.rawValue) \
         display=\(displayStatus) hudEnabled=\(displayHUDEnabled) \
-        glassesStreaming=\(cameraManager.isStreaming)
+        glassesStream=\(glassesLink.streamStateText)
         """
     }
 
@@ -466,6 +470,7 @@ final class HermesSessionViewModel {
         self.wearables = wearables
         self.glassesLink = glassesLink
         self.displayManager = HermesDisplayManager(link: glassesLink)
+        self.glassesVision = GlassesLinkVision(link: glassesLink)
         // Display-capable devices only, as Meta's DisplayAccess sample does:
         // a session opened on any other device can never attach the lens.
         self.deviceSelector = AutoDeviceSelector(
@@ -474,8 +479,6 @@ final class HermesSessionViewModel {
         )
         self.activeGlassesDevice = self.deviceSelector.activeDevice
         reloadDirectProviderState()
-        observeActiveDevice()
-        observeRegistration()
         // Wired at init, NOT at session start: lens callbacks must exist
         // before any session does (see CLAUDE.md, display callbacks).
         wireDisplay()
@@ -588,11 +591,6 @@ final class HermesSessionViewModel {
     }
 
     private func startSession(engagingBrain: Bool) async {
-        // The voice session owns the glasses from here on - a Lens-created
-        // camera session must not compete with it. (UI-wise Lens can't be
-        // open when this button is reachable; this is belt-and-braces.)
-        dropCameraSession()
-
         // A Stop (endSession) while any await below is pending bumps the
         // generation; every resume checks it and leaves the session down.
         let gen = sessionGeneration
@@ -608,11 +606,7 @@ final class HermesSessionViewModel {
             let connected = await connectGlassesSession()
             guard gen == sessionGeneration else {
                 // Stopped while connecting: no phone fallback, no notice.
-                // endSession already stopped the session; undo what the
-                // connect set afterwards unless a newer start owns it.
-                if connectionState == .disconnected {
-                    cameraManager.reset()
-                }
+                // GlassesLink keeps its session for the next start.
                 return
             }
             if !connected {
@@ -1169,7 +1163,7 @@ final class HermesSessionViewModel {
         liveTranscript = ""
         micLevel = 0
         audioManager.stopCapture()
-        cameraManager.reset()
+        glassesVision.stopLiveStream()
         phoneCameraManager.stopLiveStream()
         unpinVisionRoute()
         phoneModeActive = false
