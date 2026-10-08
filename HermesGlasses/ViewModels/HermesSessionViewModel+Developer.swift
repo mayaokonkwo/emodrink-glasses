@@ -2,7 +2,7 @@
 // HermesSessionViewModel+Developer.swift
 //
 // The Developer test panel (Settings › Glasses › Developer). Every test
-// works from a cold start: it brings its own camera session when none runs.
+// works from a cold start: GlassesLink opens the session when none runs.
 //
 
 import Foundation
@@ -90,13 +90,13 @@ extension HermesSessionViewModel {
         }
     }
 
-    /// Developer panel › Display (spec section 8). With no session running it
-    /// opens a DeviceSession for the display alone, waits up to 5 s for the
-    /// lens to attach, clears the lens, sends the test card, keeps it 15 s,
-    /// and reports one of: sent (with the SDK's display.state right after
-    /// the send), no glasses, display session failed (with the SDK error),
-    /// or the glasses mic hiding the HUD. Every DisplayState and step is
-    /// traced with a timestamp into `displayTestTrace`.
+    /// Developer panel › Display, and Test lens on the home screen. Sends
+    /// the test card through GlassesLink (which opens the session and
+    /// attaches the lens when needed, 10 s at most), keeps it 15 s, and
+    /// reports one of: sent (with the SDK's display.state right after the
+    /// send), no glasses, display session failed (with the reason), or the
+    /// glasses mic hiding the HUD. Every DisplayState and step is traced
+    /// with a timestamp into `displayTestTrace`.
     func testDisplay() async {
         testRunning.insert("Display")
         defer { testRunning.remove("Display") }
@@ -142,99 +142,58 @@ extension HermesSessionViewModel {
         var release: (() -> Void)? = nil
     }
 
+    /// Through GlassesLink, the proven Test 1 path: when the lens is up it
+    /// is cleared first; otherwise the send attaches it (session created if
+    /// needed) and the card waits for `.started`, 10 s at most.
     private func runDisplayTest() async -> DisplayTestOutcome {
-        if let early = DisplayTestReport.preflight(glassesReachable: glassesAvailable || deviceSession != nil,
+        if let early = DisplayTestReport.preflight(glassesReachable: glassesAvailable || glassesLink.sessionState != nil,
                                                    glassesMicActive: lensBlockedByCallScreen) {
             traceDisplay("preflight: \(early.message)")
             return DisplayTestOutcome(report: early)
         }
-        // acquired: this test holds one camera-session use and releases it.
-        // attachedHere: the test attached the lens to a camera-only session
-        // that did not have it (HUD off), so it detaches it again afterwards.
-        var acquired = false
-        var attachedHere = false
-        if let session = deviceSession {
-            if displayManager.status != .connected {
-                displayManager.suppressAttachRedraw = true
-                displayManager.stop()
-                displayManager.start(session: session)
+        // The test card owns the lens until it is released.
+        displayManager.suppressAttachRedraw = true
+        if glassesLink.isDisplayReady {
+            traceDisplay("lens already attached (display.state \(displayManager.sdkStateDescription ?? "none"))")
+            // Start from a blank lens; a failure here is only traced.
+            do {
+                try await displayManager.clearDisplay()
+                traceDisplay("cleared")
+            } catch {
+                traceDisplay("clear failed: \(error.localizedDescription)")
             }
         } else {
-            do {
-                try await ensureCameraSession()
-            } catch {
-                traceDisplay("session failed: \(error.localizedDescription)")
-                return DisplayTestOutcome(report: .sessionFailed(error.localizedDescription))
-            }
-            acquired = true
-            guard let session = lensSession else {
-                releaseCameraSession()
-                return DisplayTestOutcome(report: .sessionFailed("no device session"))
-            }
-            if displayManager.status != .connected {
-                attachedHere = true
-                displayManager.suppressAttachRedraw = true
-                displayManager.stop()
-                displayManager.start(session: session)
-            }
-        }
-
-        if displayManager.status == .connected {
-            traceDisplay("lens already attached (display.state \(displayManager.sdkStateDescription ?? "none"))")
-        }
-        let deadline = Date().addingTimeInterval(DisplayTestReport.attachTimeoutSeconds)
-        while displayManager.status != .connected, Date() < deadline {
-            if case .unavailable = displayManager.status { break }
-            try? await Task.sleep(nanoseconds: 100_000_000)
-        }
-        guard displayManager.status == .connected else {
-            let reason: String
-            if case .unavailable(let why) = displayManager.status { reason = why } else { reason = "the lens did not attach within \(Int(DisplayTestReport.attachTimeoutSeconds)) s" }
-            traceDisplay("not attached: \(reason)")
-            giveLensBack(acquired: acquired, attachedHere: attachedHere)
-            return DisplayTestOutcome(report: .sessionFailed(reason))
-        }
-        // Start from a blank lens; a failure here is only traced.
-        do {
-            try await displayManager.clearDisplay()
-            traceDisplay("cleared")
-        } catch {
-            traceDisplay("clear failed: \(error.localizedDescription)")
+            traceDisplay("attaching through GlassesLink (session \(glassesLink.sessionStateText))")
         }
         do {
             try await displayManager.sendTest()
         } catch {
             traceDisplay("send failed: \(error.localizedDescription)")
-            giveLensBack(acquired: acquired, attachedHere: attachedHere)
+            giveLensBack()
             return DisplayTestOutcome(report: .sessionFailed(error.localizedDescription))
         }
         let sdkState = displayManager.sdkStateDescription
         traceDisplay("sent (display.state \(sdkState ?? "none"))")
 
-        // The caller leaves the card up, then gives the lens back and
-        // releases this test's camera-session use; whoever else holds the
-        // session keeps it.
+        // The caller leaves the card up, then gives the lens back.
         return DisplayTestOutcome(report: .sent, sdkState: sdkState, release: { [weak self] in
             guard let self else { return }
-            self.giveLensBack(acquired: acquired, attachedHere: attachedHere)
+            self.giveLensBack()
             self.traceDisplay("released")
         })
     }
 
-    /// Undo what the display test set up. The lens is detached when the test
-    /// attached it, or when this test is the session's last user (the
-    /// capability dies with the session); otherwise the owner's screen
-    /// comes back through the idle handler. Then the test's use is released.
-    private func giveLensBack(acquired: Bool, attachedHere: Bool) {
+    /// Undo what the display test set up: with the HUD active the owner's
+    /// screen comes back through the idle handler; otherwise the lens is
+    /// cleared. GlassesLink keeps its session and display either way.
+    private func giveLensBack() {
         // The test card is done; attach redraws are allowed again.
         displayManager.suppressAttachRedraw = false
-        let sessionEnds = acquired && lensUsers <= 1
-        if deviceSession == nil, attachedHere || sessionEnds {
-            detachDisplayFromCameraSession()
-        } else {
+        if displayManager.isActive {
             displayManager.idleHandler?()
+        } else {
+            Task { [glassesLink] in await glassesLink.clear() }
         }
-        if acquired { releaseCameraSession() }
     }
 
     /// Longest a test waits for a brain before calling it a failure. Generous

@@ -267,165 +267,43 @@ extension HermesSessionViewModel {
         displayManager.stop()
     }
 
-    /// Step 1 for the glasses route: create the DeviceSession, hand the
-    /// camera its session, and surface camera permission. Returns false
-    /// (having already shown the reason) if the glasses can't be reached.
+    /// Step 1 for the glasses route: make sure GlassesLink (the proven
+    /// session path, shared with the Glasses basics screen) has a started
+    /// DeviceSession, and surface camera permission. Returns false (having
+    /// recorded the reason in `glassesConnectIssue` when the SDK gave one)
+    /// if the glasses can't be reached. The display is attached later, by
+    /// the display manager, through the same GlassesLink.
     func connectGlassesSession() async -> Bool {
-        // 0. Wait for a connected, compatible device (Meta display-access
-        // skill). A firmware update blocks everything, so stop here.
-        switch await waitForGlassesReady() {
-        case .firmwareUpdateRequired:
+        // A firmware update blocks everything, so stop here.
+        if glassesLink.needsFirmwareUpdate {
             glassesConnectIssue = firmwareUpdateIssue
             return false
-        case .sdkUpdateRequired:
+        }
+        if glassesLink.devices.contains(where: { $0.compatibility == .sdkUpdateRequired }) {
             // Recorded in case the session then fails; tried anyway.
             glassesConnectIssue = sdkUpdateIssue
-        case .ready, .timedOut:
-            break
         }
 
-        // 1. Create and start a device session with the glasses
-        let session: DeviceSession
-        do {
-            NSLog("[EmoDrink] glasses session: createSession")
-            session = try wearables.createSession(deviceSelector: deviceSelector)
-        } catch {
-            NSLog("[EmoDrink] createSession failed: \(error.localizedDescription)")
-            return false
-        }
-        deviceSession = session
-
-        // Single state observer - use a continuation to signal readiness
-        do {
-            // Boxed flag so both the Task and outer scope can access it
-            let done = OSAllocatedUnfairLock(initialState: false)
-
-            try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
-                let stateStream = session.stateStream()
-                let errorStream = session.errorStream()
-
-                sessionObserverTask = Task { [weak self] in
-                    await withTaskGroup(of: Void.self) { group in
-                        group.addTask {
-                            for await state in stateStream {
-                                if Task.isCancelled { return }
-                                NSLog("[EmoDrink] glasses session state \(state)")
-                                switch state {
-                                case .started:
-                                    done.withLock { finished in
-                                        if !finished {
-                                            finished = true
-                                            cont.resume()
-                                        }
-                                    }
-                                    await self?.handleSessionState(state)
-                                case .stopped, .stopping:
-                                    done.withLock { finished in
-                                        if !finished {
-                                            finished = true
-                                            cont.resume(
-                                                throwing: DeviceSessionError.unexpectedError(
-                                                    description: "Session stopped unexpectedly"
-                                                )
-                                            )
-                                            return
-                                        }
-                                    }
-                                    await self?.handleSessionState(state)
-                                    return
-                                case .paused:
-                                    await self?.handleSessionState(state)
-                                case .starting, .idle:
-                                    break
-                                @unknown default:
-                                    break
-                                }
-                            }
-                        }
-                        group.addTask {
-                            for await error in errorStream {
-                                if Task.isCancelled { return }
-                                NSLog("[EmoDrink] glasses session error \(error)")
-                                // SDK 1.0 nonblocking warning: the session
-                                // carries on, so neither fail the connect
-                                // nor stop listening.
-                                if error == .dwaOutOfStuRange {
-                                    await self?.handleSessionError(error)
-                                    continue
-                                }
-                                done.withLock { finished in
-                                    if !finished {
-                                        finished = true
-                                        cont.resume(throwing: error)
-                                        return
-                                    }
-                                }
-                                await self?.handleSessionError(error)
-                                return
-                            }
-                        }
-                    }
-                    // Cancelled (a Stop during connect) before the session
-                    // started or failed: resume, so startSession returns
-                    // instead of waiting forever.
-                    done.withLock { finished in
-                        if !finished {
-                            finished = true
-                            cont.resume(throwing: CancellationError())
-                        }
-                    }
-                }
-
-                // Now start the session
-                do {
-                    try session.start()
-                } catch {
-                    done.withLock { finished in
-                        if !finished {
-                            finished = true
-                            cont.resume(throwing: error)
-                        }
-                    }
-                    return
-                }
-
-                // Check if already started (race: started before streams iterate)
-                done.withLock { finished in
-                    if !finished && session.state == .started {
-                        finished = true
-                        cont.resume()
-                    }
-                }
+        NSLog("[EmoDrink] glasses session: GlassesLink.ensureSession (session \(glassesLink.sessionStateText))")
+        guard await glassesLink.ensureSession() else {
+            if glassesLink.requiresDATAppUpdate {
+                // startSession shows this as the notice (with the update
+                // action) instead of a bare "Glasses unreachable".
+                glassesConnectIssue = datAppUpdateIssue
             }
-        } catch DeviceSessionError.datAppOnTheGlassesUpdateRequired {
-            // startSession shows this as the notice (with the update
-            // action) instead of a bare "Glasses unreachable".
-            NSLog("[EmoDrink] glasses session: DAT app on the glasses needs an update")
-            glassesConnectIssue = datAppUpdateIssue
-            if deviceSession === session { deviceSession = nil }
-            return false
-        } catch {
-            // Caller decides whether this is fatal or a cue to use the phone,
-            // so no alert here - just the breadcrumb.
-            NSLog("[EmoDrink] glasses session failed: \(error.localizedDescription)")
-            // A newer start may already own `deviceSession`.
-            if deviceSession === session { deviceSession = nil }
+            NSLog("[EmoDrink] glasses session failed (session \(glassesLink.sessionStateText))")
             return false
         }
 
-        // Session is started - set up Hermes and audio
-        isGlassesConnected = true
-        cameraManager.configure(session: session)
         // Surface camera permission state early (non-interactive)
         Task { await ensureCameraPermission(interactive: false) }
-
         return true
     }
 
     func handleSessionState(_ state: DeviceSessionState) async {
         switch state {
         case .started:
-            isGlassesConnected = true
+            break
         case .stopped, .stopping:
             // While connecting, startSession sees the failure itself (and may
             // fall back to the phone); ending here would read as a Stop.

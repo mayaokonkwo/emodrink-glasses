@@ -55,7 +55,8 @@ final class HermesSessionViewModel {
     func stoppedSince(_ generation: Int) -> Bool {
         sessionGeneration != generation && startFailedGeneration != sessionGeneration
     }
-    var isGlassesConnected: Bool = false
+    /// GlassesLink has a started DeviceSession with the glasses.
+    var isGlassesConnected: Bool { glassesLink.isSessionStarted }
     /// Words recognized so far in the current utterance (live)
     var liveTranscript: String = ""
     /// Mic input level 0..~1 for the UI meter
@@ -111,8 +112,8 @@ final class HermesSessionViewModel {
         didSet {
             UserDefaults.standard.set(displayHUDEnabled, forKey: "display_hud_enabled")
             if !displayHUDEnabled {
-                displayManager.stop()
-            } else if let session = deviceSession {
+                displayManager.deactivate()
+            } else if glassesSessionRunning {
                 if lensBlockedByCallScreen {
                     // HUD and the glasses' HFP mic are mutually exclusive
                     // (their call screen covers the lens). HUD wins: hop
@@ -126,8 +127,7 @@ final class HermesSessionViewModel {
                         self.show(notice: "Switched to the iPhone mic - the lens HUD can't show while the glasses' hands-free mic is active.")
                     }
                 } else {
-                    displayManager.stop()
-                    displayManager.start(session: session)
+                    displayManager.activate()
                 }
             }
         }
@@ -250,7 +250,10 @@ final class HermesSessionViewModel {
     @ObservationIgnored private let speechSynthesizer = HermesSpeechSynthesizer()
     @ObservationIgnored private let directClient = DirectClient()
     // Internal, not private: the +Glasses / +Developer extensions use it.
-    @ObservationIgnored let displayManager = HermesDisplayManager()
+    @ObservationIgnored let displayManager: HermesDisplayManager
+    /// The one path to the glasses (session, display, camera), shared with
+    /// the Glasses basics screen. Internal for the extensions.
+    @ObservationIgnored let glassesLink: GlassesLink
     @ObservationIgnored private let contextProvider = DeviceContextProvider()
     // Internal, not private: the +Glasses / +Developer extensions use it.
     @ObservationIgnored var pendingPhoto: Data?
@@ -459,8 +462,10 @@ final class HermesSessionViewModel {
     }
 
 
-    init(wearables: WearablesInterface) {
+    init(wearables: WearablesInterface, glassesLink: GlassesLink) {
         self.wearables = wearables
+        self.glassesLink = glassesLink
+        self.displayManager = HermesDisplayManager(link: glassesLink)
         // Display-capable devices only, as Meta's DisplayAccess sample does:
         // a session opened on any other device can never attach the lens.
         self.deviceSelector = AutoDeviceSelector(
@@ -498,9 +503,6 @@ final class HermesSessionViewModel {
                 guard let self, !Task.isCancelled else { return }
                 NSLog("[EmoDrink] registration \(state)")
                 guard state == .available || state == .unavailable else { continue }
-                if self.deviceSession == nil && self.lensSession == nil {
-                    self.displayManager.stop()
-                }
                 self.deviceSelector = AutoDeviceSelector(
                     wearables: self.wearables,
                     filter: { $0.supportsDisplay() }
@@ -609,7 +611,6 @@ final class HermesSessionViewModel {
                 // endSession already stopped the session; undo what the
                 // connect set afterwards unless a newer start owns it.
                 if connectionState == .disconnected {
-                    isGlassesConnected = false
                     cameraManager.reset()
                 }
                 return
@@ -766,17 +767,13 @@ final class HermesSessionViewModel {
             return
         }
 
-        // Attach the lens HUD only when the mic route leaves the lens
-        // free - the GLASSES' hands-free link brings up their call screen
-        // (a headset's hands-free link does not). In phone mode there is no
-        // DeviceSession to attach to; the simulated lens reads
+        // Put the HUD on the lens (through GlassesLink) only when the mic
+        // route leaves the lens free - the GLASSES' hands-free link brings
+        // up their call screen (a headset's hands-free link does not). In
+        // phone mode nothing goes to the glasses; the simulated lens reads
         // `displayManager.content` instead, which updates either way.
-        if let session = deviceSession,
-           displayHUDEnabled, !lensBlockedByCallScreen {
-            // stop() first: a standalone Display test may still hold an
-            // attachment to its temporary session
-            displayManager.stop()
-            displayManager.start(session: session)
+        if route == .glasses, displayHUDEnabled, !lensBlockedByCallScreen {
+            displayManager.activate()
         }
 
         // Mic live, recognizer running
@@ -1092,13 +1089,18 @@ final class HermesSessionViewModel {
     /// mic live, and the HUD must come back with it. Skipping it once stranded
     /// the lens off with no recovery but toggling the HUD setting.
     private func reconcileLensHUD() {
-        guard displayHUDEnabled, let session = deviceSession else { return }
+        guard displayHUDEnabled, glassesSessionRunning else { return }
         if lensBlockedByCallScreen {
-            displayManager.stop()
+            displayManager.deactivate()
             show(notice: "Lens HUD paused - the glasses show their call screen while their hands-free mic is on. The iPhone or a headset mic keeps the HUD visible.")
-        } else if displayManager.status == .off {
-            displayManager.start(session: session)
+        } else if !displayManager.isActive {
+            displayManager.activate()
         }
+    }
+
+    /// A session is running (or connecting) with the glasses as the eye.
+    var glassesSessionRunning: Bool {
+        connectionState != .disconnected && pinnedVisionRoute == .glasses
     }
 
     /// A short spoken confirmation. With the voice loop listening, the
@@ -1161,7 +1163,7 @@ final class HermesSessionViewModel {
         cueQueue.removeAll()
         speechSynthesizer.stop()
         speechRecognizer.stop()
-        displayManager.stop()
+        displayManager.deactivate()
         displayStatus = .off
         contextProvider.stop()
         liveTranscript = ""
@@ -1177,7 +1179,6 @@ final class HermesSessionViewModel {
         pendingPhoto = nil
         deviceSession?.stop()
         deviceSession = nil
-        isGlassesConnected = false
         connectionState = .disconnected
     }
 
