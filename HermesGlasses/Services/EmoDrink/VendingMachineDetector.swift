@@ -11,7 +11,8 @@ import Foundation
 
 enum VendingMachineDetector {
     static let systemPrompt = "You are a strict image classifier. Reply with exactly one word and nothing else."
-    static let userText = "Is a beverage vending machine clearly visible and close enough to buy from in this photo? Answer with one word, YES or NO."
+    /// A photo of a machine on a screen counts: the owner tests with one.
+    static let userText = "Does this image show a vending machine for drinks or snacks? A real machine, or a photo or video of one shown on a screen, poster or page, all count as YES. Answer with one word, YES or NO."
 
     static func isYes(_ reply: String) -> Bool {
         let trimmed = reply.trimmingCharacters(in: .whitespacesAndNewlines)
