@@ -116,6 +116,7 @@ extension HermesSessionViewModel {
         var attachedHere = false
         if let session = deviceSession {
             if displayManager.status != .connected {
+                displayManager.suppressAttachRedraw = true
                 displayManager.stop()
                 displayManager.start(session: session)
             }
@@ -132,6 +133,7 @@ extension HermesSessionViewModel {
             }
             if displayManager.status != .connected {
                 attachedHere = true
+                displayManager.suppressAttachRedraw = true
                 displayManager.stop()
                 displayManager.start(session: session)
             }
@@ -169,6 +171,8 @@ extension HermesSessionViewModel {
     /// capability dies with the session); otherwise the owner's screen
     /// comes back through the idle handler. Then the test's use is released.
     private func giveLensBack(acquired: Bool, attachedHere: Bool) {
+        // The test card is done; attach redraws are allowed again.
+        displayManager.suppressAttachRedraw = false
         let sessionEnds = acquired && lensUsers <= 1
         if deviceSession == nil, attachedHere || sessionEnds {
             detachDisplayFromCameraSession()

@@ -257,7 +257,10 @@ private struct LensStage: View {
         .overlay(alignment: .bottomLeading) {
             HStack(spacing: 6) {
                 badgeLabel(badge).fixedSize()
-                badgeLabel(hermesVM.lensStatusText(EmoDrinkStrings(language: hermesVM.activeLanguage)))
+                // No lens exists in phone mode.
+                if !hermesVM.phoneModeActive {
+                    badgeLabel(hermesVM.lensStatusText(EmoDrinkStrings(language: hermesVM.activeLanguage)))
+                }
             }
             .padding(10)
         }

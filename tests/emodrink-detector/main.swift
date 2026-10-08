@@ -25,6 +25,8 @@ expect(!VendingMachineDetector.isYes(""), "empty")
 expect(!VendingMachineDetector.isYes("I cannot see the image"), "refusal")
 expect(VendingMachineDetector.userText.contains("YES or NO"), "prompt asks for one word")
 expect(VendingMachineDetector.userText.contains("screen"), "prompt accepts a machine shown on a screen")
+expect(VendingMachineDetector.userText.contains("photo"), "prompt accepts a photo of a machine")
+expect(VendingMachineDetector.userText.contains("vending machine that sells drinks"), "prompt asks about a drinks machine")
 expect(VendingMachineDetector.systemPrompt.contains("one word"), "system prompt asks for one word")
 
 // Gate defaults from the spec.

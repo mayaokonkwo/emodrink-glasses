@@ -52,6 +52,12 @@ final class HermesDisplayManager {
     /// What to do when a reply dwell ends. Default (nil) blanks the lens;
     /// the session sets this so EmoDrink can restore its card.
     var idleHandler: (() -> Void)?
+    /// Draws the current card when the display attaches (a card sent while
+    /// the display was off was dropped). Returns true when it drew.
+    var attachRedraw: (() -> Bool)?
+    /// Set by the Developer display test around its own attach, so the
+    /// redraw cannot land after (and over) the test card.
+    var suppressAttachRedraw = false
 
     private var display: Display?
     private var stateListenerToken: AnyListenerToken?
@@ -95,6 +101,9 @@ final class HermesDisplayManager {
                         if let view = self.pendingView {
                             self.pendingView = nil
                             self.transmit(view)
+                        } else if !self.suppressAttachRedraw, self.attachRedraw?() == true {
+                            // The fresh card wins over anything queued.
+                            self.pendingView = nil
                         }
                     case .stopped:
                         // Mid-session drop unless stop() already ran

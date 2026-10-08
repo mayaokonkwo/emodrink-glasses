@@ -889,13 +889,10 @@ final class HermesSessionViewModel {
         displayManager.onContentChanged = { [weak self] content in self?.lensContent = content }
         lensContent = displayManager.content
         displayManager.onDebug = { message in NSLog("[EmoDrink] display: \(message)") }
-        displayManager.onStatusChanged = { [weak self] newStatus in
-            guard let self else { return }
-            self.displayStatus = newStatus
-            // A card sent while the lens was off was dropped; draw the
-            // current EmoDrink card the moment the display attaches.
-            if newStatus == .connected { _ = self.emoDrinkLensIdle?() }
-        }
+        displayManager.onStatusChanged = { [weak self] newStatus in self?.displayStatus = newStatus }
+        // A card sent while the lens was off was dropped; the display
+        // manager draws the current EmoDrink card the moment it attaches.
+        displayManager.attachRedraw = { [weak self] in self?.emoDrinkLensIdle?() ?? false }
         displayManager.onStop = { [weak self] in self?.interruptSpeech() }
         displayManager.onRepeat = { [weak self] in self?.repeatLastReply() }
         displayManager.onNewChat = { [weak self] in
