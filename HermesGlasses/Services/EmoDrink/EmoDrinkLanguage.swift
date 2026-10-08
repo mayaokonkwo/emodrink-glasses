@@ -97,6 +97,11 @@ struct EmoDrinkStrings: Equatable {
     func lensUnavailable(_ reason: String) -> String { ja ? "レンズ利用不可: \(reason)" : "Lens unavailable: \(reason)" }
     var lensBlockedByMic: String { ja ? "メガネのマイク使用中のためレンズ非表示" : "Lens hidden by glasses mic" }
 
+    // MARK: Camera badge (home stage, glasses mode)
+
+    var glassesCameraLive: String { ja ? "メガネのカメラ · ライブ" : "Glasses camera · live" }
+    var glassesWaitingForCamera: String { ja ? "メガネ接続済み · カメラ待機中" : "Glasses connected · waiting for camera" }
+
     // MARK: Spoken
 
     var cameraLost: String { ja ? "カメラの映像が届きません。ドリンクモードを一時停止します。" : "Camera lost. Drink mode is paused." }

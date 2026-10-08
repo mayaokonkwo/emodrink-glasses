@@ -45,11 +45,13 @@ for lang in Language.allCases {
                t.choicesLine(names: ["A", "B", "C"]), t.chosenLine(name: "A", reasons: ["x"]), t.whyLine(reasons: ["x"]),
                t.slept(hours: 5.1), t.sleepScore(48), t.hrvUnder(ms: 14), t.hrvAbove(ms: 6), t.restingHROver(7),
                t.stress(71), t.stepsAlready(8400),
-               t.lensOn, t.lensAttaching, t.lensOff, t.lensUnavailable("x"), t.lensBlockedByMic]
+               t.lensOn, t.lensAttaching, t.lensOff, t.lensUnavailable("x"), t.lensBlockedByMic,
+               t.glassesCameraLive, t.glassesWaitingForCamera]
     expect(all.allSatisfy { !$0.trimmingCharacters(in: .whitespaces).isEmpty }, "\(lang): every string is non-empty")
     expect(all.allSatisfy { !$0.contains("\u{2014}") }, "\(lang): no em dashes")
     let fixed = [t.watchingText, t.choiceHeading, t.noMachine, t.cameraNotReady, t.checkResting, t.sessionDidNotStart, t.cameraLost, t.enjoy, t.stoppedTitle, t.stoppedHint, t.visionCheckFailed, t.whyLabel, t.thanksLabel,
-                 t.lensOn, t.lensAttaching, t.lensOff, t.lensUnavailable("x"), t.lensBlockedByMic]
+                 t.lensOn, t.lensAttaching, t.lensOff, t.lensUnavailable("x"), t.lensBlockedByMic,
+                 t.glassesCameraLive, t.glassesWaitingForCamera]
     if lang == .ja {
         expect(fixed.allSatisfy(hasJapanese), "ja: lens and spoken lines are Japanese")
     } else {
@@ -69,6 +71,10 @@ expect(EmoDrinkStrings(language: .en).lensOff == "Lens off", "en lens off")
 expect(EmoDrinkStrings(language: .en).lensUnavailable("Display stopped") == "Lens unavailable: Display stopped", "en lens unavailable carries the reason")
 expect(EmoDrinkStrings(language: .ja).lensUnavailable("Display stopped").hasSuffix("Display stopped"), "ja lens unavailable carries the reason")
 expect(EmoDrinkStrings(language: .en).lensBlockedByMic == "Lens hidden by glasses mic", "en lens hidden by mic")
+
+// Glasses camera badge (device fix B).
+expect(EmoDrinkStrings(language: .en).glassesCameraLive == "Glasses camera · live", "en glasses camera live")
+expect(EmoDrinkStrings(language: .en).glassesWaitingForCamera == "Glasses connected · waiting for camera", "en glasses waiting for camera")
 
 // Japanese reason fragments, exactly as the spec writes them.
 let ja = EmoDrinkStrings(language: .ja)

@@ -3,8 +3,8 @@
 //
 // The EmoDrink home: one screen, top to bottom.
 //   1. Lens stage: the iPhone camera with the simulated lens over it in
-//      phone mode; a dark stage with a "Glasses connected" badge and the
-//      same simulated lens (mirroring the Ray-Ban) in glasses mode. A
+//      phone mode; in glasses mode the Ray-Ban camera's latest frame (a
+//      dark stage until one arrives) under the same simulated lens. A
 //      second badge names the real lens's status.
 //   2. Today: sleep, score, HRV, resting HR, and where the numbers came from.
 //   3. Pick: watching (or stopped), with why the AI was skipped when it
@@ -67,7 +67,7 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
-                LensStage(hermesVM: hermesVM)
+                LensStage(hermesVM: hermesVM, emoDrinkVM: emoDrinkVM)
                 TodayCard(vm: emoDrinkVM)
                 PickCard(vm: emoDrinkVM)
                 startStopRow
@@ -242,6 +242,7 @@ struct ContentView: View {
 
 private struct LensStage: View {
     let hermesVM: HermesSessionViewModel
+    let emoDrinkVM: EmoDrinkViewModel
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -276,7 +277,9 @@ private struct LensStage: View {
 
     private var badge: String {
         if hermesVM.phoneModeActive { return hermesVM.phoneCamera.isStreaming ? "iPhone camera · live" : "iPhone camera" }
-        if hermesVM.isGlassesConnected { return "Glasses connected" }
+        let t = EmoDrinkStrings(language: hermesVM.activeLanguage)
+        if emoDrinkVM.liveImage != nil { return t.glassesCameraLive }
+        if hermesVM.isGlassesConnected { return t.glassesWaitingForCamera }
         return "Not started"
     }
 
@@ -301,6 +304,13 @@ private struct LensStage: View {
                     .tint(HermesTheme.accentLight)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
+        } else if let image = emoDrinkVM.liveImage {
+            // Glasses mode: drink mode's latest frame from the Ray-Ban camera.
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
         } else {
             HermesTheme.lensStage
         }
