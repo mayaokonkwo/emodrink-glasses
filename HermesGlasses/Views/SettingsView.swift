@@ -50,7 +50,7 @@ struct SettingsView: View {
                         AssistantPage(hermesVM: hermesVM, providerKey: $providerKey)
                     }
                     HermesDivider()
-                    navRow("Language and voice", icon: "character.bubble", value: hermesVM.micSource.shortLabel) {
+                    navRow("Language and voice", icon: "character.bubble", value: languageLabel(hermesVM.activeLanguage)) {
                         LanguageVoicePage(hermesVM: hermesVM)
                     }
                     HermesDivider()
@@ -315,6 +315,13 @@ private struct DeveloperPage: View {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
                         ForEach(Self.tests, id: \.self) { testButton($0) }
                     }
+                    if let report = hermesVM.displayTestReport {
+                        Text("Display: \(report)")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .lineLimit(4)
+                    }
                     if let failure = hermesVM.lastTestFailure {
                         Text(failure)
                             .font(.caption2)
@@ -495,14 +502,64 @@ private struct AssistantPage: View {
 
 private struct LanguageVoicePage: View {
     let hermesVM: HermesSessionViewModel
+    @State private var setting: EmoDrinkLanguage.Setting = EmoDrinkLanguage.setting()
 
     var body: some View {
         Form {
+            Section {
+                Picker("Language", selection: $setting) {
+                    ForEach(EmoDrinkLanguage.Setting.allCases) { Text($0.label).tag($0) }
+                }
+                .pickerStyle(.inline)
+                .onChange(of: setting) { _, new in
+                    EmoDrinkLanguage.setSetting(new)
+                    hermesVM.applyLanguage()
+                }
+            } header: {
+                Text("Language")
+            } footer: {
+                Text(languageFooter)
+            }
+
+            Section {
+                LabeledContent("Speaking", value: languageLabel(hermesVM.activeLanguage))
+                LabeledContent("Voice in use", value: hermesVM.voiceName ?? "System default")
+                if hermesVM.voiceNeedsInstallHint {
+                    Text(EmoDrinkStrings(language: hermesVM.activeLanguage).voiceInstallHint)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("Voice")
+            }
+
             micSection
+
+            Section {
+                ForEach(VoiceCommandCatalog.groups) { group in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(group.title).font(.system(size: 15, weight: .semibold))
+                        Text(group.examples.map { "\"\($0)\"" }.joined(separator: ", "))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } header: {
+                Text("What you can say")
+            }
         }
         .hermesFormStyle()
         .navigationTitle("Language and voice")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    /// The mid-session note shows only while a session runs: a change then
+    /// applies from the next session (applyLanguage() leaves a running
+    /// recognizer alone).
+    private var languageFooter: String {
+        let base = "Speech both ways, the lens and the spoken lines follow this. Auto uses the iPhone's first language."
+        guard hermesVM.connectionState != .disconnected else { return base }
+        return base + " A session is running, so a change applies from the next session."
     }
 
     private var micSection: some View {
@@ -524,6 +581,11 @@ private struct LanguageVoicePage: View {
     }
 }
 
+/// The resolved language's name, from the same labels as the picker.
+private func languageLabel(_ language: Language) -> String {
+    (language == .ja ? EmoDrinkLanguage.Setting.ja : .en).label
+}
+
 // MARK: - Drinks
 
 private struct DrinksPage: View {
@@ -542,6 +604,11 @@ private struct DrinksPage: View {
 
     private var watchSection: some View {
         HermesSection(header: "Watching", footer: "One small vision call only when the scene changes and settles.") {
+            Toggle(isOn: $vm.autoWatch) {
+                HermesRow("Watch for vending machines when the app opens", icon: "eye", showsChevron: false)
+            }
+            .padding(.trailing, 16)
+            HermesDivider()
             Stepper("Check every \(vm.intervalSeconds) s", value: $vm.intervalSeconds, in: 2...30)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)

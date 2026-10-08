@@ -191,8 +191,8 @@ enum HermesDisplayScreens {
     /// Static screen for the test panel's Display button.
     static func testScreen() -> FlexBox {
         FlexBox(direction: .column, spacing: 8) {
-            Text("Hermes display", style: .heading)
-            Text("Connected - this is a test screen", style: .body, color: .secondary)
+            Text("EmoDrink display", style: .heading)
+            Text("Test card", style: .body, color: .secondary)
         }
         .padding(24)
     }

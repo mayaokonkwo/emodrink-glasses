@@ -45,6 +45,8 @@ final class HermesSessionViewModel {
     var lastTestPhoto: UIImage? = nil
     var lastTestPhotoSource: String? = nil
     var lastTestAudioRoute: String? = nil
+    /// The Developer Display test's last outcome, in the spec's words.
+    var displayTestReport: String?
 
     // MARK: EmoDrink hooks (set by EmoDrinkViewModel)
 

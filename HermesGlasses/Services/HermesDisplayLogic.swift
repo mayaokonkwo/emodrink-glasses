@@ -51,3 +51,36 @@ struct DisplaySendThrottle {
         return true
     }
 }
+
+/// What the Developer panel's Display test reports (spec section 8). The
+/// session decides what happened; this names it, the same way every time.
+enum DisplayTestReport: Equatable {
+    case sent
+    case noGlasses
+    case sessionFailed(String)
+    case micInUse
+
+    /// How long the test waits for the display capability to attach.
+    static let attachTimeoutSeconds: Double = 5
+    /// How long the test card stays before the lens returns to normal.
+    static let cardSeconds: Double = 4
+
+    var message: String {
+        switch self {
+        case .sent: return "Test card sent"
+        case .noGlasses: return "No glasses connected"
+        case .sessionFailed(let error): return "Display session failed: \(error)"
+        case .micInUse:
+            return "The glasses microphone is in use, so the glasses show their call screen instead of the HUD. Switch the mic to iPhone and try again."
+        }
+    }
+
+    var isSuccess: Bool { self == .sent }
+
+    /// What can be known before touching the SDK. Nil = go ahead and attach.
+    static func preflight(glassesReachable: Bool, glassesMicActive: Bool) -> DisplayTestReport? {
+        if !glassesReachable { return .noGlasses }
+        if glassesMicActive { return .micInUse }
+        return nil
+    }
+}

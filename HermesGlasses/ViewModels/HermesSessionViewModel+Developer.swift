@@ -91,56 +91,90 @@ extension HermesSessionViewModel {
         }
     }
 
-    /// Attach (if needed) and push a static screen to the lens. Works
-    /// without a Hermes session: spins up a temporary device session just
-    /// for the test and tears it down after a few seconds.
+    /// Developer panel › Display (spec section 8). With no session running it
+    /// opens a DeviceSession for the display alone, waits up to 5 s for the
+    /// lens to attach, sends the test card, keeps it 4 s, and reports one of:
+    /// sent, no glasses, display session failed (with the SDK error), or the
+    /// glasses mic hiding the HUD.
     func testDisplay() async {
-        await runTest("Display") { [self] in
-            if let session = deviceSession {
-                if displayManager.status != .connected {
-                    displayManager.stop()
-                    displayManager.start(session: session)
-                }
-                // Attach is async - wait up to 5 s for the capability
-                for _ in 0..<50 where displayManager.status != .connected {
-                    try await Task.sleep(nanoseconds: 100_000_000)
-                }
-                try await displayManager.sendTest()
-                return
-            }
+        testRunning.insert("Display")
+        defer { testRunning.remove("Display") }
+        let report = await runDisplayTest()
+        displayTestReport = report.message
+        testResults["Display"] = report.isSuccess ? "" : report.message
+        lastTestFailure = report.isSuccess ? nil : report.message
+    }
 
-            // No session: temporary one, display only
-            let session = try wearables.createSession(deviceSelector: deviceSelector)
-            do {
-                try session.start()
-                for _ in 0..<50 where session.state != .started {
-                    try await Task.sleep(nanoseconds: 100_000_000)
-                }
-                guard session.state == .started else {
-                    throw TestFailure("Glasses didn't respond (check they're awake and connected in Meta AI)")
-                }
+    private func runDisplayTest() async -> DisplayTestReport {
+        if let early = DisplayTestReport.preflight(glassesReachable: glassesAvailable || deviceSession != nil,
+                                                   glassesMicActive: lensBlockedByCallScreen) {
+            return early
+        }
+        // borrowed: this test opened the camera-only session and closes it.
+        // attachedHere: the lens was not attached to an existing camera-only
+        // session (HUD off), so the test detaches it again afterwards.
+        var borrowed = false
+        var attachedHere = false
+        if let session = deviceSession {
+            if displayManager.status != .connected {
                 displayManager.stop()
                 displayManager.start(session: session)
-                for _ in 0..<50 where displayManager.status != .connected {
-                    try await Task.sleep(nanoseconds: 100_000_000)
-                }
-                try await displayManager.sendTest()
-            } catch {
-                displayManager.stop()
-                session.stop()
-                throw error
             }
-            // Leave the test screen up briefly, then tear down - unless a
-            // real session started meanwhile (it re-attaches the display
-            // to its own session in startSession)
-            Task { @MainActor [weak self] in
-                try? await Task.sleep(nanoseconds: 8_000_000_000)
-                if let self, self.deviceSession == nil {
-                    self.displayManager.stop()
-                }
-                session.stop()
+        } else {
+            borrowed = lensSession == nil
+            do {
+                try await ensureCameraSession()
+            } catch {
+                return .sessionFailed(error.localizedDescription)
+            }
+            guard let session = lensSession else { return .sessionFailed("no device session") }
+            if displayManager.status != .connected {
+                attachedHere = !borrowed
+                displayManager.stop()
+                displayManager.start(session: session)
             }
         }
+
+        let deadline = Date().addingTimeInterval(DisplayTestReport.attachTimeoutSeconds)
+        while displayManager.status != .connected, Date() < deadline {
+            if case .unavailable = displayManager.status { break }
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+        guard displayManager.status == .connected else {
+            let reason: String
+            if case .unavailable(let why) = displayManager.status { reason = why } else { reason = "the lens did not attach within 5 s" }
+            giveLensBack(borrowed: borrowed, attachedHere: attachedHere)
+            return .sessionFailed(reason)
+        }
+        do {
+            try await displayManager.sendTest()
+        } catch {
+            giveLensBack(borrowed: borrowed, attachedHere: attachedHere)
+            return .sessionFailed(error.localizedDescription)
+        }
+
+        // Leave the card up, then give the lens back: a borrowed session is
+        // torn down (unless a real one started meanwhile); a running session
+        // gets its own screen back through the idle handler.
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(DisplayTestReport.cardSeconds * 1_000_000_000))
+            guard let self else { return }
+            if self.deviceSession != nil {
+                self.displayManager.idleHandler?()
+            } else if borrowed || attachedHere {
+                self.giveLensBack(borrowed: borrowed, attachedHere: attachedHere)
+            } else {
+                self.displayManager.idleHandler?()
+            }
+        }
+        return .sent
+    }
+
+    /// Undo what the display test set up on a camera-only session.
+    private func giveLensBack(borrowed: Bool, attachedHere: Bool) {
+        guard deviceSession == nil else { return }
+        if borrowed || attachedHere { detachDisplayFromCameraSession() }
+        if borrowed { releaseCameraSession() }
     }
 
     /// Longest a test waits for a brain before calling it a failure. Generous

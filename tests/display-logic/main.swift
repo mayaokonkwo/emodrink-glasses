@@ -50,6 +50,17 @@ expect(throttle.shouldSend(at: t0.addingTimeInterval(0.5)),
 expect(!throttle.shouldSend(at: t0.addingTimeInterval(0.6)),
        "interval measured from last SENT, not last attempt")
 
+// Display test report (spec section 8).
+expect(DisplayTestReport.sent.message == "Test card sent" && DisplayTestReport.sent.isSuccess, "success text")
+expect(DisplayTestReport.noGlasses.message == "No glasses connected", "no glasses text")
+expect(DisplayTestReport.sessionFailed("Bluetooth is off").message == "Display session failed: Bluetooth is off", "session failure carries the SDK error")
+expect(DisplayTestReport.micInUse.message == "The glasses microphone is in use, so the glasses show their call screen instead of the HUD. Switch the mic to iPhone and try again.", "mic in use text")
+expect(!DisplayTestReport.noGlasses.isSuccess && !DisplayTestReport.micInUse.isSuccess && !DisplayTestReport.sessionFailed("x").isSuccess, "every failure is a failure")
+expect(DisplayTestReport.preflight(glassesReachable: false, glassesMicActive: true) == .noGlasses, "no glasses wins over the mic")
+expect(DisplayTestReport.preflight(glassesReachable: true, glassesMicActive: true) == .micInUse, "glasses mic blocks the HUD")
+expect(DisplayTestReport.preflight(glassesReachable: true, glassesMicActive: false) == nil, "otherwise attach")
+expect(DisplayTestReport.attachTimeoutSeconds == 5 && DisplayTestReport.cardSeconds == 4, "5 s attach wait, 4 s card")
+
 if failures > 0 {
     print("\(failures) test(s) FAILED")
     exit(1)
