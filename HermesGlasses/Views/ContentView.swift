@@ -188,44 +188,52 @@ struct ContentView: View {
     }
 
     private var startStopRow: some View {
-        HStack(spacing: 12) {
+        VStack(spacing: 10) {
             // Disabled while connecting, so a tap cannot land mid-connect.
             HermesPrimaryButton(title: connecting ? "Starting…" : (running ? "Stop" : "Start"),
                                 systemImage: running ? "stop.fill" : "play.fill",
                                 enabled: !connecting) {
                 if running { emoDrinkVM.stop() } else { Task { await startWatching() } }
             }
-            if emoDrinkVM.drinkModeOn {
-                Button {
-                    Task { await emoDrinkVM.checkNow() }
-                } label: {
-                    if emoDrinkVM.checkingNow {
-                        ProgressView()
-                    } else {
-                        Text("Check now").font(.system(size: 15, weight: .semibold))
+            let showCheck = emoDrinkVM.drinkModeOn
+            let showTest = wearablesVM.registrationState == .registered
+            if showCheck || showTest {
+                HStack(spacing: 10) {
+                    if showCheck {
+                        secondaryButton("Check now", systemImage: "viewfinder",
+                                        busy: emoDrinkVM.checkingNow,
+                                        enabled: !emoDrinkVM.checkingNow && !emoDrinkVM.momentActive) {
+                            Task { await emoDrinkVM.checkNow() }
+                        }
+                    }
+                    if showTest {
+                        secondaryButton("Test lens", systemImage: "eyeglasses",
+                                        busy: hermesVM.testRunning.contains("Display"),
+                                        enabled: !hermesVM.testRunning.contains("Display")) {
+                            Task { await testLens() }
+                        }
                     }
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(HermesTheme.accentOnCard)
-                .disabled(emoDrinkVM.checkingNow || emoDrinkVM.momentActive)
-                .fixedSize()
-            }
-            if wearablesVM.registrationState == .registered {
-                Button {
-                    Task { await testLens() }
-                } label: {
-                    if hermesVM.testRunning.contains("Display") {
-                        ProgressView()
-                    } else {
-                        Text("Test lens").font(.system(size: 15, weight: .semibold))
-                    }
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(HermesTheme.accentOnCard)
-                .disabled(hermesVM.testRunning.contains("Display"))
-                .fixedSize()
             }
         }
+    }
+
+    private func secondaryButton(_ title: String, systemImage: String, busy: Bool,
+                                 enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if busy { ProgressView().controlSize(.small) } else { Image(systemName: systemImage) }
+                Text(title).lineLimit(1)
+            }
+            .font(.system(size: 15, weight: .semibold))
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .background(HermesTheme.accent.opacity(0.10), in: Capsule())
+            .overlay(Capsule().strokeBorder(HermesTheme.accent.opacity(0.25), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(HermesTheme.accentOnCard)
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.5)
     }
 
     /// Runs the Developer panel's Display test and shows its report under
@@ -249,9 +257,10 @@ private struct LensStage: View {
     var body: some View {
         ZStack(alignment: .top) {
             backdrop
-            SimulatedLensView(content: hermesVM.lensContent)
+            SimulatedLensView(content: hermesVM.lensContent, compact: true)
                 .padding(.horizontal, 14)
-                .padding(.top, 28)
+                .padding(.top, 22)
+                .frame(maxHeight: .infinity, alignment: .top)
         }
         .frame(maxWidth: .infinity, minHeight: 220, maxHeight: .infinity)
         .background(HermesTheme.lensStage)
@@ -335,7 +344,8 @@ private struct TodayCard: View {
                 HermesStatTile(value: vm.currentSnapshot?.hrvMs.map { "\(Int($0.rounded()))" } ?? "-", caption: "HRV ms")
                 HermesStatTile(value: vm.currentSnapshot?.restingHR.map { "\(Int($0.rounded()))" } ?? "-", caption: "rest HR")
             }
-            Text(vm.fetching ? "Fetching…" : (vm.sourceLine.isEmpty ? "No data yet" : vm.sourceLine))
+            Label(vm.fetching ? "Fetching…" : (vm.sourceLine.isEmpty ? "No data yet" : vm.sourceLine),
+                  systemImage: "heart.text.square")
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -368,9 +378,9 @@ private struct PickCard: View {
         } else {
             switch vm.step {
             case .choices:
-                Text(t.choiceHeading).font(.system(size: 20, weight: .bold))
+                Text(t.choiceHeading).font(.system(size: 18, weight: .bold))
                 ForEach(Array(vm.options.enumerated()), id: \.element.id) { index, drink in
-                    chip("\(index + 1)  \(name(drink))") { vm.choose(index) }
+                    optionRow(index: index, drink: drink)
                 }
             case .chosen:
                 if let pick = vm.currentPick {
@@ -404,6 +414,30 @@ private struct PickCard: View {
 
     private func name(_ drink: Drink) -> String { vm.language == .ja ? drink.nameJa : drink.name }
     private func otherName(_ drink: Drink) -> String { vm.language == .ja ? drink.name : drink.nameJa }
+
+    /// One drink option: number badge, name, the other-language name.
+    private func optionRow(index: Int, drink: Drink) -> some View {
+        Button { vm.choose(index) } label: {
+            HStack(spacing: 12) {
+                Text("\(index + 1)")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 28)
+                    .background(HermesTheme.accent, in: Circle())
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(name(drink)).font(.system(size: 16, weight: .semibold)).lineLimit(1)
+                    Text(otherName(drink)).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+            .background(HermesTheme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(HermesTheme.accentOnCard)
+    }
 
     private func chip(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {

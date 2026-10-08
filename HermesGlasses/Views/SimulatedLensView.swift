@@ -15,9 +15,12 @@ struct SimulatedLensView: View {
     let content: LensContent
     /// Drawn on the frame's tag. Ray-Ban Display's usable HUD area.
     var resolutionLabel: String = "640×200"
+    /// Compact rendering for the home stage: fewer lines, the choices on one
+    /// row that shrinks to fit, so the card never outgrows the stage.
+    var compact: Bool = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: compact ? 6 : 10) {
             HermesScreenTitle(
                 text: "EMODRINK", size: 13, tint: HermesTheme.accentLight.opacity(0.9)
             )
@@ -34,7 +37,7 @@ struct SimulatedLensView: View {
                     .font(.system(size: 19, weight: .semibold))
                     .kerning(-0.2)
                     .foregroundStyle(HermesTheme.cream)
-                    .lineLimit(4)
+                    .lineLimit(compact ? 2 : 4)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -54,10 +57,17 @@ struct SimulatedLensView: View {
 
             if !content.choices.isEmpty {
                 let choices = Array(content.choices.prefix(3))
-                // Three drink names rarely fit on one row: fall back to a column.
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 6) { ForEach(choices) { choiceChip($0) } }
-                    VStack(alignment: .leading, spacing: 6) { ForEach(choices) { choiceChip($0) } }
+                if compact {
+                    // One row of equal chips that shrink, so the stage never clips.
+                    HStack(spacing: 6) {
+                        ForEach(choices) { choiceChip($0).frame(maxWidth: .infinity) }
+                    }
+                } else {
+                    // Three drink names rarely fit on one row: fall back to a column.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 6) { ForEach(choices) { choiceChip($0) } }
+                        VStack(alignment: .leading, spacing: 6) { ForEach(choices) { choiceChip($0) } }
+                    }
                 }
             }
 
@@ -101,6 +111,8 @@ struct SimulatedLensView: View {
             .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(.white)
             .lineLimit(1)
+            .minimumScaleFactor(0.75)
+            .truncationMode(.tail)
             .padding(.horizontal, 9)
             .padding(.vertical, 4)
             .background(HermesTheme.accent, in: Capsule())
