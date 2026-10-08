@@ -139,7 +139,12 @@ struct ContentView: View {
         guard !didAutoStart, onboardingComplete, emoDrinkVM.autoWatch,
               hermesVM.connectionState == .disconnected else { return }
         didAutoStart = true
+        let genBefore = hermesVM.sessionGeneration
         await waitForGlassesIfPaired()
+        guard !Task.isCancelled else { return }
+        // A manual Start or Stop during the wait wins over the auto start.
+        guard hermesVM.connectionState == .disconnected,
+              hermesVM.sessionGeneration == genBefore else { return }
         await emoDrinkVM.start()
     }
 
@@ -151,6 +156,7 @@ struct ContentView: View {
               hermesVM.phoneModePreference != .always else { return }
         var polls = 0
         while !hermesVM.glassesAvailable, polls < 12 {
+            if Task.isCancelled { break }
             try? await Task.sleep(for: .milliseconds(250))
             polls += 1
         }
