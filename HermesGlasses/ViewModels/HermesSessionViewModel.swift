@@ -223,6 +223,11 @@ final class HermesSessionViewModel {
     /// session provides the camera, or when Lens is closed).
     // Internal, not private: the +Glasses / +Developer extensions use it.
     @ObservationIgnored var lensSession: DeviceSession?
+    /// How many callers hold the camera through `ensureCameraSession()`.
+    /// Each successful ensure adds one, each `releaseCameraSession()` takes
+    /// one; the camera-only session is torn down only at zero. Internal for
+    /// the +Glasses / +Developer extensions.
+    @ObservationIgnored var lensUsers = 0
 
     /// Resumed by the first reply (or error) that follows a test's query.
     // Internal, not private: the +Glasses / +Developer extensions use it.
@@ -491,7 +496,7 @@ final class HermesSessionViewModel {
         // The voice session owns the glasses from here on - a Lens-created
         // camera session must not compete with it. (UI-wise Lens can't be
         // open when this button is reachable; this is belt-and-braces.)
-        releaseCameraSession()
+        dropCameraSession()
 
         connectionState = .connecting
 

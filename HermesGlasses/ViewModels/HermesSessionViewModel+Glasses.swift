@@ -19,8 +19,14 @@ extension HermesSessionViewModel {
     /// screen: it reuses the live voice session when one exists, otherwise
     /// it creates its own DeviceSession, torn down by
     /// `releaseCameraSession()` when the view closes.
+    ///
+    /// Every successful return (including the early one when a session is
+    /// already up) counts one user; pair each with `releaseCameraSession()`.
     func ensureCameraSession() async throws {
-        if deviceSession != nil || lensSession != nil { return }
+        if deviceSession != nil || lensSession != nil {
+            lensUsers += 1
+            return
+        }
 
         let session = try wearables.createSession(deviceSelector: deviceSelector)
         try session.start()
@@ -43,6 +49,7 @@ extension HermesSessionViewModel {
         }
 
         lensSession = session
+        lensUsers += 1
         cameraManager.configure(session: session)
         if await ensureCameraPermission(interactive: false) == false {
             NSLog("[Hermes] glasses camera grant MISSING - streams will fail")
@@ -52,6 +59,19 @@ extension HermesSessionViewModel {
     /// Tear down the Lens-owned camera session. No-op when the camera is
     /// riding on the voice session (or nothing is connected).
     func releaseCameraSession() {
+        lensUsers = max(0, lensUsers - 1)
+        guard lensUsers == 0 else { return }
+        tearDownCameraSession()
+    }
+
+    /// The voice session takes the glasses: close the camera-only session
+    /// whoever holds it. Later releases from those holders clamp at zero.
+    func dropCameraSession() {
+        lensUsers = 0
+        tearDownCameraSession()
+    }
+
+    private func tearDownCameraSession() {
         guard let session = lensSession else { return }
         lensSession = nil
         if deviceSession == nil { cameraManager.reset() }

@@ -322,7 +322,8 @@ private struct DeveloperPage: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .lineLimit(4)
                     }
-                    if let failure = hermesVM.lastTestFailure {
+                    // The Display test's outcome already shows above; show it once.
+                    if let failure = hermesVM.lastTestFailure, failure != hermesVM.displayTestReport {
                         Text(failure)
                             .font(.caption2)
                             .foregroundStyle(HermesTheme.destructive)

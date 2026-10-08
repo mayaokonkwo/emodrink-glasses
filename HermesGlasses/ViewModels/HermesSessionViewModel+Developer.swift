@@ -19,9 +19,8 @@ extension HermesSessionViewModel {
     func withCameraSession<T>(
         _ body: () async throws -> T
     ) async throws -> T {
-        let borrowed = deviceSession == nil && lensSession == nil
         try await ensureCameraSession()
-        defer { if borrowed { releaseCameraSession() } }
+        defer { releaseCameraSession() }
         return try await body()
     }
 
@@ -110,10 +109,10 @@ extension HermesSessionViewModel {
                                                    glassesMicActive: lensBlockedByCallScreen) {
             return early
         }
-        // borrowed: this test opened the camera-only session and closes it.
-        // attachedHere: the lens was not attached to an existing camera-only
-        // session (HUD off), so the test detaches it again afterwards.
-        var borrowed = false
+        // acquired: this test holds one camera-session use and releases it.
+        // attachedHere: the test attached the lens to a camera-only session
+        // that did not have it (HUD off), so it detaches it again afterwards.
+        var acquired = false
         var attachedHere = false
         if let session = deviceSession {
             if displayManager.status != .connected {
@@ -121,15 +120,18 @@ extension HermesSessionViewModel {
                 displayManager.start(session: session)
             }
         } else {
-            borrowed = lensSession == nil
             do {
                 try await ensureCameraSession()
             } catch {
                 return .sessionFailed(error.localizedDescription)
             }
-            guard let session = lensSession else { return .sessionFailed("no device session") }
+            acquired = true
+            guard let session = lensSession else {
+                releaseCameraSession()
+                return .sessionFailed("no device session")
+            }
             if displayManager.status != .connected {
-                attachedHere = !borrowed
+                attachedHere = true
                 displayManager.stop()
                 displayManager.start(session: session)
             }
@@ -143,38 +145,37 @@ extension HermesSessionViewModel {
         guard displayManager.status == .connected else {
             let reason: String
             if case .unavailable(let why) = displayManager.status { reason = why } else { reason = "the lens did not attach within 5 s" }
-            giveLensBack(borrowed: borrowed, attachedHere: attachedHere)
+            giveLensBack(acquired: acquired, attachedHere: attachedHere)
             return .sessionFailed(reason)
         }
         do {
             try await displayManager.sendTest()
         } catch {
-            giveLensBack(borrowed: borrowed, attachedHere: attachedHere)
+            giveLensBack(acquired: acquired, attachedHere: attachedHere)
             return .sessionFailed(error.localizedDescription)
         }
 
-        // Leave the card up, then give the lens back: a borrowed session is
-        // torn down (unless a real one started meanwhile); a running session
-        // gets its own screen back through the idle handler.
+        // Leave the card up, then give the lens back and release this
+        // test's camera-session use; whoever else holds the session keeps it.
         Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: UInt64(DisplayTestReport.cardSeconds * 1_000_000_000))
-            guard let self else { return }
-            if self.deviceSession != nil {
-                self.displayManager.idleHandler?()
-            } else if borrowed || attachedHere {
-                self.giveLensBack(borrowed: borrowed, attachedHere: attachedHere)
-            } else {
-                self.displayManager.idleHandler?()
-            }
+            self?.giveLensBack(acquired: acquired, attachedHere: attachedHere)
         }
         return .sent
     }
 
-    /// Undo what the display test set up on a camera-only session.
-    private func giveLensBack(borrowed: Bool, attachedHere: Bool) {
-        guard deviceSession == nil else { return }
-        if borrowed || attachedHere { detachDisplayFromCameraSession() }
-        if borrowed { releaseCameraSession() }
+    /// Undo what the display test set up. The lens is detached when the test
+    /// attached it, or when this test is the session's last user (the
+    /// capability dies with the session); otherwise the owner's screen
+    /// comes back through the idle handler. Then the test's use is released.
+    private func giveLensBack(acquired: Bool, attachedHere: Bool) {
+        let sessionEnds = acquired && lensUsers <= 1
+        if deviceSession == nil, attachedHere || sessionEnds {
+            detachDisplayFromCameraSession()
+        } else {
+            displayManager.idleHandler?()
+        }
+        if acquired { releaseCameraSession() }
     }
 
     /// Longest a test waits for a brain before calling it a failure. Generous
