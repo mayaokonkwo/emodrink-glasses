@@ -468,10 +468,6 @@ final class EmoDrinkViewModel {
 
     // MARK: Drink mode
 
-    func toggleDrinkMode() {
-        if drinkModeOn { stopDrinkMode() } else { Task { await startDrinkMode() } }
-    }
-
     func startDrinkMode() async {
         guard !drinkModeOn, !isStarting else { return }
         isStarting = true

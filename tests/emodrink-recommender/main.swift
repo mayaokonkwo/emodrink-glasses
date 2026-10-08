@@ -55,16 +55,11 @@ expect(DrinkRecommender.score(wonda, wants: [.energise], hour: 9, lowSugar: true
 let h2o = catalog.drink(id: "super-h2o")!
 expect(DrinkRecommender.score(h2o, wants: [.calm, .recover, .hydrate], hour: 9, lowSugar: true) == 3, "second want 2 plus third want 1, low sugar does not penalise 'low'")
 
-// Alternates, ranking, cycling.
+// Alternates and ranking.
 let rec = DrinkRecommender.recommend(snapshot: stressed, catalog: catalog, hour: 9, lowSugar: false)!
 expect(rec.alternates.count == 2 && !rec.alternates.contains(rec.pick), "two alternates, neither is the pick")
 expect(rec.alternates[0] != rec.alternates[1], "alternates are distinct")
 expect(rec.ranked.count == catalog.drinks.count && rec.ranked.first == rec.pick, "ranked has every drink, pick first")
-var cur = rec.pick
-var seen: [String] = [cur.id]
-for _ in 0..<4 { cur = rec.next(after: cur); expect(cur.id != seen.last, "next never repeats the current drink"); seen.append(cur.id) }
-expect(rec.next(after: rec.ranked.last!) == rec.ranked.first!, "next wraps around")
-expect(rec.next(after: Drink(id: "ghost", name: "", nameJa: "", kind: "", functions: [], caffeineMg: 0, sugar: .none, served: .cold)) == rec.ranked.first!, "next on an unknown drink restarts at the top")
 
 // Stability: same input, same output.
 let again = DrinkRecommender.recommend(snapshot: stressed, catalog: catalog, hour: 9, lowSugar: false)!
@@ -86,7 +81,7 @@ expect(rec.reasonLine == rec.reasons.prefix(2).joined(separator: ", "), "reasonL
 
 // Japanese reasons (spec section 6). The language never changes the pick.
 let jaReasons = DrinkRecommender.reasons(snapshot: snap(hours: 5.1, score: 48, hrv: 38, base: 52, hr: 61, hrBase: 54, stress: 71), hour: 15, language: .ja)
-expect(jaReasons == ["睡眠5.1時間", "睡眠スコア48", "HRVがいつもより14ms低い", "安静時心拍がいつもより7高い", "ストレス71"], "ja reasons in priority order, at most five: \(jaReasons)")
+expect(jaReasons == ["睡眠5.1時間", "睡眠スコア48", "HRVがいつもより14ms低い", "安静時心拍数がいつもより7拍高い", "ストレス71"], "ja reasons in priority order, at most five: \(jaReasons)")
 expect(DrinkRecommender.reasons(snapshot: snap(hours: 7, steps: 8400), hour: 16, language: .ja) == ["睡眠7.0時間", "すでに8,400歩", "もう15時過ぎ"], "ja steps and the cutoff")
 expect(DrinkRecommender.reasons(snapshot: snap(hours: 7.5), hour: 9, language: .ja) == ["睡眠7.5時間"], "ja reasons without baselines mention only sleep")
 let recJa = DrinkRecommender.recommend(snapshot: stressed, catalog: catalog, hour: 9, lowSugar: false, language: .ja)!

@@ -1,8 +1,8 @@
 //
 // EmoDrinkPersona.swift
 //
-// The system prompt for the drink moment, and the fixed spoken lines used
-// when the AI is unavailable. Everything the model may say about the body
+// The system prompt for the drink moment and the requests that phrase each
+// spoken line (the fallbacks live in EmoDrinkStrings). Everything the model may say about the body
 // is in the prompt as numbers; it is told to suggest, never to diagnose or
 // name a feeling. Foundation only; tested in tests/emodrink-persona.
 //
@@ -15,11 +15,6 @@ enum EmoDrinkPersona {
     static let emotionDenylist = ["anxious", "anxiety", "depress", "angry", "sad", "happy", "nervous", "panic"]
 
     static let whyQuestion = "Why do you suggest this drink for me right now?"
-
-    static let firstLineRequest = """
-        Write the one sentence you will say out loud to offer the pick. Name the drink, then the one or two \
-        body facts it follows from, in plain words. No greeting, no emoji, no second sentence.
-        """
 
     /// The last line of the prompt: how to sound, and in which language.
     static func languageRule(_ language: Language) -> String {
@@ -85,41 +80,7 @@ enum EmoDrinkPersona {
         return parts.joined(separator: ", ")
     }
 
-    /// Spoken when the AI cannot phrase the first line.
-    static func fallbackLine(pick: Drink, recommendation: Recommendation) -> String {
-        let reasons = recommendation.reasons.prefix(2).joined(separator: ", ")
-        let sentence = reasons.isEmpty ? "" : " " + String(reasons.prefix(1)).uppercased() + String(reasons.dropFirst()) + "."
-        return "Try \(article(for: pick.name)) \(pick.name).\(sentence)"
-    }
-
-    static func alternateLine(pick: Drink) -> String {
-        "How about \(article(for: pick.name)) \(pick.name)?"
-    }
-
-    /// Spoken for "why" when there is no AI to answer.
-    static func whyFallback(recommendation: Recommendation) -> String {
-        guard let first = recommendation.reasons.first else { return "Because it fits how you slept." }
-        let rest = Array(recommendation.reasons.dropFirst().prefix(2))
-        let afterCutoff = "it is after 3 pm"
-        let nounish = rest.filter { $0 != afterCutoff }
-        var sentence = "Because you \(first)"
-        if !nounish.isEmpty { sentence += ", with " + joinedWithAnd(nounish) }
-        if rest.contains(afterCutoff) { sentence += ", and \(afterCutoff)" }
-        return sentence + "."
-    }
-
-    /// "a", "a and b", "a, b and c".
-    private static func joinedWithAnd(_ items: [String]) -> String {
-        guard items.count > 1 else { return items.first ?? "" }
-        return items.dropLast().joined(separator: ", ") + " and " + items[items.count - 1]
-    }
-
     private static func functionList(_ d: Drink) -> String {
         d.functions.map(\.rawValue).joined(separator: "/")
-    }
-
-    private static func article(for name: String) -> String {
-        guard let first = name.lowercased().first else { return "a" }
-        return "aeiou".contains(first) ? "an" : "a"
     }
 }

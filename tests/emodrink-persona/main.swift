@@ -41,16 +41,7 @@ let summary = EmoDrinkPersona.summary(of: minimal)
 expect(summary.contains("7.5 h") && !summary.lowercased().contains("hrv") && !summary.lowercased().contains("heart"),
        "summary without baselines mentions only sleep: \(summary)")
 
-expect(EmoDrinkPersona.fallbackLine(pick: rec.pick, recommendation: rec) == "Try an Asahi Rokujo Mugicha. Slept 6.4 h, sleep score 63.",
-       "fallback line is pick plus first two reasons: \(EmoDrinkPersona.fallbackLine(pick: rec.pick, recommendation: rec))")
-expect(EmoDrinkPersona.alternateLine(pick: catalog.drink(id: "wilkinson-tansan")!) == "How about a Wilkinson Tansan?", "alternate line")
-expect(EmoDrinkPersona.alternateLine(pick: catalog.drink(id: "oishii-mizu")!) == "How about an Asahi Oishii Mizu Tennensui?", "alternate line uses 'an' before a vowel")
 expect(EmoDrinkPersona.whyQuestion == "Why do you suggest this drink for me right now?", "why question is fixed text")
-expect(EmoDrinkPersona.whyFallback(recommendation: rec).hasPrefix("Because you slept 6.4 h"), "why fallback reads the reasons: \(EmoDrinkPersona.whyFallback(recommendation: rec))")
-expect(EmoDrinkPersona.whyFallback(recommendation: rec) == "Because you slept 6.4 h, with sleep score 63 and HRV 16 ms under your usual.", "why fallback is one grammatical sentence: \(EmoDrinkPersona.whyFallback(recommendation: rec))")
-let lateRec = DrinkRecommender.recommend(snapshot: stressed, catalog: catalog, hour: 19, lowSugar: false)!
-expect(EmoDrinkPersona.whyFallback(recommendation: lateRec).hasPrefix("Because you slept 6.4 h, with sleep score 63"), "late why fallback keeps the list form: \(EmoDrinkPersona.whyFallback(recommendation: lateRec))")
-expect(EmoDrinkPersona.firstLineRequest.contains("one sentence"), "first line request asks for one sentence")
 
 // Language (spec section 6): the prompt ENDS with the language rule.
 let promptJa = EmoDrinkPersona.systemPrompt(snapshot: stressed, pick: rec.pick, recommendation: rec, catalog: catalog,

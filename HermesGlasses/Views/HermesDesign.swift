@@ -456,66 +456,6 @@ struct HermesStatusPill: View {
     }
 }
 
-/// Two-way segmented capsule: which eye Hermes is using. Explicit and
-/// always visible, because inferring it and explaining the inference in
-/// prose ("No glasses connected - the iPhone camera will be...") left
-/// people unsure what the app was about to do.
-struct HermesEyeToggle: View {
-    @Binding var usesGlasses: Bool
-    /// Glasses selected but something is wrong with them - unreachable, or
-    /// missing the camera grant. Shown, not hidden.
-    var glassesWarning: Bool = false
-
-    var body: some View {
-        HStack(spacing: 2) {
-            segment(
-                title: "Glasses",
-                systemImage: "eyeglasses",
-                selected: usesGlasses,
-                warns: usesGlasses && glassesWarning
-            ) { usesGlasses = true }
-
-            segment(
-                title: "Phone",
-                systemImage: "iphone",
-                selected: !usesGlasses,
-                warns: false
-            ) { usesGlasses = false }
-        }
-        .padding(2)
-        .background(Color.secondary.opacity(0.14), in: Capsule())
-        .animation(.snappy(duration: 0.2), value: usesGlasses)
-    }
-
-    private func segment(
-        title: String,
-        systemImage: String,
-        selected: Bool,
-        warns: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack(spacing: 5) {
-                Image(systemName: warns ? "exclamationmark.triangle.fill" : systemImage)
-                    .font(.system(size: 11, weight: .semibold))
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold))
-            }
-            .foregroundStyle(selected ? .white : Color.secondary)
-            .padding(.horizontal, 11)
-            .frame(height: 28)
-            .background(
-                selected
-                    ? AnyShapeStyle(warns ? HermesTheme.accentDeep : HermesTheme.accent)
-                    : AnyShapeStyle(Color.clear),
-                in: Capsule()
-            )
-            .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 /// Filled capsule button (Export PDF, Start Session).
 struct HermesPrimaryButton: View {
     let title: String

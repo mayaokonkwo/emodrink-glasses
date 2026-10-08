@@ -421,7 +421,6 @@
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "EmoDrink uses your approximate location so the assistant knows where you are and what the weather is like.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "EmoDrink listens for what you say so it can pick a drink and answer you.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "EmoDrink tells the assistant whether you are walking or still, so its answers fit what you are doing.";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "EmoDrink saves photos you ask it to keep.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "EmoDrink turns your speech into text on this phone.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -460,7 +459,6 @@
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "EmoDrink uses your approximate location so the assistant knows where you are and what the weather is like.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "EmoDrink listens for what you say so it can pick a drink and answer you.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "EmoDrink tells the assistant whether you are walking or still, so its answers fit what you are doing.";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "EmoDrink saves photos you ask it to keep.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "EmoDrink turns your speech into text on this phone.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

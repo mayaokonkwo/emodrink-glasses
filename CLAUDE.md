@@ -165,11 +165,12 @@ mode.
   moment has two steps: `.choices` (three drinks as `LensContent
   .emoDrinkChoices`, buttons `1 <name>`) and `.chosen` (the card with Why /
   Thanks). The claimer takes EmoDrinkCommands replies first, then
-  `DrinkChoiceParser` (numbers, ordinals, a DISTINCTIVE name token; a token
-  two options share never decides), then the drink-mode intents; everything
-  else goes to the assistant with `DirectClient.systemPromptOverride` set to
-  the persona. `askPersona` detaches the claimer for one query so the
-  generated "why" question cannot loop. Drink mode reuses `ChangeGate`
+  `DrinkChoiceParser` (numbers, ordinals, an exact full name, then a
+  DISTINCTIVE name token; a token two options share never decides), then the
+  drink-mode intents; everything else goes to the assistant with
+  `DirectClient.systemPromptOverride` set to the persona. "Why" is a
+  one-shot call (`DirectClient.askOneShotText`), so it never re-enters the
+  claimer. Drink mode reuses `ChangeGate`
   through `VendingMachineGate` (8 s spacing, 150/h, 120 s cooldown after a
   pick; "Check now" skips the change gate and the cooldown, never the
   budget) and `FrameTools.canRunVisionChecks` as its preflight. The default

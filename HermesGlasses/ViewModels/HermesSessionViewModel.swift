@@ -779,11 +779,6 @@ final class HermesSessionViewModel {
         }
     }
 
-    /// "Send now" button - don't wait for the pause detection
-    func sendNow() {
-        speechRecognizer.finalizeNow()
-    }
-
     /// Answer a multiple-choice reply by picking one of its options. Sent
     /// as the option's words, so the transcript reads like a conversation
     /// rather than a row of letters.
@@ -1030,11 +1025,6 @@ final class HermesSessionViewModel {
         speakCue(text)
     }
 
-    /// A notice on the main screen (the non-fault banner).
-    func showNoticeMessage(_ message: String) {
-        show(notice: message)
-    }
-
     // MARK: EmoDrink surface
 
     func setPersonaOverride(_ prompt: String?) {
@@ -1056,15 +1046,6 @@ final class HermesSessionViewModel {
 
     func clearLens() {
         displayManager.clear()
-    }
-
-    /// A question for the active persona. Skips the claimers (it was built
-    /// from a claimed "why"), otherwise the normal query path.
-    func askPersona(_ text: String) {
-        let savedClaimer = emoDrinkClaimer
-        emoDrinkClaimer = nil
-        defer { emoDrinkClaimer = savedClaimer }
-        submitQuery(text)
     }
 
     func endSession() {

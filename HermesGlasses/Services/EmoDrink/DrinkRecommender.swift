@@ -25,14 +25,6 @@ struct Recommendation: Equatable {
 
     /// The first two reasons; Japanese joins with 「、」.
     var reasonLine: String { reasons.prefix(2).joined(separator: language == .ja ? "、" : ", ") }
-
-    /// The drink after `drink` in rank order, wrapping around. An unknown
-    /// drink restarts at the top. Never returns `drink` itself unless the
-    /// catalogue has one entry.
-    func next(after drink: Drink) -> Drink {
-        guard let index = ranked.firstIndex(of: drink) else { return ranked[0] }
-        return ranked[(index + 1) % ranked.count]
-    }
 }
 
 enum DrinkRecommender {

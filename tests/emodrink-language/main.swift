@@ -38,16 +38,16 @@ expect(EmoDrinkLanguage.setting(in: suite) == .auto, "garbage reads as auto")
 let hasJapanese: (String) -> Bool = { $0.unicodeScalars.contains { (0x3040...0x30FF).contains($0.value) || (0x4E00...0x9FFF).contains($0.value) } }
 for lang in Language.allCases {
     let t = EmoDrinkStrings(language: lang)
-    let all = [t.watchingHeading, t.watchingText, t.watchingHint, t.idleTitle, t.idleHint, t.choiceHeading, t.choiceHint,
+    let all = [t.watchingHeading, t.watchingText, t.watchingHint, t.idleTitle, t.idleHint, t.choiceHeading,
                t.cameraLost, t.cameraStopped, t.cameraDidNotOpen, t.noMachine, t.cameraNotReady, t.checkResting,
                t.sessionDidNotStart, t.micBlocked, t.enjoy, t.stoppedTitle, t.stoppedHint, t.visionCheckFailed,
-               t.whyLabel, t.thanksLabel, t.backLabel, t.voiceInstallHint, t.afterCutoff,
+               t.whyLabel, t.thanksLabel, t.voiceInstallHint, t.afterCutoff,
                t.choicesLine(names: ["A", "B", "C"]), t.chosenLine(name: "A", reasons: ["x"]), t.whyLine(reasons: ["x"]),
                t.slept(hours: 5.1), t.sleepScore(48), t.hrvUnder(ms: 14), t.hrvAbove(ms: 6), t.restingHROver(7),
                t.stress(71), t.stepsAlready(8400)]
     expect(all.allSatisfy { !$0.trimmingCharacters(in: .whitespaces).isEmpty }, "\(lang): every string is non-empty")
     expect(all.allSatisfy { !$0.contains("\u{2014}") }, "\(lang): no em dashes")
-    let fixed = [t.watchingText, t.choiceHeading, t.noMachine, t.cameraNotReady, t.checkResting, t.sessionDidNotStart, t.cameraLost, t.enjoy, t.stoppedTitle, t.stoppedHint, t.visionCheckFailed, t.whyLabel, t.thanksLabel, t.backLabel]
+    let fixed = [t.watchingText, t.choiceHeading, t.noMachine, t.cameraNotReady, t.checkResting, t.sessionDidNotStart, t.cameraLost, t.enjoy, t.stoppedTitle, t.stoppedHint, t.visionCheckFailed, t.whyLabel, t.thanksLabel]
     if lang == .ja {
         expect(fixed.allSatisfy(hasJapanese), "ja: lens and spoken lines are Japanese")
     } else {
@@ -62,11 +62,15 @@ expect(EmoDrinkStrings(language: .ja).stoppedTitle == "停止中", "ja stopped t
 
 // Japanese reason fragments, exactly as the spec writes them.
 let ja = EmoDrinkStrings(language: .ja)
+expect(ja.checkResting == "この1時間の確認回数を使い切りました", "ja check resting")
+expect(ja.cameraLost.hasPrefix("カメラの映像が届きません"), "ja camera lost")
+expect(ja.enjoy == "どうぞ、楽しんでください。", "ja enjoy")
+
 expect(ja.slept(hours: 5.1) == "睡眠5.1時間", "ja sleep hours")
 expect(ja.sleepScore(48) == "睡眠スコア48", "ja sleep score")
 expect(ja.hrvUnder(ms: 14) == "HRVがいつもより14ms低い", "ja HRV under")
 expect(ja.hrvAbove(ms: 6) == "HRVがいつもより6ms高い", "ja HRV above")
-expect(ja.restingHROver(7) == "安静時心拍がいつもより7高い", "ja resting HR")
+expect(ja.restingHROver(7) == "安静時心拍数がいつもより7拍高い", "ja resting HR")
 expect(ja.stress(71) == "ストレス71", "ja stress")
 expect(ja.afterCutoff == "もう15時過ぎ", "ja after cutoff")
 expect(ja.stepsAlready(8400) == "すでに8,400歩", "ja steps with a thousands comma")
@@ -82,14 +86,14 @@ expect(en.stepsAlready(8400) == "8,400 steps already" && en.afterCutoff == "it i
 expect(en.choicesLine(names: ["Rokujo Mugicha", "Calpis Water", "Wilkinson"]) == "How about Rokujo Mugicha, Calpis Water, or Wilkinson?", "en choices line")
 expect(en.choicesLine(names: ["A", "B"]) == "How about A or B?", "en choices line with two")
 expect(en.choicesLine(names: ["A"]) == "How about A?", "en choices line with one")
-expect(ja.choicesLine(names: ["六条麦茶", "カルピスウォーター", "ウィルキンソン"]) == "六条麦茶、カルピスウォーター、ウィルキンソンはどうですか", "ja choices line")
+expect(ja.choicesLine(names: ["六条麦茶", "カルピスウォーター", "ウィルキンソン"]) == "六条麦茶、カルピスウォーター、ウィルキンソンはどうですか？", "ja choices line ends with a question mark")
 expect(en.chosenLine(name: "Calpis Water", reasons: ["slept 5.1 h", "sleep score 48"]) == "Good choice, Calpis Water. Slept 5.1 h, sleep score 48.", "en chosen line")
 expect(en.chosenLine(name: "Calpis Water", reasons: []) == "Good choice, Calpis Water.", "en chosen line without reasons")
-expect(ja.chosenLine(name: "カルピスウォーター", reasons: ["睡眠5.1時間", "睡眠スコア48"]) == "カルピスウォーター、いい選択です。睡眠5.1時間、睡眠スコア48なので、ちょうどいいと思います。", "ja chosen line")
+expect(ja.chosenLine(name: "カルピスウォーター", reasons: ["睡眠5.1時間", "睡眠スコア48"]) == "カルピスウォーター、いい選択です。睡眠5.1時間、睡眠スコア48という様子なので、ちょうどいいと思います。", "ja chosen line")
 expect(ja.chosenLine(name: "カルピスウォーター", reasons: []) == "カルピスウォーター、いい選択です。", "ja chosen line without reasons")
 expect(en.whyLine(reasons: ["slept 6.4 h", "sleep score 63", "HRV 16 ms under your usual"]) == "Because you slept 6.4 h, with sleep score 63 and HRV 16 ms under your usual.", "en why line keeps the persona wording")
 expect(en.whyLine(reasons: []) == "Because it fits how you slept.", "en why line without reasons")
-expect(ja.whyLine(reasons: ["睡眠6.4時間", "睡眠スコア63", "HRVがいつもより16ms低い", "ストレス71"]) == "睡眠6.4時間、睡眠スコア63、HRVがいつもより16ms低いので、これを選びました。", "ja why line uses at most three reasons")
+expect(ja.whyLine(reasons: ["睡眠6.4時間", "睡眠スコア63", "HRVがいつもより16ms低い", "ストレス71"]) == "睡眠6.4時間、睡眠スコア63、HRVがいつもより16ms低いという様子なので、これを選びました。", "ja why line uses at most three reasons")
 expect(ja.whyLine(reasons: []) == "昨夜の睡眠に合わせて選びました。", "ja why line without reasons")
 
 print(failures == 0 ? "ALL PASS" : "\(failures) FAILED")
