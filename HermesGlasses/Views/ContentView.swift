@@ -6,8 +6,8 @@
 //      phone mode; a dark stage with a "Glasses connected" badge and the
 //      same simulated lens (mirroring the Ray-Ban) in glasses mode.
 //   2. Today: sleep, score, HRV, resting HR, and where the numbers came from.
-//   3. Pick: watching, the three drinks as chips, or the chosen drink with
-//      Why / Thanks.
+//   3. Pick: watching (or stopped), with why the AI was skipped when it
+//      was; the three drinks as chips; or the chosen drink with Why / Thanks.
 //   4. Start / Stop, with "Check now" beside it while watching.
 // Toolbar: Transcript and Settings. A plain VStack in the safe area with
 // 16 pt side padding; nothing is wider than the screen.
@@ -315,12 +315,19 @@ private struct PickCard: View {
                     }
                 }
             case nil:
-                Text(vm.noMachineNotice ?? t.idleTitle)
+                // Watching only while drink mode is on; otherwise say stopped.
+                Text(vm.drinkModeOn ? (vm.noMachineNotice ?? t.idleTitle) : t.stoppedTitle)
                     .font(.system(size: 17, weight: .semibold))
-                Text(t.idleHint)
+                Text(vm.drinkModeOn ? t.idleHint : t.stoppedHint)
                     .font(.system(size: 14))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                if let notice = vm.aiNotice {
+                    Label(notice, systemImage: "exclamationmark.circle")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
             }
         }
     }

@@ -613,6 +613,20 @@ private struct DrinksPage: View {
             Stepper("Check every \(vm.intervalSeconds) s", value: $vm.intervalSeconds, in: 2...30)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
+            HermesDivider()
+            HermesRow("Checks sent", icon: "paperplane", value: "\(vm.sentCount)", showsChevron: false)
+            HermesDivider()
+            HermesRow("Budget used", icon: "gauge.medium",
+                      value: "\(vm.budgetUsed) of \(VendingMachineGate.defaultConfig.budgetPerHour) per hour", showsChevron: false)
+            if let until = vm.restingUntil {
+                HermesDivider()
+                HermesRow("Resting until", icon: "moon.zzz",
+                          value: until.formatted(date: .omitted, time: .shortened), showsChevron: false)
+            }
+            if let notice = vm.aiNotice {
+                HermesDivider()
+                HermesRow("Last AI note", icon: "exclamationmark.circle", subtitle: notice, showsChevron: false)
+            }
         }
     }
 

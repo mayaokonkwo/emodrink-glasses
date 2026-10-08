@@ -37,6 +37,8 @@ final class EmoDrinkViewModel {
     static let autoWatchKey = "emodrink_auto_watch"
 
     enum MomentStep: Equatable { case choices, chosen }
+    /// One vision check's outcome. A failure is not a NO: Check now says so.
+    enum VisionCheck: Equatable { case yes, no, failed(String) }
 
     // MARK: Settings (UserDefaults-backed)
 
@@ -86,13 +88,14 @@ final class EmoDrinkViewModel {
     private(set) var fetching = false
     private(set) var checkingNow = false
     /// Check now's 3 s line on the home card: "No vending machine in view"
-    /// after a NO, "Camera not ready yet" with no fresh frame, or the
-    /// hour's budget spent.
+    /// after a NO, "Vision check failed" after an error, "Camera not ready
+    /// yet" with no fresh frame, or the hour's budget spent.
     private(set) var noMachineNotice: String?
     /// Why the session could not start (no mic or speech permission).
     private(set) var sessionBlocked: String?
     var errorMessage: String?
-    /// Why the AI was skipped, when it was ("no API key", a timeout).
+    /// Why the AI was skipped, when it was ("no API key", a timeout, a
+    /// failed vision check). The home card shows it under the idle line.
     private(set) var aiNotice: String?
     private(set) var currentSnapshot: PhysiologySnapshot?
 
@@ -567,11 +570,15 @@ final class EmoDrinkViewModel {
         checkInFlight = true
         checkingNow = true
         defer { checkingNow = false }
-        if await check(image) == false { flashNotice(strings.noMachine) }
+        switch await check(image) {
+        case .yes: break
+        case .no: flashNotice(strings.noMachine)
+        case .failed: flashNotice(strings.visionCheckFailed)
+        }
     }
 
-    /// The home card's 3 s line after Check now: no machine, camera not
-    /// ready, or the hour's budget spent.
+    /// The home card's 3 s line after Check now: no machine, a failed
+    /// check, camera not ready, or the hour's budget spent.
     private func flashNotice(_ text: String) {
         noMachineNotice = text
         noMachineTask?.cancel()
@@ -712,22 +719,31 @@ final class EmoDrinkViewModel {
         }
     }
 
-    /// One vision call. True when the reply is YES (and the moment started).
+    private static let visionNoticePrefix = "vision check failed: "
+
+    /// One vision call. `.yes` when the reply is YES (and the moment
+    /// started); `.failed` when the call itself failed.
     @discardableResult
-    private func check(_ image: UIImage) async -> Bool {
+    private func check(_ image: UIImage) async -> VisionCheck {
         defer { checkInFlight = false }
-        guard let jpeg = FrameTools.downscaledJPEG(image, maxSide: 768, quality: 0.6) else { return false }
+        guard let jpeg = FrameTools.downscaledJPEG(image, maxSide: 768, quality: 0.6) else {
+            return .failed("could not encode the frame")
+        }
         do {
             let reply = try await oneShot.askOneShot(systemPrompt: VendingMachineDetector.systemPrompt,
                                                      userText: VendingMachineDetector.userText,
                                                      photoJPEG: jpeg, timeout: Self.detectTimeout)
-            guard drinkModeOn, !momentActive, VendingMachineDetector.isYes(reply) else { return false }
+            // The call works again: drop a stale failure line.
+            if aiNotice?.hasPrefix(Self.visionNoticePrefix) == true { aiNotice = nil }
+            guard drinkModeOn, !momentActive, VendingMachineDetector.isYes(reply) else { return .no }
             await pickNow()
-            return true
+            return .yes
         } catch {
-            // A failed check is a NO: stay quiet, keep watching.
-            aiNotice = "vision check failed: \(Self.shortReason(error))"
-            return false
+            // The loop stays quiet and keeps watching; the home card shows
+            // the reason, and Check now flashes it.
+            let reason = Self.shortReason(error)
+            aiNotice = Self.visionNoticePrefix + reason
+            return .failed(reason)
         }
     }
 

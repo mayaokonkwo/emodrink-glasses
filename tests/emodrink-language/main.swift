@@ -40,20 +40,25 @@ for lang in Language.allCases {
     let t = EmoDrinkStrings(language: lang)
     let all = [t.watchingHeading, t.watchingText, t.watchingHint, t.idleTitle, t.idleHint, t.choiceHeading, t.choiceHint,
                t.cameraLost, t.cameraStopped, t.cameraDidNotOpen, t.noMachine, t.cameraNotReady, t.checkResting,
-               t.sessionDidNotStart, t.micBlocked, t.enjoy,
+               t.sessionDidNotStart, t.micBlocked, t.enjoy, t.stoppedTitle, t.stoppedHint, t.visionCheckFailed,
                t.whyLabel, t.thanksLabel, t.backLabel, t.voiceInstallHint, t.afterCutoff,
                t.choicesLine(names: ["A", "B", "C"]), t.chosenLine(name: "A", reasons: ["x"]), t.whyLine(reasons: ["x"]),
                t.slept(hours: 5.1), t.sleepScore(48), t.hrvUnder(ms: 14), t.hrvAbove(ms: 6), t.restingHROver(7),
                t.stress(71), t.stepsAlready(8400)]
     expect(all.allSatisfy { !$0.trimmingCharacters(in: .whitespaces).isEmpty }, "\(lang): every string is non-empty")
     expect(all.allSatisfy { !$0.contains("\u{2014}") }, "\(lang): no em dashes")
-    let fixed = [t.watchingText, t.choiceHeading, t.noMachine, t.cameraNotReady, t.checkResting, t.sessionDidNotStart, t.cameraLost, t.enjoy, t.whyLabel, t.thanksLabel, t.backLabel]
+    let fixed = [t.watchingText, t.choiceHeading, t.noMachine, t.cameraNotReady, t.checkResting, t.sessionDidNotStart, t.cameraLost, t.enjoy, t.stoppedTitle, t.stoppedHint, t.visionCheckFailed, t.whyLabel, t.thanksLabel, t.backLabel]
     if lang == .ja {
         expect(fixed.allSatisfy(hasJapanese), "ja: lens and spoken lines are Japanese")
     } else {
         expect(!fixed.contains(where: hasJapanese), "en: lens and spoken lines are English")
     }
 }
+
+// Home lines added in the final review.
+expect(EmoDrinkStrings(language: .en).visionCheckFailed == "Vision check failed", "en vision check failed")
+expect(EmoDrinkStrings(language: .en).stoppedTitle == "Stopped", "en stopped title")
+expect(EmoDrinkStrings(language: .ja).stoppedTitle == "停止中", "ja stopped title")
 
 // Japanese reason fragments, exactly as the spec writes them.
 let ja = EmoDrinkStrings(language: .ja)

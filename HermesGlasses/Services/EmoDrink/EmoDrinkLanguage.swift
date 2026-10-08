@@ -73,6 +73,9 @@ struct EmoDrinkStrings: Equatable {
     var idleHint: String { ja ? "「何を飲めばいい」といつでもどうぞ" : "Say 「何を飲めばいい」 or \"what should I drink\" any time" }
     var choiceHeading: String { ja ? "どれにする？" : "Pick one" }
     var choiceHint: String { ja ? "タップか、番号か名前で選べます" : "Tap, or say a number or a name" }
+    var stoppedTitle: String { ja ? "停止中" : "Stopped" }
+    var stoppedHint: String { ja ? "「Start」をタップすると自販機を探します" : "Tap Start to watch for a vending machine" }
+    var visionCheckFailed: String { ja ? "画像の確認に失敗しました" : "Vision check failed" }
     var noMachine: String { ja ? "自販機が見当たりません" : "No vending machine in view" }
     var cameraNotReady: String { ja ? "カメラの準備ができていません" : "Camera not ready yet" }
     var checkResting: String { ja ? "今の時間の確認回数を使い切りました" : "This hour's checks are used up" }
