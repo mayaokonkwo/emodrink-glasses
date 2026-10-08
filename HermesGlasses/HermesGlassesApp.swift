@@ -24,6 +24,7 @@ struct HermesGlassesApp: App {
     /// EmoDrink/Hermes view models stay in the codebase but are not
     /// constructed, so nothing auto-starts a session, the camera or
     /// drink watching at launch.
+    @State private var glassesLink: GlassesLink
     @State private var basicsViewModel: GlassesBasicsViewModel
 
     init() {
@@ -50,8 +51,12 @@ struct HermesGlassesApp: App {
         }
         #endif
 
+        // The one path to the glasses (session, display, camera), shared
+        // by everything that talks to them.
+        let link = GlassesLink(wearables: Wearables.shared)
+        self._glassesLink = State(wrappedValue: link)
         self._basicsViewModel = State(
-            wrappedValue: GlassesBasicsViewModel(wearables: Wearables.shared)
+            wrappedValue: GlassesBasicsViewModel(link: link)
         )
     }
 
