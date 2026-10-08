@@ -190,6 +190,34 @@ extension HermesSessionViewModel {
         }
         NSLog("[EmoDrink] camera session state started")
 
+        // Observe the camera-only session like the voice one (and like
+        // Meta's sample): every state is logged and async errors are
+        // surfaced. Both streams finish when the session stops (SDK 0.9+).
+        let lensStates = session.stateStream()
+        let lensErrors = session.errorStream()
+        Task { [weak self] in
+            for await state in lensStates {
+                NSLog("[EmoDrink] camera session state \(state)")
+                if state == .stopped, let self, self.lensSession === session {
+                    // The SDK ended it (glasses folded, link lost): drop it
+                    // so the next ensure creates a fresh one.
+                    NSLog("[EmoDrink] camera session stopped by the SDK")
+                    self.lensSession = nil
+                    self.lensUsers = 0
+                    if self.deviceSession == nil {
+                        self.displayManager.stop()
+                        self.cameraManager.reset()
+                    }
+                }
+            }
+        }
+        Task { [weak self] in
+            for await error in lensErrors {
+                NSLog("[EmoDrink] camera session error \(error)")
+                await self?.handleSessionError(error)
+            }
+        }
+
         lensSession = session
         lensUsers += 1
         cameraManager.configure(session: session)

@@ -68,6 +68,11 @@ final class HermesDisplayManager {
     private var stateListenerToken: AnyListenerToken?
     private var stateTask: Task<Void, Never>?
     private var stateContinuation: AsyncStream<DisplayState>.Continuation?
+    /// Meta's DisplayAccess sample gives the display 10 s to reach
+    /// `.started`, then gives up and says so. Without it a display that
+    /// never starts sat in `.connecting` forever, silently.
+    private var readinessTask: Task<Void, Never>?
+    static let readinessTimeoutSeconds: Double = 10
     /// Latest view queued while the capability is still attaching
     private var pendingView: FlexBox?
     /// Serialized send pipeline: newest queued view wins, one send in
@@ -107,6 +112,8 @@ final class HermesDisplayManager {
                     case .starting, .stopping:
                         break
                     case .started:
+                        self.readinessTask?.cancel()
+                        self.readinessTask = nil
                         self.status = .connected
                         self.debug("Display attached")
                         if let view = self.pendingView {
@@ -129,6 +136,7 @@ final class HermesDisplayManager {
 
             capability.start()
             display = capability
+            startReadinessTimeout()
         } catch {
             status = .unavailable(error.localizedDescription)
             NSLog("[EmoDrink] display addDisplay failed: \(error)")
@@ -149,7 +157,25 @@ final class HermesDisplayManager {
         cleanup()
     }
 
+    private func startReadinessTimeout() {
+        readinessTask?.cancel()
+        readinessTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(Self.readinessTimeoutSeconds * 1_000_000_000))
+            guard !Task.isCancelled, let self, self.status == .connecting else { return }
+            let state = self.sdkStateDescription ?? "none"
+            NSLog("[EmoDrink] display not started within \(Int(Self.readinessTimeoutSeconds)) s (display.state \(state)), stopping it")
+            self.onStateTrace?("timed out (display.state \(state))")
+            self.readinessTask = nil
+            self.pendingView = nil
+            self.display?.stop()
+            self.cleanup()
+            self.status = .unavailable("Timed out waiting for the display to become ready.")
+        }
+    }
+
     private func cleanup() {
+        readinessTask?.cancel()
+        readinessTask = nil
         stateListenerToken = nil
         stateContinuation?.finish()
         stateContinuation = nil

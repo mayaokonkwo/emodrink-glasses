@@ -189,7 +189,7 @@ extension HermesSessionViewModel {
         }
         guard displayManager.status == .connected else {
             let reason: String
-            if case .unavailable(let why) = displayManager.status { reason = why } else { reason = "the lens did not attach within 5 s" }
+            if case .unavailable(let why) = displayManager.status { reason = why } else { reason = "the lens did not attach within \(Int(DisplayTestReport.attachTimeoutSeconds)) s" }
             traceDisplay("not attached: \(reason)")
             giveLensBack(acquired: acquired, attachedHere: attachedHere)
             return DisplayTestOutcome(report: .sessionFailed(reason))

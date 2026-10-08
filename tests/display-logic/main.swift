@@ -59,7 +59,7 @@ expect(!DisplayTestReport.noGlasses.isSuccess && !DisplayTestReport.micInUse.isS
 expect(DisplayTestReport.preflight(glassesReachable: false, glassesMicActive: true) == .noGlasses, "no glasses wins over the mic")
 expect(DisplayTestReport.preflight(glassesReachable: true, glassesMicActive: true) == .micInUse, "glasses mic blocks the HUD")
 expect(DisplayTestReport.preflight(glassesReachable: true, glassesMicActive: false) == nil, "otherwise attach")
-expect(DisplayTestReport.attachTimeoutSeconds == 5 && DisplayTestReport.cardSeconds == 15, "5 s attach wait, 15 s card")
+expect(DisplayTestReport.attachTimeoutSeconds == 10 && DisplayTestReport.cardSeconds == 15, "10 s attach wait (Meta sample), 15 s card")
 expect(DisplayTestReport.sent.message(sdkState: "started") == "Test card sent (display.state: started)", "sent report carries the SDK state")
 expect(DisplayTestReport.sent.message(sdkState: nil) == "Test card sent", "no SDK state, plain report")
 expect(DisplayTestReport.noGlasses.message(sdkState: "started") == "No glasses connected", "failures never carry the SDK state")

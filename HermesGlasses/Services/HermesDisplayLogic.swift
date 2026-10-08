@@ -60,8 +60,10 @@ enum DisplayTestReport: Equatable {
     case sessionFailed(String)
     case micInUse
 
-    /// How long the test waits for the display capability to attach.
-    static let attachTimeoutSeconds: Double = 5
+    /// How long the test waits for the display capability to attach. 10 s,
+    /// the display readiness deadline in Meta's DisplayAccess sample:
+    /// Display brings up its medium then high bandwidth links first.
+    static let attachTimeoutSeconds: Double = 10
     /// How long the test card stays before the lens returns to normal.
     /// Long enough to put the glasses on and look.
     static let cardSeconds: Double = 15

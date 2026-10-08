@@ -380,6 +380,7 @@ final class HermesSessionViewModel {
     private(set) var activeGlassesDevice: DeviceIdentifier?
 
     @ObservationIgnored private var activeDeviceTask: Task<Void, Never>?
+    @ObservationIgnored private var registrationTask: Task<Void, Never>?
 
     /// A Meta device the SDK can open a session on right now.
     var glassesAvailable: Bool { activeGlassesDevice != nil }
@@ -469,6 +470,7 @@ final class HermesSessionViewModel {
         self.activeGlassesDevice = self.deviceSelector.activeDevice
         reloadDirectProviderState()
         observeActiveDevice()
+        observeRegistration()
         // Wired at init, NOT at session start: lens callbacks must exist
         // before any session does (see CLAUDE.md, display callbacks).
         wireDisplay()
@@ -481,6 +483,33 @@ final class HermesSessionViewModel {
     deinit {
         sessionObserverTask?.cancel()
         activeDeviceTask?.cancel()
+        registrationTask?.cancel()
+    }
+
+    /// Meta's DisplayAccess sample resets its display session whenever
+    /// registration drops to `.available` or `.unavailable`: the lens is
+    /// detached and a fresh display-filtered selector replaces the old one
+    /// (whose device may be gone for good). A running session is left to
+    /// the SDK, which stops it and reports through its state stream.
+    private func observeRegistration() {
+        let stream = wearables.registrationStateStream()
+        registrationTask = Task { [weak self] in
+            for await state in stream {
+                guard let self, !Task.isCancelled else { return }
+                NSLog("[EmoDrink] registration \(state)")
+                guard state == .available || state == .unavailable else { continue }
+                if self.deviceSession == nil && self.lensSession == nil {
+                    self.displayManager.stop()
+                }
+                self.deviceSelector = AutoDeviceSelector(
+                    wearables: self.wearables,
+                    filter: { $0.supportsDisplay() }
+                )
+                self.activeDeviceTask?.cancel()
+                self.activeGlassesDevice = self.deviceSelector.activeDevice
+                self.observeActiveDevice()
+            }
+        }
     }
 
     /// Keep `activeGlassesDevice` live. Eligibility changes whenever the

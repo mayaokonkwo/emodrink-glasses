@@ -196,7 +196,7 @@ mode.
   while the recognizer is stopped, so a mid-session change applies next
   session.
 - **The Developer Display test attaches the lens itself.** No session: a
-  camera-only DeviceSession for the display alone, 5 s to attach, SDK
+  camera-only DeviceSession for the display alone, 10 s to attach (the DisplayAccess sample's deadline), SDK
   clearDisplay(), card ("EmoDrink" / "Lens OK") for 15 s, then torn down.
   Every DisplayState and step is traced with a timestamp into
   `displayTestTrace` (shown under the report, with a Clear lens button), and
