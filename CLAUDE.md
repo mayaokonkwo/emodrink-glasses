@@ -43,7 +43,7 @@ mode.
 - **Glasses camera needs a separate permission** granted through the Meta AI
   app: `wearables.requestPermission(.camera)` (the Photo test button runs it).
   Streams fail with `permissionDenied` otherwise.
-- **Camera streams are one-shot:** fresh `addStream()` per capture, stopped
+- **Camera streams are one-shot:** fresh `addCamera()` per capture (SDK 1.0; `camera.stream`), the Camera stopped
   via `defer` on every path. Config matches Meta's CameraAccess sample
   (`.raw`, `.low`, 24 fps).
 - **Display HUD (Ray-Ban Display):** `HermesDisplayManager` attaches

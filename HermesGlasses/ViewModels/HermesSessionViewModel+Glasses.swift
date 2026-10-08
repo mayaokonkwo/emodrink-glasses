@@ -23,6 +23,9 @@ struct GlassesConnectIssue {
     let action: NoticeAction?
 }
 
+/// The `.dwaOutOfStuRange` update suggestion is shown once per app run.
+@MainActor private var dwaOutOfRangeNoticeShown = false
+
 /// Result of the pre-session readiness wait (see `waitForGlassesReady`).
 enum GlassesReadiness: Equatable {
     case ready
@@ -315,6 +318,13 @@ extension HermesSessionViewModel {
                             for await error in errorStream {
                                 if Task.isCancelled { return }
                                 NSLog("[EmoDrink] glasses session error \(error)")
+                                // SDK 1.0 nonblocking warning: the session
+                                // carries on, so neither fail the connect
+                                // nor stop listening.
+                                if error == .dwaOutOfStuRange {
+                                    await self?.handleSessionError(error)
+                                    continue
+                                }
                                 done.withLock { finished in
                                     if !finished {
                                         finished = true
@@ -404,6 +414,14 @@ extension HermesSessionViewModel {
 
     func handleSessionError(_ error: DeviceSessionError) async {
         NSLog("[EmoDrink] session error \(error) while \(connectionState)")
+        if error == .dwaOutOfStuRange {
+            // Nonblocking, and the SDK asks for a rate-limited suggestion:
+            // once per app run, whatever the session is doing.
+            guard !dwaOutOfRangeNoticeShown else { return }
+            dwaOutOfRangeNoticeShown = true
+            if let issue = noticeIssue(for: error) { show(notice: issue.message, action: issue.action) }
+            return
+        }
         if let issue = noticeIssue(for: error) {
             // While connecting, connectGlassesSession records it and
             // startSession shows it once, in the fallback notice.
@@ -426,6 +444,16 @@ extension HermesSessionViewModel {
         switch error {
         case .datAppOnTheGlassesUpdateRequired:
             return datAppUpdateIssue
+        case .insufficientSDKVersion:
+            // Terminal (SDK 1.0): the glasses need an app built with a
+            // newer SDK.
+            return sdkUpdateIssue
+        case .dwaOutOfStuRange:
+            // Nonblocking (SDK 1.0): the session keeps working.
+            return GlassesConnectIssue(
+                message: "Your glasses software is out of date. EmoDrink still works, but updating in the Meta AI app is recommended.",
+                action: firmwareUpdateIssue.action
+            )
         default:
             return nil
         }

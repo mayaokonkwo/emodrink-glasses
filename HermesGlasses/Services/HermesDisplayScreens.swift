@@ -123,7 +123,9 @@ enum HermesDisplayScreens {
     ) -> FlexBox {
         var buttons: [Button] = []
         for choice in choices {
-            buttons.append(Button(label: choice.shortLabel, style: .primary, onClick: { onChoose(choice) }))
+            let button = Button(label: choice.shortLabel, style: .primary, onClick: { onChoose(choice) })
+            // SDK 1.0: the first primary action gets focus on first render.
+            buttons.append(buttons.isEmpty ? button.actionRole(.primary) : button)
         }
         return FlexBox(direction: .column, spacing: 12) {
             FlexBox(direction: .column, spacing: 6) {
@@ -165,7 +167,9 @@ enum HermesDisplayScreens {
     ) -> FlexBox {
         var buttons: [Button] = []
         for choice in choices {
-            buttons.append(Button(label: choice.shortLabel, style: .primary, onClick: { onChoose(choice) }))
+            let button = Button(label: choice.shortLabel, style: .primary, onClick: { onChoose(choice) })
+            // SDK 1.0: the first primary action gets focus on first render.
+            buttons.append(buttons.isEmpty ? button.actionRole(.primary) : button)
         }
         return FlexBox(direction: .column, spacing: 12) {
             FlexBox(direction: .column, spacing: 6) {

@@ -67,6 +67,9 @@ final class HermesCameraManager: @unchecked Sendable {
         // by stopLiveStream(). While it runs, capturePhoto() serves the
         // latest live frame instead of opening a competing stream.
         var liveStream: MWDATCamera.Stream?
+        /// The SDK 0.9+ Camera capability that owns `liveStream`; stopping
+        /// it stops the stream and frees the camera for the next add.
+        var liveCamera: Camera?
         var liveTokens: [AnyListenerToken] = []
         var latestLiveFrame: VideoFrame?
     }
@@ -137,10 +140,12 @@ final class HermesCameraManager: @unchecked Sendable {
             resolution: .low,
             frameRate: 24
         )
-        guard let stream = try session.addStream(config: config) else {
-            debug("camera: addStream returned nil")
+        // SDK 0.9+: the stream belongs to a Camera capability.
+        guard let camera = try session.addCamera(config: config) else {
+            debug("camera: addCamera returned nil")
             throw HermesCameraError.streamUnavailable
         }
+        let stream = camera.stream
         debug("camera: stream created, state=\(stream.state)")
 
         // Report every state transition while this capture runs
@@ -159,8 +164,9 @@ final class HermesCameraManager: @unchecked Sendable {
         // The stream must run only while a capture is in flight. Register
         // the stop before starting it so every exit path - including a
         // start-timeout - guarantees the stream is torn down. Streams are
-        // one-shot: never cached or reused across captures.
-        defer { stream.stop() }
+        // one-shot: never cached or reused across captures. Stopping the
+        // Camera cascades to its stream and releases the camera resource.
+        defer { camera.stop() }
 
         let started = Date()
         if stream.state != .streaming {
@@ -211,11 +217,11 @@ final class HermesCameraManager: @unchecked Sendable {
 
         // Resolution is negotiated, not assumed. This asked for .high while
         // every path that actually works on device - one-shot capture, and
-        // Meta's own CameraAccess sample - uses .low, and addStream returns
+        // Meta's own CameraAccess sample - uses .low, and addCamera returns
         // a bare nil when it won't serve what you asked for. Highest first,
         // then down; snaps are cropped from these frames so more pixels are
         // nice, not necessary.
-        var stream: MWDATCamera.Stream?
+        var camera: Camera?
         var used: StreamingResolution = .low
         var attempts: [String] = []
 
@@ -224,8 +230,8 @@ final class HermesCameraManager: @unchecked Sendable {
                 let config = StreamConfiguration(
                     videoCodec: .raw, resolution: resolution, frameRate: 24
                 )
-                stream = try session.addStream(config: config)
-                if stream != nil {
+                camera = try session.addCamera(config: config)
+                if camera != nil {
                     used = resolution
                     break outer
                 }
@@ -236,13 +242,14 @@ final class HermesCameraManager: @unchecked Sendable {
             if pass == 0 { try await Task.sleep(nanoseconds: 500_000_000) }
         }
 
-        guard let stream else {
-            let detail = "addStream nil for every resolution "
+        guard let camera else {
+            let detail = "addCamera nil for every resolution "
                 + "(\(attempts.joined(separator: ", "))), session=\(session.state)"
             debug("lens: \(detail)")
             NSLog("[Hermes] lens: \(detail)")
             throw HermesCameraError.streamRejected(detail)
         }
+        let stream = camera.stream
         NSLog("[Hermes] lens: stream opened at \(used)")
         debug("lens: live stream created, state=\(stream.state)")
 
@@ -260,6 +267,7 @@ final class HermesCameraManager: @unchecked Sendable {
 
         stateLock.withLockUnchecked { state in
             state.liveStream = stream
+            state.liveCamera = camera
             state.liveTokens = [frameToken, errorToken, stateToken]
         }
 
@@ -277,15 +285,16 @@ final class HermesCameraManager: @unchecked Sendable {
 
     /// Tear down the live stream. Safe to call when no stream is running.
     func stopLiveStream() {
-        let (stream, tokens): (MWDATCamera.Stream?, [AnyListenerToken]) =
+        let (stream, camera, tokens): (MWDATCamera.Stream?, Camera?, [AnyListenerToken]) =
             stateLock.withLockUnchecked { state in
-                let out = (state.liveStream, state.liveTokens)
+                let out = (state.liveStream, state.liveCamera, state.liveTokens)
                 state.liveStream = nil
+                state.liveCamera = nil
                 state.liveTokens = []
                 state.latestLiveFrame = nil
                 return out
             }
-        stream?.stop()
+        if let camera { camera.stop() } else { stream?.stop() }
         if stream != nil { debug("lens: live stream stopped") }
         Task {
             for token in tokens { await token.cancel() }
