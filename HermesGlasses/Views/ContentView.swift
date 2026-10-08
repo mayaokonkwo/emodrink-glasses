@@ -51,6 +51,8 @@ struct ContentView: View {
     let wearablesVM: WearablesViewModel
     let hermesVM: HermesSessionViewModel
     let emoDrinkVM: EmoDrinkViewModel
+    /// The Glasses basics tests, reached from Settings › Glasses › Developer.
+    let basicsVM: GlassesBasicsViewModel
 
     @AppStorage("onboarding_complete") private var onboardingComplete = false
     @Environment(\.scenePhase) private var scenePhase
@@ -99,7 +101,7 @@ struct ContentView: View {
         .tint(HermesTheme.accent)
         .sheet(isPresented: $showSettings, onDismiss: { settingsRoute = nil }) {
             SettingsView(hermesVM: hermesVM, wearablesVM: wearablesVM, emoDrinkVM: emoDrinkVM,
-                         initialRoute: settingsRoute)
+                         basicsVM: basicsVM, initialRoute: settingsRoute)
         }
         .sheet(isPresented: $showTranscript) {
             TranscriptSheet(hermesVM: hermesVM)

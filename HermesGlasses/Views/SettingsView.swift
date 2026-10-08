@@ -20,6 +20,7 @@ struct SettingsView: View {
     let hermesVM: HermesSessionViewModel
     let wearablesVM: WearablesViewModel
     let emoDrinkVM: EmoDrinkViewModel
+    let basicsVM: GlassesBasicsViewModel
     /// Push this page as soon as Settings appears.
     var initialRoute: SettingsRoute? = nil
 
@@ -83,7 +84,7 @@ struct SettingsView: View {
             }
             .navigationDestination(for: SettingsRoute.self) { route in
                 switch route {
-                case .glasses: GlassesPage(hermesVM: hermesVM, wearablesVM: wearablesVM)
+                case .glasses: GlassesPage(hermesVM: hermesVM, wearablesVM: wearablesVM, basicsVM: basicsVM)
                 }
             }
             .onAppear {
@@ -140,20 +141,33 @@ struct SettingsView: View {
 private struct GlassesPage: View {
     let hermesVM: HermesSessionViewModel
     let wearablesVM: WearablesViewModel
+    let basicsVM: GlassesBasicsViewModel
+    @State private var showBasics = false
 
     var body: some View {
         HermesScrollPage {
             deviceSection
             cameraSection
             phoneModeSection
-            HermesSection(header: "Developer") {
+            HermesSection(header: "Developer",
+                          footer: "Glasses basics: the three on-device tests (lens card, camera feed, vending machine check) on the same glasses path EmoDrink uses.") {
+                Button {
+                    showBasics = true
+                } label: {
+                    HermesRow("Glasses basics", icon: "checklist", mutedIcon: true, value: "Tests 1 to 3")
+                }
+                .buttonStyle(.plain)
+                HermesDivider()
                 NavigationLink {
-                    DeveloperPage(hermesVM: hermesVM)
+                    DeveloperPage(hermesVM: hermesVM, basicsVM: basicsVM)
                 } label: {
                     HermesRow("Test panel", icon: "wrench.and.screwdriver", mutedIcon: true, value: "Display test")
                 }
                 .buttonStyle(.plain)
             }
+        }
+        .fullScreenCover(isPresented: $showBasics) {
+            GlassesBasicsView(viewModel: basicsVM, showsDone: true)
         }
         .navigationTitle("Glasses")
         .navigationBarTitleDisplayMode(.inline)
@@ -300,11 +314,21 @@ private struct GlassesStatusPage: View {
 
 private struct DeveloperPage: View {
     let hermesVM: HermesSessionViewModel
+    let basicsVM: GlassesBasicsViewModel
+    @State private var showBasics = false
 
     private static let tests = ["Display", "Sound", "Photo", "Query", "Visual"]
 
     var body: some View {
         HermesScrollPage {
+            HermesSection(header: "Glasses basics") {
+                Button {
+                    showBasics = true
+                } label: {
+                    HermesRow("Glasses basics", icon: "checklist", mutedIcon: true, value: "Tests 1 to 3")
+                }
+                .buttonStyle(.plain)
+            }
             HermesSection(header: "Test panel") {
                 VStack(spacing: 10) {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
@@ -374,6 +398,9 @@ private struct DeveloperPage: View {
                 HermesDivider()
                 HermesRow("Glasses display", value: displayText, showsChevron: false)
             }
+        }
+        .fullScreenCover(isPresented: $showBasics) {
+            GlassesBasicsView(viewModel: basicsVM, showsDone: true)
         }
         .navigationTitle("Developer")
         .navigationBarTitleDisplayMode(.inline)

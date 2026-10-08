@@ -2,16 +2,20 @@
 // GlassesBasicsView.swift
 // EmoDrink Glasses
 //
-// The app's only screen until the two fundamentals work: text on the
-// glasses display, and the glasses camera feed on the phone. Plain list,
-// no app styling. Driven by GlassesBasicsViewModel (a near-copy of Meta's
-// DisplayAccess and CameraAccess samples).
+// Settings › Glasses › Developer › Glasses basics, full screen: text on
+// the glasses display, the glasses camera feed on the phone, and a frame
+// to the vending machine check. Plain list, no app styling. Driven by
+// GlassesBasicsViewModel over GlassesLink (a near-copy of Meta's
+// DisplayAccess and CameraAccess samples), the path EmoDrink itself uses.
 //
 
 import SwiftUI
 
 struct GlassesBasicsView: View {
     @Bindable var viewModel: GlassesBasicsViewModel
+    /// Presented full screen from Settings: show a Done button.
+    var showsDone = false
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
@@ -25,6 +29,13 @@ struct GlassesBasicsView: View {
             }
             .navigationTitle("Glasses basics")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if showsDone {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { dismiss() }
+                    }
+                }
+            }
             .task { await viewModel.refreshCameraPermission() }
         }
     }
